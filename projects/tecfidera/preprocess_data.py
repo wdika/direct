@@ -1,22 +1,21 @@
 # encoding: utf-8
 __author__ = 'Dimitrios Karkalousos'
 
-import os
-import torch
 import argparse
 import glob
 import logging
-from multiprocessing import Process
 import sys
 import time
+from multiprocessing import Process
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 from tqdm import tqdm
 
-from projects.tecfidera.utils import readcfl
 import direct.data.transforms as T
+from projects.tecfidera.utils import readcfl
 
 # import h5py
 
@@ -31,39 +30,25 @@ def save_png_outputs(data, output_dir):
         plt.close()
 
 
-def preprocess_vol(kspace, output_dir, num_workers=32):
+def preprocess_vol(kspace, output_dir):
     logger.info("Preprocessing data. This might take some time, please wait...")
     start = time.perf_counter()
 
     kspace = T.to_tensor(kspace).refine_names('slice', 'height', 'width', 'coil', 'complex')
 
     logger.info("Processing the axial plane...")
-    # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
-    # axial_target = np.sqrt(np.sum(axial_imspace ** 2, -1))
-    # del axial_imspace
-
     axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
-    # axial_imspace = np.fft.ifftn(T.tensor_to_complex_numpy(kspace), axes=(0, 1, 2))
-    data = np.abs(T.root_sum_of_squares(axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy())
+    data = np.abs(T.root_sum_of_squares(
+        axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy())
 
     Process(target=save_png_outputs, args=(data, output_dir + '/axial/')).start()
 
-    # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
-    # transversal_target = np.abs(np.sqrt(np.sum(transversal_imspace ** 2, -1)))
-    # del transversal_imspace
-    #
-    # logger.info("Processing the sagittal plane...")
     # sagittal_imspace = np.transpose(
     #     np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (2, 1, 0, 3)), axes=(0, 1, 2)), axes=2), (0, 2, 1, 3))
-    # sagittal_target = np.abs(np.sqrt(np.sum(sagittal_imspace ** 2, -1)))
-    # del sagittal_imspace
 
     time_taken = time.perf_counter() - start
     logger.info(f"Done! Run Time = {time_taken:}s")
-
-    # return axial_target, transversal_target, sagittal_target
-    return axial_target
 
 
 def main(args):
@@ -80,7 +65,7 @@ def main(args):
 
         for acquisition in acquisitions:
             logger.info(f"Processing scan: {acquisition.split('/')[-2]}")
-            #scans = glob.glob(acquisition + "*kspace.cfl")
+            # scans = glob.glob(acquisition + "*kspace.cfl")
             scans = glob.glob(acquisition + "*.cfl")
             logger.info(f"Total scans: {len(scans)}")
 
@@ -107,7 +92,6 @@ def create_arg_parser():
     parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
     parser.add_argument('output', type=str, help='Output dir to save files.')
     parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
-    parser.add_argument('--num-workers', type=int, default=32, help='Number of workers for data loading')
 
     return parser
 
