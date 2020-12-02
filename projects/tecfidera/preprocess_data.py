@@ -113,41 +113,33 @@ def create_arg_parser():
 if __name__ == '__main__':
     args = create_arg_parser().parse_args(sys.argv[1:])
 
-    dirs = glob.glob(args.root + "/*/")
-    logger.info(f"Total scans: {len(dirs)}")
+    subjects = glob.glob(args.root + "/*/")
+    logger.info(f"Total subjects: {len(subjects)}")
 
-    for folder in dirs:
-        logger.info(f"Processing scan: {folder.split('/')[-2]}")
-        files = glob.glob(folder + "*.cfl")
+    for subject in subjects:
+        logger.info(f"Processing subject: {subject.split('/')[-2]}")
+        acquisitions = glob.glob(args.root + "/*/")
+        logger.info(f"Total acquisitions: {len(acquisitions)}")
 
-        subjects = glob.glob(args.root + "/*/")
-        logger.info(f"Total scans: {len(subjects)}")
-
-        for subject in subjects:
-            logger.info(f"Processing subject: {subject.split('/')[-2]}")
-            scans = glob.glob(subject + "/*/")
+        for acquisition in acquisitions:
+            logger.info(f"Processing scan: {acquisition.split('/')[-2]}")
+            #scans = glob.glob(acquisition + "*kspace.cfl")
+            scans = glob.glob(acquisition + "*.cfl")
             logger.info(f"Total scans: {len(scans)}")
 
             for scan in scans:
-                logger.info(f"Processing scan: {scan.split('/')[-2]}")
-                # kspaces = glob.glob(scan + "*kspace.cfl")
-                kspaces = glob.glob(scan + "*.cfl")
+                kspace = scan.split('.')[0]
+                name = scan.split('/')[-1].split('_')[0]
+                logger.info(f"Processing scan: {name}")
 
-                logger.info(f"Total volumes: {len(scan)}")
+                args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                    -2] + '/' + name + '/'
 
-                for k in kspaces:
-                    k = k.split('.')[0]
-                    name = k.split('/')[-1].split('_')[0]
-                    logger.info(f"Processing volume: {name}")
+                if args.export_type == 'png':
+                    output_dir = args.output_dir + '/png/targets/'
+                    Path(output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+                    preprocess_vol(readcfl(kspace), output_dir)
 
-                    args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + scan.split('/')[
-                        -2] + '/' + name + '/'
-
-                    if args.export_type == 'png':
-                        output_dir = args.output_dir + '/png/targets/'
-                        Path(output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
-                        # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
-                        # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
-                        preprocess_vol(readcfl(k), output_dir)
-
-                   # main(args.num_workers, args.export_type)
+               # main(args.num_workers, args.export_type)
