@@ -18,51 +18,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_png_outputs(idx):
-    plt.imshow(data, cmap='gray')
-    plt.savefig(args.output_dir + '/' + str(idx) + '.png')
-    plt.close()
-
-
-def preprocess_vol(kspace):
-    logger.info("Preprocessing data. This might take some time, please wait...")
-    start = time.perf_counter()
-
-    mask = np.where(np.sum(np.sum(np.abs(kspace), 0), -1) > 0., 1, 0)
-
-    time_taken = time.perf_counter() - start
-    logger.info(f"Done! Run Time = {time_taken:}s")
-
-    return mask
-
-
-def main(num_workers, export_type):
-    with multiprocessing.Pool(num_workers) as pool:
-        start_time = time.perf_counter()
-        logger.info("Saving data. This might take some time, please wait...")
-
-        if export_type == 'png':
-            pool.map(save_png_outputs, range(len(data)))
-        # else:
-        #     pool.map(save_h5_outputs, range(len(data)))
-
-        time_taken = time.perf_counter() - start_time
-        logger.info(f"Done! Run Time = {time_taken:}s")
-
-
-def create_arg_parser():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
-    parser.add_argument('output', type=str, help='Output dir to save files.')
-    parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
-    parser.add_argument('--num-workers', type=int, default=32, help='Number of workers for data loading')
-
-    return parser
-
-
-if __name__ == '__main__':
-    args = create_arg_parser().parse_args(sys.argv[1:])
+def main(args):
+    start_time = time.perf_counter()
+    logger.info("Saving data. This might take some time, please wait...")
 
     subjects = glob.glob(args.root + "/*/")
     logger.info(f"Total scans: {len(subjects)}")
@@ -83,11 +41,30 @@ if __name__ == '__main__':
                 name = k.split('/')[-1].split('_')[0]
                 logger.info(f"Processing volume: {name}")
 
-                args.output_dir = args.output + '/' + name
+                kspace = readcfl(k)
+                mask = np.where(np.sum(np.sum(np.abs(kspace), 0), -1) > 0., 1, 0)
+
+                Path(args.output + '/' + name).mkdir(parents=True, exist_ok=True)
                 if args.export_type == 'png':
-                    args.output_dir = args.output_dir + '/png/masks/'
-                    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+                    plt.imshow(mask, cmap='gray')
+                    plt.savefig(args.output + '/' + name + '/png/mask.png')
+                    plt.close()
 
-                data = preprocess_vol(readcfl(k))
+    time_taken = time.perf_counter() - start_time
+    logger.info(f"Done! Run Time = {time_taken:}s")
 
-                main(args.num_workers, args.export_type)
+
+def create_arg_parser():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
+    parser.add_argument('output', type=str, help='Output dir to save files.')
+    parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
+    parser.add_argument('--num-workers', type=int, default=32, help='Number of workers for data loading')
+
+    return parser
+
+
+if __name__ == '__main__':
+    args = create_arg_parser().parse_args(sys.argv[1:])
+    main(args)
