@@ -3,48 +3,24 @@ __author__ = 'Dimitrios Karkalousos'
 
 # import os
 import argparse
+import glob
+import logging
+import multiprocessing
 # import pathlib
 import sys
 import time
-from tqdm import tqdm
-import multiprocessing
-import logging
-import glob
+from pathlib import Path
 
-# import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
+from tqdm import tqdm
+
+from projects.tecfidera.utils import readcfl
+
+# import h5py
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def readcfl(cfl):
-    logger.info("Constructing a numpy array. This might take some time, please wait...")
-    start_time = time.perf_counter()
-
-    h = open(cfl + ".hdr", "r")
-    h.readline()  # skip
-    line = h.readline()
-    h.close()
-    dims = [int(i) for i in line.split()]
-
-    # remove singleton dimensions from the end
-    n = int(np.prod(dims))
-    dims_prod = np.cumprod(dims)
-    dims = dims[:np.searchsorted(dims_prod, n) + 1]
-
-    # load data and reshape into dims
-    d = open(f + ".cfl", "r")
-    a = np.fromfile(d, dtype=np.complex64, count=n)
-    d.close()
-    a = a.reshape(dims, order='F')  # column-major
-
-    time_taken = time.perf_counter() - start_time
-    logger.info(f"Done! Run Time = {time_taken:}s")
-
-    return a
 
 
 def save_outputs(idx):

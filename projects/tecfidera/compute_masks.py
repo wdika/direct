@@ -1,58 +1,28 @@
 # encoding: utf-8
 __author__ = 'Dimitrios Karkalousos'
 
-import os
 import argparse
-import pathlib
+import glob
+import logging
+import multiprocessing
 import sys
 import time
-from tqdm import tqdm
-import multiprocessing
-import logging
-import glob
+from pathlib import Path
 
-import colorcet as cc
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
+
+from projects.tecfidera.utils import readcfl
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def readcfl(name):
-    logger.info("Constructing a numpy array. This might take some time, please wait...")
-    start_time = time.perf_counter()
-
-    h = open(name + ".hdr", "r")
-    h.readline()  # skip
-    l = h.readline()
-    h.close()
-    dims = [int(i) for i in l.split()]
-
-    # remove singleton dimensions from the end
-    n = int(np.prod(dims))
-    dims_prod = np.cumprod(dims)
-    dims = dims[:np.searchsorted(dims_prod, n) + 1]
-
-    # load data and reshape into dims
-    d = open(name + ".cfl", "r")
-    a = np.fromfile(d, dtype=np.complex64, count=n)
-    d.close()
-    a = a.reshape(dims, order='F')  # column-major
-
-    time_taken = time.perf_counter() - start_time
-    logger.info(f"Done! Run Time = {time_taken:}s")
-
-    return a
-
-
 def save_outputs(idx):
     plt.imshow(data, cmap='gray')
-    plt.savefig(args.output_path + '/mask.png')
+    plt.savefig(args.output_path + '/mask_ ' + str(idx) + '.png')
     plt.close()
-	
+
 
 def preprocess_vol(kspace):
     logger.info("Preprocessing data. This might take some time, please wait...")
@@ -73,7 +43,7 @@ def main(num_workers):
         pool.map(save_outputs, range(len(data)))
         time_taken = time.perf_counter() - start_time
         logger.info(f"Done! Run Time = {time_taken:}s")
-    
+
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
@@ -86,7 +56,7 @@ def create_arg_parser():
 
 if __name__ == '__main__':
     args = create_arg_parser().parse_args(sys.argv[1:])
-    
+
     dirs = glob.glob(args.root + "/*/")
     logger.info(f"Total scans: {len(dirs)}")
 
@@ -102,10 +72,9 @@ if __name__ == '__main__':
             logger.info(f"Processing volume: {f.split('/')[-1]}")
 
             args.output_path = folder + '/png/' + name + '/'
-            
+
             Path(args.output_path).mkdir(parents=True, exist_ok=True)
 
             data = preprocess_vol(readcfl(f))
 
             main(args.num_workers)
-
