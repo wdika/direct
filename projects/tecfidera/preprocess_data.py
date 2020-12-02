@@ -46,6 +46,8 @@ def preprocess_vol(kspace):
 
     kspace = T.to_tensor(kspace).refine_names('slice', 'height', 'width', 'coil', 'complex')
 
+    print(kspace.names)
+
     logger.info("Processing the axial plane...")
     # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
     # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
