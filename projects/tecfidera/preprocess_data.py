@@ -41,7 +41,7 @@ def save_png_outputs(idx):
 
     for i in tqdm(range(data.shape[0])):
         plt.imshow(data[i], cmap='gray')
-        plt.savefig(args.output_path + '/' + plane + '/' + str(i) + '.png')
+        plt.savefig(args.output_dir + '/' + plane + '/' + str(i) + '.png')
         plt.close()
 
 
