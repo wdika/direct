@@ -103,7 +103,7 @@ if __name__ == '__main__':
                 name = k.split('/')[-1]
                 logger.info(f"Processing volume: {k.split('/')[-1]}")
 
-                args.output = Path(args.output / name)
+                args.output = Path(args.output + '/' + name)
                 if args.export_type == 'png':
                     args.output = Path(args.output / 'png/csms/')
                     Path(args.output / 'axial').mkdir(parents=True, exist_ok=True)
