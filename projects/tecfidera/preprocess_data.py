@@ -11,7 +11,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from torch.fft import ifftn, ifft2
+from torch.fft import ifftn
 import torch
 from tqdm import tqdm
 
@@ -32,12 +32,10 @@ def save_png_outputs(data, output_dir):
 
 
 def preprocess_vol(input_kspace, input_csm, output_dir):
-    kspace = torch.from_numpy(input_kspace).permute(1, 2, 0, 3)
-
+    kspace = torch.from_numpy(input_kspace)
     # csm = torch.from_numpy(input_csm)
-    kspace = T.ifftshift(kspace, dim=(0, 1))
-    axial_imspace = ifft2(kspace, dim=(0, 1), norm="ortho")
-    axial_imspace = T.fftshift(axial_imspace, dim=(0, 1)).permute(2, 0, 1, 3)
+
+    axial_imspace = ifftn(kspace, dim=(0, 1, 2), norm=None)
     # axial_csm = csm.refine_names('slice', 'height', 'width', 'coil')
 
     #axial_target = np.abs(np.sum(axial_imspace * input_csm.conj(), -1))
