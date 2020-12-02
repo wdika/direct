@@ -46,7 +46,7 @@ def save_png_outputs(data):
         plt.close()
 
 
-def preprocess_vol(kspace):
+def preprocess_vol(kspace, output_dir):
     logger.info("Preprocessing data. This might take some time, please wait...")
     start = time.perf_counter()
 
@@ -59,6 +59,13 @@ def preprocess_vol(kspace):
 
     axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
     axial_imspace = axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')
+
+    axial_target = np.abs(T.root_sum_of_squares(axial_imspace).detach().cpu().numpy())
+
+    for i in tqdm(range(axial_target.shape[0])):
+        plt.imshow(axial_target[i], cmap='gray')
+        plt.savefig(output_dir + '/axial/' + str(i) + '.png')
+        plt.close()
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
@@ -75,7 +82,7 @@ def preprocess_vol(kspace):
     logger.info(f"Done! Run Time = {time_taken:}s")
 
     # return axial_target, transversal_target, sagittal_target
-    return axial_imspace
+    # return axial_imspace
 
 
 def main(num_workers, export_type):
@@ -83,9 +90,9 @@ def main(num_workers, export_type):
     start_time = time.perf_counter()
     logger.info("Saving data. This might take some time, please wait...")
 
-    if export_type == 'png':
+    # if export_type == 'png':
         # pool.map(save_png_outputs, range(len(data)))
-        save_png_outputs(data)
+        # save_png_outputs(data)
     # else:
     #     pool.map(save_h5_outputs, range(len(data)))
 
@@ -136,14 +143,11 @@ if __name__ == '__main__':
                     args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + scan.split('/')[
                         -2] + '/' + name + '/'
 
-                    targets = preprocess_vol(readcfl(k))
-
                     if args.export_type == 'png':
-                        args.output_dir = args.output_dir + '/png/targets/'
-                        Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                        output_dir = args.output_dir + '/png/targets/'
+                        Path(output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
                         # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
                         # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+                        preprocess_vol(readcfl(k), output_dir)
 
-                        data = np.abs(T.root_sum_of_squares(targets).detach().cpu().numpy())
-
-                    main(args.num_workers, args.export_type)
+                   # main(args.num_workers, args.export_type)
