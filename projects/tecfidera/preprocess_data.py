@@ -22,7 +22,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def preprocess_png_vol(kspace):
+def save_png_outputs(idx):
+    # if idx == 0:
+    #     plane = 'axial'
+    # elif idx == 1:
+    #     plane = 'transversal'
+    # elif idx == 2:
+    #     plane = 'sagittal'
+    # else:
+    #     plane = 'tmp'
+
+    plane = 'axial'
+
+    for i in tqdm(range(data[idx].shape[0])):
+        plt.imshow(data[idx][i], cmap='gray')
+        plt.savefig(args.output_path + '/' + plane + '/' + str(i) + '.png')
+        plt.close()
+
+
+def preprocess_vol(kspace):
     logger.info("Preprocessing data. This might take some time, please wait...")
     start = time.perf_counter()
 
@@ -30,12 +48,7 @@ def preprocess_png_vol(kspace):
     # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
     # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
     # del axial_imspace
-    axial_target = np.abs(T.root_sum_of_squares(T.ifft2(T.to_tensor(kspace))).detach().cpu().numpy())
-
-    for i in tqdm(range(axial_target.shape[0])):
-        plt.imshow(axial_target[i], cmap='gray')
-        plt.savefig(args.output_dir + '/axial/' + str(i) + '.png')
-        plt.close()
+    axial_target = T.ifft2(T.to_tensor(kspace))
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
@@ -60,7 +73,7 @@ def main(num_workers, export_type):
         logger.info("Saving data. This might take some time, please wait...")
 
         if export_type == 'png':
-            pool.map(preprocess_png_vol, range(len(data)))
+            pool.map(save_png_outputs, range(len(data)))
         # else:
         #     pool.map(save_h5_outputs, range(len(data)))
 
@@ -104,6 +117,8 @@ if __name__ == '__main__':
                 logger.info(f"Total volumes: {len(scan)}")
 
                 for k in kspaces:
+                    targets = preprocess_vol(readcfl(k))
+
                     k = k.split('.')[0]
                     name = k.split('/')[-1].split('_')[0]
                     logger.info(f"Processing volume: {name}")
@@ -112,12 +127,11 @@ if __name__ == '__main__':
                         -2] + '/' + name + '/'
 
                     if args.export_type == 'png':
-                        args.output_dir = args.output_dir + '/png/images/'
+                        args.output_dir = args.output_dir + '/png/targets/'
                         Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
                         # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
                         # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
 
-                    # data = preprocess_vol(readcfl(k))
-                    data = readcfl(k)
+                        data = np.abs(T.root_sum_of_squares(targets).detach().cpu().numpy())
 
                     main(args.num_workers, args.export_type)

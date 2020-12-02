@@ -19,17 +19,30 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def preprocess_png_vol(csm):
+def save_png_outputs(idx):
+    # if idx == 0:
+    #     plane = 'axial'
+    # elif idx == 1:
+    #     plane = 'transversal'
+    # elif idx == 2:
+    #     plane = 'sagittal'
+    # else:
+    #     plane = 'tmp'
+
+    plane = 'axial'
+
+    for i in tqdm(range(data[idx].shape[0])):
+        plt.imshow(data[idx][i], cmap='gray')
+        plt.savefig(args.output_path + '/' + plane + '/' + str(i) + '.png')
+        plt.close()
+
+
+def preprocess_vol(csm):
     logger.info("Preprocessing data. This might take some time, please wait...")
     start = time.perf_counter()
 
     logger.info("Processing the axial plane...")
     axial_target = np.abs(np.sqrt(np.sum(csm ** 2, -1)))
-
-    for i in tqdm(range(axial_target.shape[0])):
-        plt.imshow(axial_target[i], cmap='gray')
-        plt.savefig(args.output_dir + '/axial/' + str(i) + '.png')
-        plt.close()
 
     # logger.info("Processing the transversal plane...")
     # transversal_target = np.abs(np.sqrt(np.sum(np.transpose(csm, (1, 0, 2, 3))**2, -1)))
@@ -49,7 +62,7 @@ def main(num_workers, export_type):
         logger.info("Saving data. This might take some time, please wait...")
 
         if export_type == 'png':
-            pool.map(preprocess_png_vol, range(len(data)))
+            pool.map(save_png_outputs, range(len(data)))
         # else:
         #     pool.map(save_h5_outputs, range(len(data)))
 
@@ -71,35 +84,41 @@ def create_arg_parser():
 if __name__ == '__main__':
     args = create_arg_parser().parse_args(sys.argv[1:])
 
-    subjects = glob.glob(args.root + "/*/")
-    logger.info(f"Total scans: {len(subjects)}")
+    dirs = glob.glob(args.root + "/*/")
+    logger.info(f"Total scans: {len(dirs)}")
 
-    for subject in subjects:
-        logger.info(f"Processing subject: {subject.split('/')[-2]}")
-        scans = glob.glob(subject + "/*/")
-        logger.info(f"Total scans: {len(scans)}")
+    for folder in dirs:
+        logger.info(f"Processing scan: {folder.split('/')[-2]}")
+        files = glob.glob(folder + "*.cfl")
 
-        for scan in scans:
-            logger.info(f"Processing scan: {scan.split('/')[-2]}")
-            kspaces = glob.glob(scan + "*csm.cfl")
+        subjects = glob.glob(args.root + "/*/")
+        logger.info(f"Total scans: {len(subjects)}")
 
-            logger.info(f"Total volumes: {len(scan)}")
+        for subject in subjects:
+            logger.info(f"Processing subject: {subject.split('/')[-2]}")
+            scans = glob.glob(subject + "/*/")
+            logger.info(f"Total scans: {len(scans)}")
 
-            for k in kspaces:
-                k = k.split('.')[0]
-                name = k.split('/')[-1]
-                logger.info(f"Processing volume: {k.split('/')[-1]}")
+            for scan in scans:
+                logger.info(f"Processing scan: {scan.split('/')[-2]}")
+                kspaces = glob.glob(scan + "*kspace.cfl")
 
-                args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + scan.split('/')[
-                    -2] + '/' + name + '/'
+                logger.info(f"Total volumes: {len(scan)}")
 
-                if args.export_type == 'png':
-                    args.output_dir = args.output_dir + '/png/images/'
-                    Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+                for k in kspaces:
+                    data = preprocess_vol(readcfl(k))
 
-                # data = preprocess_vol(readcfl(k))
-                data = readcfl(k)
+                    k = k.split('.')[0]
+                    name = k.split('/')[-1].split('_')[0]
+                    logger.info(f"Processing volume: {name}")
 
-                main(args.num_workers, args.export_type)
+                    args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + scan.split('/')[
+                        -2] + '/' + name + '/'
+
+                    if args.export_type == 'png':
+                        args.output_dir = args.output_dir + '/png/csms/'
+                        Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                        # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
+                        # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+
+                    main(args.num_workers, args.export_type)
