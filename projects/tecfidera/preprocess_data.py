@@ -36,8 +36,8 @@ def preprocess_vol(input_kspace, input_csm, output_dir):
 
     axial_imspace = ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho").detach().cpu().numpy()
     # axial_csm = csm.refine_names('slice', 'height', 'width', 'coil')
-    axial_target = np.abs(np.sum(axial_imspace * input_csm.conj()))
-    axial_csm = np.abs(np.sum(input_csm.conj()))
+    axial_target = np.abs(np.sum(axial_imspace * input_csm.conj(), -1))
+    axial_csm = np.abs(np.sum(input_csm.conj(), -1))
 
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
     # sagittal_imspace = np.transpose(
