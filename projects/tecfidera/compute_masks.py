@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def save_png_outputs(idx):
     plt.imshow(data, cmap='gray')
-    plt.savefig(args.output + '/' + str(idx) + '.png')
+    plt.savefig(args.output_dir + '/' + str(idx) + '.png')
     plt.close()
 
 
@@ -80,13 +80,13 @@ if __name__ == '__main__':
 
             for k in kspaces:
                 k = k.split('.')[0]
-                name = k.split('/')[-1]
-                logger.info(f"Processing volume: {k.split('/')[-1]}")
+                name = k.split('/')[-1].split('_')[0]
+                logger.info(f"Processing volume: {name}")
 
-                args.output = args.output + '/' + name
+                args.output_dir = args.output + '/' + name
                 if args.export_type == 'png':
-                    args.output = args.output + '/png/masks/'
-                    Path(args.output).mkdir(parents=True, exist_ok=True)
+                    args.output_dir = args.output_dir + '/png/masks/'
+                    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
                 data = preprocess_vol(readcfl(k))
 

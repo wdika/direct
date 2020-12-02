@@ -120,8 +120,8 @@ if __name__ == '__main__':
 
                 for k in kspaces:
                     k = k.split('.')[0]
-                    name = k.split('/')[-1]
-                    logger.info(f"Processing volume: {k.split('/')[-1]}")
+                    name = k.split('/')[-1].split('_')[0]
+                    logger.info(f"Processing volume: {name}")
 
                     args.output = args.output + '/' + name
                     if args.export_type == 'png':
