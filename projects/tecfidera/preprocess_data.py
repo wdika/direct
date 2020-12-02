@@ -57,7 +57,8 @@ def preprocess_vol(kspace, output_dir):
     # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
     # del axial_imspace
 
-    axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
+    # axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
+    axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(1, 2), norm="ortho")
     axial_imspace = axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')
 
     axial_target = np.abs(T.root_sum_of_squares(axial_imspace).detach().cpu().numpy())
