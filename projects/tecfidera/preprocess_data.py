@@ -32,7 +32,7 @@ def save_png_outputs(data, output_dir):
 
 def preprocess_vol(kspace, output_dir):
     kspace = T.to_tensor(kspace).refine_names('slice', 'height', 'width', 'coil', 'complex')
-    axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
+    axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm=None)#"ortho")
     axial_target = np.abs(T.root_sum_of_squares(
         axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy())
 
