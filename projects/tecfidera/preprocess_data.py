@@ -56,7 +56,7 @@ def main(args):
         logger.info(f"Total acquisitions: {len(acquisitions)}")
 
         for acquisition in acquisitions:
-            logger.info(f"Processing scan: {acquisition.split('/')[-2]}")
+            logger.info(f"Processing acquisition: {acquisition.split('/')[-2]}")
             # scans = glob.glob(acquisition + "*kspace.cfl")
             scans = glob.glob(acquisition + "*.cfl")
             logger.info(f"Total scans: {len(scans)}")
