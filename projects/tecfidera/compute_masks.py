@@ -4,7 +4,6 @@ __author__ = 'Dimitrios Karkalousos'
 import argparse
 import glob
 import logging
-import multiprocessing
 import sys
 import time
 from pathlib import Path
