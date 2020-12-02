@@ -1,6 +1,7 @@
 # encoding: utf-8
 __author__ = 'Dimitrios Karkalousos'
 
+import torch
 import argparse
 import glob
 import logging
@@ -55,7 +56,10 @@ def preprocess_vol(kspace):
     # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
     # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
     # del axial_imspace
-    axial_target = T.ifft2(kspace)
+
+    kspace = torch.ifftshift(kspace, dim=('slice', 'height', 'width'))
+    axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=('slice', 'height', 'width'), norm="ortho")
+    axial_imspace = torch.fftshift(axial_imspace, dim=('slice', 'height', 'width'))
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
@@ -72,7 +76,7 @@ def preprocess_vol(kspace):
     logger.info(f"Done! Run Time = {time_taken:}s")
 
     # return axial_target, transversal_target, sagittal_target
-    return axial_target
+    return axial_imspace
 
 
 def main(num_workers, export_type):
