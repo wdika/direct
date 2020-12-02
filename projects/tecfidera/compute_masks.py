@@ -64,28 +64,33 @@ def create_arg_parser():
 if __name__ == '__main__':
     args = create_arg_parser().parse_args(sys.argv[1:])
 
-    dirs = glob.glob(args.root + "/*/")
-    logger.info(f"Total scans: {len(dirs)}")
+    subjects = glob.glob(args.root + "/*/")
+    logger.info(f"Total scans: {len(subjects)}")
 
-    for folder in dirs:
-        logger.info(f"Processing scan: {folder.split('/')[-2]}")
-        files = glob.glob(folder + "*.cfl")
+    for subject in subjects:
+        logger.info(f"Processing subject: {subject.split('/')[-2]}")
+        scans = glob.glob(subject + "/*/")
+        logger.info(f"Total scans: {len(scans)}")
 
-        logger.info(f"Total volumes: {len(files)}")
+        for scan in scans:
+            logger.info(f"Processing scan: {scan.split('/')[-2]}")
+            kspaces = glob.glob(scan + "*kspace.cfl")
 
-        for f in files:
-            f = f.split('.')[0]
-            name = f.split('/')[-1]
-            logger.info(f"Processing volume: {f.split('/')[-1]}")
+            logger.info(f"Total volumes: {len(scan)}")
 
-            if args.export_type == 'png':
-                args.output_dir = args.output_dir / '/png/' / name
-                Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
-                # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
-                # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
-            else:
-                args.output_dir = args.output_dir / name
+            for k in kspaces:
+                k = k.split('.')[0]
+                name = k.split('/')[-1]
+                logger.info(f"Processing volume: {k.split('/')[-1]}")
 
-            data = preprocess_vol(readcfl(f))
+                if args.export_type == 'png':
+                    args.output_dir = args.output_dir / '/png/' / name
+                    Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+                else:
+                    args.output_dir = args.output_dir / name
 
-            main(args.num_workers)
+                data = preprocess_vol(readcfl(k))
+
+                main(args.num_workers, args.export_type)
