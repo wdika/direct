@@ -65,14 +65,15 @@ def main(args):
         for acquisition in acquisitions:
             logger.info(f"Processing acquisition: {acquisition.split('/')[-2]}")
             kspaces = glob.glob(acquisition + "*kspace.cfl")
-            csms = glob.glob(acquisition + "*csm.cfl")
+            # csms = glob.glob(acquisition + "*csm.cfl")
             # scans = glob.glob(acquisition + "*.cfl")
             logger.info(f"Total scans: {len(kspaces)}")
 
-            for (kspace, csm) in zip(kspaces, csms):
+            for kspace in kspaces:
                 kspace = kspace.split('.')[0]
-                csm = csm.split('.')[0]
                 name = kspace.split('/')[-1].split('_')[0]
+                csm = name + '_csm'
+
                 logger.info(f"Processing scan: {name}")
 
                 if args.export_type == 'png':
