@@ -34,7 +34,7 @@ def preprocess_vol(input_kspace, input_csm, output_dir):
     csm = torch.from_numpy(input_csm).refine_names('slice', 'height', 'width', 'coil')
 
     print(kspace.shape, csm.shape)
-    im = np.fft.ifftn(input_kspace, axes=(0))
+    im = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
 
     axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho").refine_names('slice', 'height',
                                                                                                    'width', 'coil')
