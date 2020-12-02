@@ -33,15 +33,13 @@ def save_png_outputs(data, output_dir):
 
 def preprocess_vol(input_kspace, input_csm, output_dir):
     kspace = torch.from_numpy(input_kspace)
-    # csm = torch.from_numpy(input_csm)
+    csm = torch.from_numpy(input_csm)
 
-    axial_imspace = ifftn(kspace, dim=(0, 1, 2), norm="ortho")
-    axial_imspace = T.fftshift(axial_imspace, dim=(0))
-    # axial_csm = csm.refine_names('slice', 'height', 'width', 'coil')
+    axial_imspace = T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=(0))
+    axial_csm = torch.conj(csm).refine_names('slice', 'height', 'width', 'coil')
 
-    #axial_target = np.abs(np.sum(axial_imspace * input_csm.conj(), -1))
-    axial_target = np.abs(T.root_sum_of_squares(axial_imspace.refine_names('slice', 'height', 'width', 'coil')).detach().cpu().numpy())
-    axial_csm = np.abs(np.sum(input_csm.conj(), -1))
+    axial_target = torch.abs(torch.sum(axial_imspace * axial_csm, 'coil')).detach().cpu().numpy()
+    axial_csm = torch.abs(torch.sum(axial_csm, 'coil')).detach().cpu().numpy()
 
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
     # sagittal_imspace = np.transpose(
@@ -101,4 +99,6 @@ def create_arg_parser():
 
 if __name__ == '__main__':
     args = create_arg_parser().parse_args(sys.argv[1:])
+
+    print(torch.cuda.device())
     main(args)
