@@ -6,7 +6,7 @@ import torch
 import argparse
 import glob
 import logging
-import multiprocessing
+from multiprocessing import Process
 import sys
 import time
 from pathlib import Path
@@ -24,15 +24,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_png_outputs(data, idx):
-    # for i in tqdm(range(data.shape[0])):
-    #     plt.imshow(data[i], cmap='gray')
-    #     plt.savefig(output_dir + str(i) + '.png')
-    #     plt.close()
+def save_png_outputs(data, output_dir):
+    for i in tqdm(range(data.shape[0])):
+        plt.imshow(data[i], cmap='gray')
+        plt.savefig(output_dir + str(i) + '.png')
+        plt.close()
 
-    plt.imshow(data[idx], cmap='gray')
-    plt.savefig(str(idx) + '.png')
-    plt.close()
 
 def preprocess_vol(kspace, output_dir, num_workers=32):
     logger.info("Preprocessing data. This might take some time, please wait...")
@@ -49,10 +46,7 @@ def preprocess_vol(kspace, output_dir, num_workers=32):
     # axial_imspace = np.fft.ifftn(T.tensor_to_complex_numpy(kspace), axes=(0, 1, 2))
     data = np.abs(T.root_sum_of_squares(axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy())
 
-    with multiprocessing.Pool(num_workers) as pool:
-        os.chdir(output_dir)
-        # pool.map(save_png_outputs(axial_target, output_dir=output_dir + '/axial/'),  range(len(axial_target)))
-        pool.map(save_png_outputs, tqdm(data, range(len(data))))
+    Process(target=save_png_outputs, args=(data, output_dir + '/axial/')).start()
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
