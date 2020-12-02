@@ -54,16 +54,15 @@ def preprocess_vol(kspace, output_dir):
 
     logger.info("Processing the axial plane...")
     # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
-    # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
+    # axial_target = np.sqrt(np.sum(axial_imspace ** 2, -1))
     # del axial_imspace
 
-    axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm=None)
-    axial_imspace = axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')
-
-    axial_target = np.abs(T.root_sum_of_squares(axial_imspace).detach().cpu().numpy())
+    # axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
+    axial_imspace = np.fft.ifftn(T.tensor_to_complex_numpy(kspace), axes=(0, 1, 2))
+    axial_target = T.root_sum_of_squares(axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy()
 
     for i in tqdm(range(axial_target.shape[0])):
-        plt.imshow(axial_target[i], cmap='gray')
+        plt.imshow(np.abs(axial_target)[i], cmap='gray')
         plt.savefig(output_dir + '/axial/' + str(i) + '.png')
         plt.close()
 
