@@ -132,11 +132,9 @@ if __name__ == '__main__':
                 name = scan.split('/')[-1].split('_')[0]
                 logger.info(f"Processing scan: {name}")
 
-                args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                    -2] + '/' + name + '/'
-
                 if args.export_type == 'png':
-                    output_dir = '/png/' + args.output_dir + '/targets/'
+                    output_dir = args.output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                        -2] + '/' + name + '/targets/'
                     Path(output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
