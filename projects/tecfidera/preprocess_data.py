@@ -33,10 +33,9 @@ def save_png_outputs(data, output_dir):
 
 def preprocess_vol(kspace, csm, output_dir):
     axial_imspace = T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=(0))
-    axial_csm = torch.conj(csm).refine_names('slice', 'height', 'width', 'coil')
 
-    axial_target = torch.abs(torch.sum(axial_imspace * axial_csm, 'coil')).detach().cpu().numpy()
-    axial_csm = torch.abs(torch.sum(axial_csm, 'coil')).detach().cpu().numpy()
+    axial_target = torch.abs(torch.sum(axial_imspace * torch.conj(csm), -1)).detach().cpu().numpy()
+    axial_csm = torch.abs(torch.sum(torch.conj(csm), -1)).detach().cpu().numpy()
 
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
     # sagittal_imspace = np.transpose(
