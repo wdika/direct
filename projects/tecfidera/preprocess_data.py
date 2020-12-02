@@ -50,7 +50,7 @@ def preprocess_vol(kspace, output_dir, num_workers=32):
 
     with multiprocessing.Pool(num_workers) as pool:
         # pool.map(save_png_outputs(axial_target, output_dir=output_dir + '/axial/'),  range(len(axial_target)))
-        pool.map(save_png_outputs,  tqdm(range(len(axial_target))))
+        pool.map(save_png_outputs(output_dir), tqdm(range(len(axial_target))))
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
