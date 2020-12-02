@@ -18,9 +18,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_outputs(idx):
+def save_png_outputs(idx):
     plt.imshow(data, cmap='gray')
-    plt.savefig(args.output_path + '/mask_ ' + str(idx) + '.png')
+    plt.savefig(args.output_dir + '/mask_ ' + str(idx) + '.png')
     plt.close()
 
 
@@ -36,11 +36,16 @@ def preprocess_vol(kspace):
     return mask
 
 
-def main(num_workers):
+def main(num_workers, export_type):
     with multiprocessing.Pool(num_workers) as pool:
         start_time = time.perf_counter()
         logger.info("Saving data. This might take some time, please wait...")
-        pool.map(save_outputs, range(len(data)))
+
+        if export_type == 'png':
+            pool.map(save_png_outputs, range(len(data)))
+        # else:
+        #     pool.map(save_h5_outputs, range(len(data)))
+
         time_taken = time.perf_counter() - start_time
         logger.info(f"Done! Run Time = {time_taken:}s")
 
@@ -49,6 +54,8 @@ def create_arg_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
+    parser.add_argument('output-dir', type=str, help='Output dir to save files.')
+    parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
     parser.add_argument('--num-workers', type=int, default=32, help='Number of workers for data loading')
 
     return parser
@@ -71,9 +78,13 @@ if __name__ == '__main__':
             name = f.split('/')[-1]
             logger.info(f"Processing volume: {f.split('/')[-1]}")
 
-            args.output_path = folder + '/png/' + name + '/'
-
-            Path(args.output_path).mkdir(parents=True, exist_ok=True)
+            if args.export_type == 'png':
+                args.output_dir = args.output_dir / '/png/' / name
+                Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
+                # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+            else:
+                args.output_dir = args.output_dir / name
 
             data = preprocess_vol(readcfl(f))
 
