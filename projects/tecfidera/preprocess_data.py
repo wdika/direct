@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_png_outputs(idx):
+def save_png_outputs():
     # if idx == 0:
     #     plane = 'axial'
     # elif idx == 1:
@@ -34,8 +34,13 @@ def save_png_outputs(idx):
 
     plane = 'axial'
 
-    for i in tqdm(range(data[idx].shape[0])):
-        plt.imshow(data[idx][i], cmap='gray')
+    # for i in tqdm(range(data[idx].shape[0])):
+    #     plt.imshow(data[idx][i], cmap='gray')
+    #     plt.savefig(args.output_path + '/' + plane + '/' + str(i) + '.png')
+    #     plt.close()
+
+    for i in tqdm(range(data.shape[0])):
+        plt.imshow(data[i], cmap='gray')
         plt.savefig(args.output_path + '/' + plane + '/' + str(i) + '.png')
         plt.close()
 
@@ -45,8 +50,6 @@ def preprocess_vol(kspace):
     start = time.perf_counter()
 
     kspace = T.to_tensor(kspace).refine_names('slice', 'height', 'width', 'coil', 'complex')
-
-    print(kspace.names)
 
     logger.info("Processing the axial plane...")
     # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
@@ -68,7 +71,8 @@ def preprocess_vol(kspace):
     time_taken = time.perf_counter() - start
     logger.info(f"Done! Run Time = {time_taken:}s")
 
-    return axial_target  # , transversal_target, sagittal_target
+    # return axial_target, transversal_target, sagittal_target
+    return axial_target
 
 
 def main(num_workers, export_type):
