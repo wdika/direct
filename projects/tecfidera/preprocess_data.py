@@ -43,7 +43,7 @@ def preprocess_vol(kspace, output_dir):
 
     axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
     # axial_imspace = np.fft.ifftn(T.tensor_to_complex_numpy(kspace), axes=(0, 1, 2))
-    axial_target = T.root_sum_of_squares(axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy()
+    axial_target = np.abs(T.root_sum_of_squares(axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy())
     save_png_outputs(axial_target, plane='axial', output_dir=output_dir)
 
     # logger.info("Processing the transversal plane...")
