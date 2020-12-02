@@ -44,11 +44,13 @@ def preprocess_vol(kspace):
     logger.info("Preprocessing data. This might take some time, please wait...")
     start = time.perf_counter()
 
+    kspace = T.to_tensor(kspace).refine_names('slice', 'height', 'width', 'coil', 'complex')
+
     logger.info("Processing the axial plane...")
     # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
     # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
     # del axial_imspace
-    axial_target = T.ifft2(T.to_tensor(kspace))
+    axial_target = T.ifft2(kspace)
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
