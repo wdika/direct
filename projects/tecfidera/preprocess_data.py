@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     for subject in subjects:
         logger.info(f"Processing subject: {subject.split('/')[-2]}")
-        acquisitions = glob.glob(subjects + "/*/")
+        acquisitions = glob.glob(subject + "/*/")
         logger.info(f"Total acquisitions: {len(acquisitions)}")
 
         for acquisition in acquisitions:
