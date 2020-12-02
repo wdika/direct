@@ -1,12 +1,10 @@
 # encoding: utf-8
 __author__ = 'Dimitrios Karkalousos'
 
-# import os
 import argparse
 import glob
 import logging
 import multiprocessing
-# import pathlib
 import sys
 import time
 from pathlib import Path
@@ -24,25 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_png_outputs(idx):
-    # if idx == 0:
-    #     plane = 'axial'
-    # elif idx == 1:
-    #     plane = 'transversal'
-    # elif idx == 2:
-    #     plane = 'sagittal'
-    # else:
-    #     plane = 'tmp'
-
-    plane = 'axial'
-
-    for i in tqdm(range(data[idx].shape[0])):
-        plt.imshow(data[idx][i], cmap='gray')
-        plt.savefig(args.output + '/' + plane + '/' + str(i) + '.png')
-        plt.close()
-
-
-def preprocess_vol(kspace):
+def preprocess_png_vol(kspace):
     logger.info("Preprocessing data. This might take some time, please wait...")
     start = time.perf_counter()
 
@@ -51,6 +31,11 @@ def preprocess_vol(kspace):
     # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
     # del axial_imspace
     axial_target = np.abs(T.root_sum_of_squares(T.ifft2(T.to_tensor(kspace))).detach().cpu().numpy())
+
+    for i in tqdm(range(axial_target.shape[0])):
+        plt.imshow(axial_target[i], cmap='gray')
+        plt.savefig(args.output_dir + '/axial/' + str(i) + '.png')
+        plt.close()
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
@@ -75,7 +60,7 @@ def main(num_workers, export_type):
         logger.info("Saving data. This might take some time, please wait...")
 
         if export_type == 'png':
-            pool.map(save_png_outputs, range(len(data)))
+            pool.map(preprocess_png_vol, range(len(data)))
         # else:
         #     pool.map(save_h5_outputs, range(len(data)))
 
@@ -123,13 +108,16 @@ if __name__ == '__main__':
                     name = k.split('/')[-1].split('_')[0]
                     logger.info(f"Processing volume: {name}")
 
-                    args.output = args.output + '/' + name
-                    if args.export_type == 'png':
-                        args.output = args.output + '/png/images/'
-                        Path(args.output + '/axial/').mkdir(parents=True, exist_ok=True)
-                        # Path(args.output / 'sagittal').mkdir(parents=True, exist_ok=True)
-                        # Path(args.output / 'transversal').mkdir(parents=True, exist_ok=True)
+                    args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + scan.split('/')[
+                        -2] + '/' + name + '/'
 
-                    data = preprocess_vol(readcfl(k))
+                    if args.export_type == 'png':
+                        args.output_dir = args.output_dir + '/png/images/'
+                        Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                        # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
+                        # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+
+                    # data = preprocess_vol(readcfl(k))
+                    data = readcfl(k)
 
                     main(args.num_workers, args.export_type)

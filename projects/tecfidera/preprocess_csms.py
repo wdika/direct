@@ -14,35 +14,22 @@ import numpy as np
 from tqdm import tqdm
 
 from projects.tecfidera.utils import readcfl
-import direct.data.transforms as T
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_png_outputs(idx):
-    # if idx == 0:
-    #     plane = 'axial'
-    # elif idx == 1:
-    #     plane = 'transversal'
-    # elif idx == 2:
-    #     plane = 'sagittal'
-
-    plane = 'axial'
-
-    for i in tqdm(range(data[idx].shape[0])):
-        plt.imshow(data[idx][i], cmap='gray')
-        plt.savefig(args.output + '/' + plane + '/' + str(i) + '.png')
-        plt.close()
-
-
-def preprocess_vol(csm):
+def preprocess_png_vol(csm):
     logger.info("Preprocessing data. This might take some time, please wait...")
     start = time.perf_counter()
 
     logger.info("Processing the axial plane...")
     axial_target = np.abs(np.sqrt(np.sum(csm ** 2, -1)))
+
+    for i in tqdm(range(axial_target.shape[0])):
+        plt.imshow(axial_target[i], cmap='gray')
+        plt.savefig(args.output_dir + '/axial/' + str(i) + '.png')
+        plt.close()
 
     # logger.info("Processing the transversal plane...")
     # transversal_target = np.abs(np.sqrt(np.sum(np.transpose(csm, (1, 0, 2, 3))**2, -1)))
@@ -62,7 +49,7 @@ def main(num_workers, export_type):
         logger.info("Saving data. This might take some time, please wait...")
 
         if export_type == 'png':
-            pool.map(save_png_outputs, range(len(data)))
+            pool.map(preprocess_png_vol, range(len(data)))
         # else:
         #     pool.map(save_h5_outputs, range(len(data)))
 
@@ -103,13 +90,16 @@ if __name__ == '__main__':
                 name = k.split('/')[-1]
                 logger.info(f"Processing volume: {k.split('/')[-1]}")
 
-                args.output = args.output + '/' + name
-                if args.export_type == 'png':
-                    args.output = args.output / 'png/csms/'
-                    Path(args.output / 'axial').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output / 'sagittal').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output / 'transversal').mkdir(parents=True, exist_ok=True)
+                args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + scan.split('/')[
+                    -2] + '/' + name + '/'
 
-                data = preprocess_vol(readcfl(k))
+                if args.export_type == 'png':
+                    args.output_dir = args.output_dir + '/png/images/'
+                    Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+
+                # data = preprocess_vol(readcfl(k))
+                data = readcfl(k)
 
                 main(args.num_workers, args.export_type)
