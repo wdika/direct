@@ -72,7 +72,7 @@ def main(args):
             for kspace in kspaces:
                 kspace = kspace.split('.')[0]
                 name = kspace.split('/')[-1].split('_')[0]
-                csm = name + '_csm'
+                csm = kspace.split('/')[-1].split('_')[0] + '_csm'
 
                 logger.info(f"Processing scan: {name}")
 
