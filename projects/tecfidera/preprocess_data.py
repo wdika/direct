@@ -29,11 +29,12 @@ def save_png_outputs(data, output_dir):
         plt.close()
 
 
-def preprocess_vol(kspace, csm, output_dir):
-    kspace = torch.from_numpy(kspace)
-    csm = torch.from_numpy(csm).refine_names('slice', 'height', 'width', 'coil')
+def preprocess_vol(input_kspace, input_csm, output_dir):
+    kspace = torch.from_numpy(input_kspace)
+    csm = torch.from_numpy(input_csm).refine_names('slice', 'height', 'width', 'coil')
 
     print(kspace.shape, csm.shape)
+    im = np.fft.ifftn(input_kspace, axes=(0))
 
     axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho").refine_names('slice', 'height',
                                                                                                    'width', 'coil')
@@ -68,10 +69,10 @@ def main(args):
             # scans = glob.glob(acquisition + "*.cfl")
             logger.info(f"Total scans: {len(kspaces)}")
 
-            for k in kspaces:
-                k = k.split('.')[0]
-                name = k.split('/')[-1].split('_')[0]
-                csm = k.split('_')[0] + '_csm'
+            for kspace in kspaces:
+                kspace = kspace.split('.')[0]
+                name = kspace.split('/')[-1].split('_')[0]
+                csm = kspace.split('_')[0] + '_csm'
 
                 logger.info(f"Processing scan: {name}")
 
@@ -82,7 +83,7 @@ def main(args):
                     Path(output_dir + '/axial/csms/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
-                    preprocess_vol(readcfl(k), readcfl(csm), output_dir)
+                    preprocess_vol(readcfl(kspace), readcfl(csm), output_dir)
 
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
