@@ -43,10 +43,10 @@ def main(args):
                 kspace = readcfl(k)
                 mask = np.where(np.sum(np.sum(np.abs(kspace), 0), -1) > 0., 1, 0)
 
-                Path(args.output + '/' + name).mkdir(parents=True, exist_ok=True)
+                Path(args.output + '/png/' + name).mkdir(parents=True, exist_ok=True)
                 if args.export_type == 'png':
                     plt.imshow(mask, cmap='gray')
-                    plt.savefig(args.output + '/' + name + '/png/mask.png')
+                    plt.savefig(args.output + '/png/' + name + '/mask.png')
                     plt.close()
 
     time_taken = time.perf_counter() - start_time
