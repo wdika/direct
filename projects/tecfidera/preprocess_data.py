@@ -57,9 +57,7 @@ def preprocess_vol(kspace):
     # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
     # del axial_imspace
 
-    kspace = T.ifftshift(kspace, dim=(0, 1, 2))
     axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
-    axial_imspace = T.fftshift(axial_imspace, dim=(0, 1, 2))
     axial_imspace = axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')
 
     # logger.info("Processing the transversal plane...")
