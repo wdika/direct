@@ -83,9 +83,10 @@ if __name__ == '__main__':
                 name = k.split('/')[-1]
                 logger.info(f"Processing volume: {k.split('/')[-1]}")
 
-                args.output = Path(args.output + '/' + name)
+                args.output = args.output + '/' + name
                 if args.export_type == 'png':
-                    args.output = Path(args.output + '/png/masks/')
+                    args.output = args.output + '/png/masks/'
+                    Path(args.output).mkdir(parents=True, exist_ok=True)
 
                 data = preprocess_vol(readcfl(k))
 
