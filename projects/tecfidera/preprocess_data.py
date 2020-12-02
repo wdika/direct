@@ -31,6 +31,11 @@ def save_png_outputs(data, output_dir):
 
 
 def preprocess_vol(kspace, csm, output_dir):
+    mask = torch.where(torch.sum(torch.sum(torch.abs(kspace), 0), -1) > 0, 1, 0).detach().cpu().numpy()
+    plt.imshow(mask, cmap='gray')
+    plt.savefig(output_dir + '/axial/mask.png')
+    plt.close()
+
     axial_imspace = T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=(0))
 
     axial_target = torch.abs(torch.sum(axial_imspace * torch.conj(csm), -1)).detach().cpu().numpy()
@@ -60,7 +65,7 @@ def main(args):
                 csm = kspace.split('_')[0] + '_csm'
 
                 logger.info(f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
-                            f"| scan: {name}")
+                            f" | scan: {name}")
 
                 input_kspace = torch.from_numpy(readcfl(kspace)).to(args.device)
                 input_csm = torch.from_numpy(readcfl(csm)).to(args.device)
