@@ -43,7 +43,7 @@ def main(args):
                 kspace = readcfl(k)
                 mask = np.where(np.sum(np.sum(np.abs(kspace), 0), -1) > 0., 1, 0)
 
-                output_dir = args.output + '/' + subject + '/' + scan + '/' + name + '/'
+                output_dir = args.output + '/' + subject.split('/')[-2] + '/' + scan.split('/')[-2] + '/' + name + '/'
                 if args.export_type == 'png':
                     Path(output_dir + '/png/').mkdir(parents=True, exist_ok=True)
                     plt.imshow(mask, cmap='gray')
