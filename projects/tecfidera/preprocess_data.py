@@ -117,14 +117,14 @@ if __name__ == '__main__':
                 logger.info(f"Total volumes: {len(scan)}")
 
                 for k in kspaces:
-                    targets = preprocess_vol(readcfl(k))
-
                     k = k.split('.')[0]
                     name = k.split('/')[-1].split('_')[0]
                     logger.info(f"Processing volume: {name}")
 
                     args.output_dir = args.output + '/' + subject.split('/')[-2] + '/' + scan.split('/')[
                         -2] + '/' + name + '/'
+
+                    targets = preprocess_vol(readcfl(k))
 
                     if args.export_type == 'png':
                         args.output_dir = args.output_dir + '/png/targets/'
