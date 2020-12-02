@@ -130,7 +130,8 @@ if __name__ == '__main__':
 
             for scan in scans:
                 logger.info(f"Processing scan: {scan.split('/')[-2]}")
-                kspaces = glob.glob(scan + "*kspace.cfl")
+                # kspaces = glob.glob(scan + "*kspace.cfl")
+                kspaces = glob.glob(scan + "*.cfl")
 
                 logger.info(f"Total volumes: {len(scan)}")
 
