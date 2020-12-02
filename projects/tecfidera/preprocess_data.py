@@ -23,26 +23,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_png_outputs(data):
-    # if idx == 0:
-    #     plane = 'axial'
-    # elif idx == 1:
-    #     plane = 'transversal'
-    # elif idx == 2:
-    #     plane = 'sagittal'
-    # else:
-    #     plane = 'tmp'
-
-    plane = 'axial'
-
-    # for i in tqdm(range(data[idx].shape[0])):
-    #     plt.imshow(data[idx][i], cmap='gray')
-    #     plt.savefig(args.output_path + '/' + plane + '/' + str(i) + '.png')
-    #     plt.close()
-
+def save_png_outputs(data, plane, output_dir):
     for i in tqdm(range(data.shape[0])):
         plt.imshow(data[i], cmap='gray')
-        plt.savefig(args.output_dir + '/' + plane + '/' + str(i) + '.png')
+        plt.savefig(output_dir + '/' + plane + '/' + str(i) + '.png')
         plt.close()
 
 
@@ -60,11 +44,7 @@ def preprocess_vol(kspace, output_dir):
     axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho")
     # axial_imspace = np.fft.ifftn(T.tensor_to_complex_numpy(kspace), axes=(0, 1, 2))
     axial_target = T.root_sum_of_squares(axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy()
-
-    for i in tqdm(range(axial_target.shape[0])):
-        plt.imshow(np.abs(axial_target)[i], cmap='gray')
-        plt.savefig(output_dir + '/axial/' + str(i) + '.png')
-        plt.close()
+    save_png_outputs(axial_target, plane='axial', output_dir=output_dir)
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
@@ -81,19 +61,39 @@ def preprocess_vol(kspace, output_dir):
     logger.info(f"Done! Run Time = {time_taken:}s")
 
     # return axial_target, transversal_target, sagittal_target
-    # return axial_imspace
+    return axial_target
 
 
-def main(num_workers, export_type):
-    #with multiprocessing.Pool(num_workers) as pool:
+def main(args):
     start_time = time.perf_counter()
     logger.info("Saving data. This might take some time, please wait...")
 
-    # if export_type == 'png':
-        # pool.map(save_png_outputs, range(len(data)))
-        # save_png_outputs(data)
-    # else:
-    #     pool.map(save_h5_outputs, range(len(data)))
+    subjects = glob.glob(args.root + "/*/")
+    logger.info(f"Total subjects: {len(subjects)}")
+
+    for subject in subjects:
+        logger.info(f"Processing subject: {subject.split('/')[-2]}")
+        acquisitions = glob.glob(subject + "/*/")
+        logger.info(f"Total acquisitions: {len(acquisitions)}")
+
+        for acquisition in acquisitions:
+            logger.info(f"Processing scan: {acquisition.split('/')[-2]}")
+            #scans = glob.glob(acquisition + "*kspace.cfl")
+            scans = glob.glob(acquisition + "*.cfl")
+            logger.info(f"Total scans: {len(scans)}")
+
+            for scan in scans:
+                kspace = scan.split('.')[0]
+                name = kspace.split('/')[-1].split('_')[0]
+                logger.info(f"Processing scan: {name}")
+
+                if args.export_type == 'png':
+                    output_dir = args.output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                        -2] + '/' + name + '/targets/'
+                    Path(output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+                    preprocess_vol(readcfl(kspace), output_dir)
 
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
@@ -112,32 +112,4 @@ def create_arg_parser():
 
 if __name__ == '__main__':
     args = create_arg_parser().parse_args(sys.argv[1:])
-
-    subjects = glob.glob(args.root + "/*/")
-    logger.info(f"Total subjects: {len(subjects)}")
-
-    for subject in subjects:
-        logger.info(f"Processing subject: {subject.split('/')[-2]}")
-        acquisitions = glob.glob(subject + "/*/")
-        logger.info(f"Total acquisitions: {len(acquisitions)}")
-
-        for acquisition in acquisitions:
-            logger.info(f"Processing scan: {acquisition.split('/')[-2]}")
-            #scans = glob.glob(acquisition + "*kspace.cfl")
-            scans = glob.glob(acquisition + "*.cfl")
-            logger.info(f"Total scans: {len(scans)}")
-
-            for scan in scans:
-                kspace = scan.split('.')[0]
-                name = scan.split('/')[-1].split('_')[0]
-                logger.info(f"Processing scan: {name}")
-
-                if args.export_type == 'png':
-                    output_dir = args.output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                        -2] + '/' + name + '/targets/'
-                    Path(output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
-                    preprocess_vol(readcfl(kspace), output_dir)
-
-               # main(args.num_workers, args.export_type)
+    main(args)
