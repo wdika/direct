@@ -33,13 +33,13 @@ def save_png_outputs(data, output_dir):
 
 def preprocess_vol(input_kspace, input_csm, output_dir):
     kspace = torch.from_numpy(input_kspace).refine_names('readout_direction', 'phase_enc_direction_1',
-                    'phase_enc_direction_2', 'coils').align_as('phase_enc_direction_1', 'phase_enc_direction_2',
-                                                               'readout_direction', 'coils')
+                    'phase_enc_direction_2', 'coils').align_as(*('phase_enc_direction_1', 'phase_enc_direction_2',
+                                                               'readout_direction', 'coils'))
     # csm = torch.from_numpy(input_csm)
     kspace = T.ifftshift(kspace, dim=('phase_enc_direction_1', 'phase_enc_direction_2'))
     axial_imspace = ifft2(kspace, dim=('phase_enc_direction_1', 'phase_enc_direction_2'), norm="ortho")
-    axial_imspace = T.fftshift(axial_imspace, dim=('phase_enc_direction_1', 'phase_enc_direction_2')).align_as('readout_direction', 'phase_enc_direction_1',
-                                                                     'phase_enc_direction_2', 'coils').rename(None)
+    axial_imspace = T.fftshift(axial_imspace, dim=('phase_enc_direction_1', 'phase_enc_direction_2')).align_as(*('readout_direction', 'phase_enc_direction_1',
+                                                                     'phase_enc_direction_2', 'coils')).rename(None)
     # axial_csm = csm.refine_names('slice', 'height', 'width', 'coil')
 
     #axial_target = np.abs(np.sum(axial_imspace * input_csm.conj(), -1))
