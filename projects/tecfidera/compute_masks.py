@@ -84,10 +84,10 @@ if __name__ == '__main__':
                 logger.info(f"Processing volume: {k.split('/')[-1]}")
 
                 if args.export_type == 'png':
-                    args.output = args.output / '/png/' / name / 'masks'
-                    Path(args.output + '/axial/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output + '/sagittal/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output + '/transversal/').mkdir(parents=True, exist_ok=True)
+                    args.output = args.output / 'png' / name / 'masks'
+                    Path(args.output / 'axial').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output / 'sagittal').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output / 'transversal').mkdir(parents=True, exist_ok=True)
                 else:
                     args.output = args.output / name
 
