@@ -14,6 +14,8 @@ import numpy as np
 from tqdm import tqdm
 
 from projects.tecfidera.utils import readcfl
+import direct.data.transforms as T
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -31,7 +33,7 @@ def save_png_outputs(idx):
 
     for i in tqdm(range(data[idx].shape[0])):
         plt.imshow(data[idx][i], cmap='gray')
-        plt.savefig(args.output / plane / str(i) + '.png')
+        plt.savefig(args.output + '/' + plane + '/' + str(i) + '.png')
         plt.close()
 
 
@@ -101,13 +103,12 @@ if __name__ == '__main__':
                 name = k.split('/')[-1]
                 logger.info(f"Processing volume: {k.split('/')[-1]}")
 
+                args.output = Path(args.output / name)
                 if args.export_type == 'png':
-                    args.output = args.output / 'png' / name
+                    args.output = Path(args.output / 'png/csms/')
                     Path(args.output / 'axial').mkdir(parents=True, exist_ok=True)
                     # Path(args.output / 'sagittal').mkdir(parents=True, exist_ok=True)
                     # Path(args.output / 'transversal').mkdir(parents=True, exist_ok=True)
-                else:
-                    args.output = args.output / name
 
                 data = preprocess_vol(readcfl(k))
 

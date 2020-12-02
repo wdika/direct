@@ -16,6 +16,7 @@ import numpy as np
 from tqdm import tqdm
 
 from projects.tecfidera.utils import readcfl
+import direct.data.transforms as T
 
 # import h5py
 
@@ -37,7 +38,7 @@ def save_png_outputs(idx):
 
     for i in tqdm(range(data[idx].shape[0])):
         plt.imshow(data[idx][i], cmap='gray')
-        plt.savefig(args.output / plane / str(i) + '.png')
+        plt.savefig(args.output + '/' + plane + '/' + str(i) + '.png')
         plt.close()
 
 
@@ -46,9 +47,10 @@ def preprocess_vol(kspace):
     start = time.perf_counter()
 
     logger.info("Processing the axial plane...")
-    axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
-    axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
-    del axial_imspace
+    # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
+    # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
+    # del axial_imspace
+    axial_target = np.abs(T.root_sum_of_squares(T.ifft2(T.to_tensor(kspace))).detach().cpu().numpy())
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
@@ -121,13 +123,12 @@ if __name__ == '__main__':
                     name = k.split('/')[-1]
                     logger.info(f"Processing volume: {k.split('/')[-1]}")
 
+                    args.output = Path(args.output / name)
                     if args.export_type == 'png':
-                        args.output = args.output / 'png' / name
-                        Path(args.output / 'axial').mkdir(parents=True, exist_ok=True)
+                        args.output = Path(args.output + '/png/images/')
+                        Path(args.output + '/axial/').mkdir(parents=True, exist_ok=True)
                         # Path(args.output / 'sagittal').mkdir(parents=True, exist_ok=True)
                         # Path(args.output / 'transversal').mkdir(parents=True, exist_ok=True)
-                    else:
-                        args.output = args.output / name
 
                     data = preprocess_vol(readcfl(k))
 
