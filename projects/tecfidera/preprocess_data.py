@@ -31,10 +31,7 @@ def save_png_outputs(data, output_dir):
         plt.close()
 
 
-def preprocess_vol(input_kspace, input_csm, output_dir):
-    kspace = torch.from_numpy(input_kspace)
-    csm = torch.from_numpy(input_csm)
-
+def preprocess_vol(kspace, csm, output_dir):
     axial_imspace = T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=(0))
     axial_csm = torch.conj(csm).refine_names('slice', 'height', 'width', 'coil')
 
@@ -74,6 +71,9 @@ def main(args):
 
                 logger.info(f"Processing scan: {name}")
 
+                input_kspace = torch.from_numpy(readcfl(kspace)).to(args.device)
+                input_csm = torch.from_numpy(readcfl(csm)).to(args.device)
+
                 if args.export_type == 'png':
                     output_dir = args.output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
                         -2] + '/' + name
@@ -81,7 +81,7 @@ def main(args):
                     Path(output_dir + '/axial/csms/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
-                    preprocess_vol(readcfl(kspace), readcfl(csm), output_dir)
+                    preprocess_vol(input_kspace, input_csm, output_dir)
 
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
@@ -93,6 +93,7 @@ def create_arg_parser():
     parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
     parser.add_argument('output', type=str, help='Output dir to save files.')
     parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
+    parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda', help='Enable GPU.')
 
     return parser
 
@@ -100,5 +101,4 @@ def create_arg_parser():
 if __name__ == '__main__':
     args = create_arg_parser().parse_args(sys.argv[1:])
 
-    print(torch.cuda.device())
     main(args)
