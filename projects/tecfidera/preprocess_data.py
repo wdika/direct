@@ -32,14 +32,12 @@ def save_png_outputs(data, output_dir):
 
 
 def preprocess_vol(input_kspace, input_csm, output_dir):
-    kspace = torch.from_numpy(input_kspace).refine_names('readout_direction', 'phase_enc_direction_1',
-                    'phase_enc_direction_2', 'coils').refine_names(*('phase_enc_direction_1', 'phase_enc_direction_2',
-                                                               'readout_direction', 'coils'))
+    kspace = torch.from_numpy(input_kspace).permute(1, 2, 0, 3)
+
     # csm = torch.from_numpy(input_csm)
-    kspace = T.ifftshift(kspace, dim=('phase_enc_direction_1', 'phase_enc_direction_2'))
-    axial_imspace = ifft2(kspace, dim=('phase_enc_direction_1', 'phase_enc_direction_2'), norm="ortho")
-    axial_imspace = T.fftshift(axial_imspace, dim=('phase_enc_direction_1', 'phase_enc_direction_2')).refine_names(*('readout_direction', 'phase_enc_direction_1',
-                                                                     'phase_enc_direction_2', 'coils')).rename(None)
+    kspace = T.ifftshift(kspace, dim=(0, 1))
+    axial_imspace = ifft2(kspace, dim=(0, 1), norm="ortho")
+    axial_imspace = T.fftshift(axial_imspace, dim=(0, 1)).permute(2, 0, 1, 3)
     # axial_csm = csm.refine_names('slice', 'height', 'width', 'coil')
 
     #axial_target = np.abs(np.sum(axial_imspace * input_csm.conj(), -1))
