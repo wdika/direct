@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_png_outputs():
+def save_png_outputs(idx):
     # if idx == 0:
     #     plane = 'axial'
     # elif idx == 1:
