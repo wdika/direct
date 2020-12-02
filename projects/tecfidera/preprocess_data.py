@@ -10,13 +10,12 @@ from multiprocessing import Process
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
-from torch.fft import ifftn
 import torch
+from torch.fft import ifftn
 from tqdm import tqdm
 
-from projects.tecfidera.utils import readcfl
 from direct.data import transforms as T
+from projects.tecfidera.utils import readcfl
 
 # import h5py
 
@@ -37,10 +36,6 @@ def preprocess_vol(kspace, csm, output_dir):
     axial_target = torch.abs(torch.sum(axial_imspace * torch.conj(csm), -1)).detach().cpu().numpy()
     axial_csm = torch.abs(torch.sum(torch.conj(csm), -1)).detach().cpu().numpy()
 
-    # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
-    # sagittal_imspace = np.transpose(
-    #     np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (2, 1, 0, 3)), axes=(0, 1, 2)), axes=2), (0, 2, 1, 3))
-
     Process(target=save_png_outputs, args=(axial_target, output_dir + '/axial/targets/')).start()
     Process(target=save_png_outputs, args=(axial_csm, output_dir + '/axial/csms/')).start()
 
@@ -53,22 +48,19 @@ def main(args):
     logger.info(f"Total subjects: {len(subjects)}")
 
     for subject in tqdm(subjects):
-        logger.info(f"Processing subject: {subject.split('/')[-2]}")
         acquisitions = glob.glob(subject + "/*/")
-        logger.info(f"Total acquisitions: {len(acquisitions)}")
 
         for acquisition in acquisitions:
-            logger.info(f"Processing acquisition: {acquisition.split('/')[-2]}")
             kspaces = glob.glob(acquisition + "*kspace.cfl")
             # scans = glob.glob(acquisition + "*.cfl")
-            logger.info(f"Total scans: {len(kspaces)}")
 
             for kspace in kspaces:
                 kspace = kspace.split('.')[0]
                 name = kspace.split('/')[-1].split('_')[0]
                 csm = kspace.split('_')[0] + '_csm'
 
-                logger.info(f"Processing scan: {name}")
+                logger.info(f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
+                            f"| scan: {name}")
 
                 input_kspace = torch.from_numpy(readcfl(kspace)).to(args.device)
                 input_csm = torch.from_numpy(readcfl(csm)).to(args.device)
@@ -78,8 +70,7 @@ def main(args):
                         -2] + '/' + name
                     Path(output_dir + '/axial/targets/').mkdir(parents=True, exist_ok=True)
                     Path(output_dir + '/axial/csms/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+
                     preprocess_vol(input_kspace, input_csm, output_dir)
 
     time_taken = time.perf_counter() - start_time
