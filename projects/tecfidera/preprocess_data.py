@@ -48,9 +48,9 @@ def preprocess_vol(kspace, output_dir, num_workers=32):
     # axial_imspace = np.fft.ifftn(T.tensor_to_complex_numpy(kspace), axes=(0, 1, 2))
     axial_target = np.abs(T.root_sum_of_squares(axial_imspace.refine_names('slice', 'height', 'width', 'coil', 'complex')).detach().cpu().numpy())
 
-    with tqdm(multiprocessing.Pool(num_workers)) as pool:
+    with multiprocessing.Pool(num_workers) as pool:
         # pool.map(save_png_outputs(axial_target, output_dir=output_dir + '/axial/'),  range(len(axial_target)))
-        pool.map(save_png_outputs,  range(len(axial_target)))
+        pool.map(save_png_outputs,  tqdm(range(len(axial_target))))
 
     # logger.info("Processing the transversal plane...")
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
