@@ -14,7 +14,6 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-import direct.data.transforms as T
 from projects.tecfidera.utils import readcfl
 
 # import h5py
@@ -30,22 +29,23 @@ def save_png_outputs(data, output_dir):
         plt.close()
 
 
-def preprocess_vol(kspace, output_dir):
-    # kspace = T.to_tensor(kspace).refine_names('slice', 'height', 'width', 'coil', 'complex')
-
+def preprocess_vol(kspace, csm, output_dir):
     kspace = torch.from_numpy(kspace)
-    axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho").refine_names('slice', 'height', 'width', 'coil')
-    axial_target = np.abs(T.root_sum_of_squares(axial_imspace).detach().cpu().numpy())
-    # axial_imspace = axial_imspace[..., 0] + 1j * axial_imspace[..., 1]
+    csm = torch.from_numpy(csm).refine_names('slice', 'height', 'width', 'coil')
 
-    # axial_imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
-    # axial_target = np.abs(np.sqrt(np.sum(axial_imspace ** 2, -1)))
+    axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho").refine_names('slice', 'height',
+                                                                                                   'width', 'coil')
+
+    axial_target = np.abs(torch.sum(axial_imspace * torch.conj(csm), dim='coil').detach().cpu().numpy())
+
+    axial_csm = np.abs(torch.sum(torch.conj(csm), dim='coil').detach().cpu().numpy())
 
     # transversal_imspace = np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (1, 0, 2, 3)), axes=(0, 1, 2)), axes=1)
     # sagittal_imspace = np.transpose(
     #     np.fft.ifftshift(np.fft.ifftn(np.transpose(kspace, (2, 1, 0, 3)), axes=(0, 1, 2)), axes=2), (0, 2, 1, 3))
 
-    Process(target=save_png_outputs, args=(axial_target, output_dir + '/axial/')).start()
+    Process(target=save_png_outputs, args=(axial_target, output_dir + '/axial/targets/')).start()
+    Process(target=save_png_outputs, args=(axial_csm, output_dir + '/axial/csms/')).start()
 
 
 def main(args):
@@ -62,22 +62,25 @@ def main(args):
 
         for acquisition in acquisitions:
             logger.info(f"Processing acquisition: {acquisition.split('/')[-2]}")
-            # scans = glob.glob(acquisition + "*kspace.cfl")
-            scans = glob.glob(acquisition + "*.cfl")
-            logger.info(f"Total scans: {len(scans)}")
+            kspaces = glob.glob(acquisition + "*kspace.cfl")
+            csms = glob.glob(acquisition + "*csm.cfl")
+            # scans = glob.glob(acquisition + "*.cfl")
+            logger.info(f"Total scans: {len(kspaces)}")
 
-            for scan in scans:
-                kspace = scan.split('.')[0]
+            for kspace, csm in kspaces, csms:
+                kspace = kspace.split('.')[0]
+                csm = csm.split('.')[0]
                 name = kspace.split('/')[-1].split('_')[0]
                 logger.info(f"Processing scan: {name}")
 
                 if args.export_type == 'png':
                     output_dir = args.output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                        -2] + '/' + name + '/targets/'
-                    Path(output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
+                        -2] + '/' + name
+                    Path(output_dir + '/axial/targets/').mkdir(parents=True, exist_ok=True)
+                    Path(output_dir + '/axial/csms/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
-                    preprocess_vol(readcfl(kspace), output_dir)
+                    preprocess_vol(readcfl(kspace), readcfl(csm), output_dir)
 
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
