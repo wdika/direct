@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def save_png_outputs(idx):
+def save_png_outputs(data):
     # if idx == 0:
     #     plane = 'axial'
     # elif idx == 1:
@@ -79,17 +79,18 @@ def preprocess_vol(kspace):
 
 
 def main(num_workers, export_type):
-    with multiprocessing.Pool(num_workers) as pool:
-        start_time = time.perf_counter()
-        logger.info("Saving data. This might take some time, please wait...")
+    #with multiprocessing.Pool(num_workers) as pool:
+    start_time = time.perf_counter()
+    logger.info("Saving data. This might take some time, please wait...")
 
-        if export_type == 'png':
-            pool.map(save_png_outputs, range(len(data)))
-        # else:
-        #     pool.map(save_h5_outputs, range(len(data)))
+    if export_type == 'png':
+        # pool.map(save_png_outputs, range(len(data)))
+        save_png_outputs(data)
+    # else:
+    #     pool.map(save_h5_outputs, range(len(data)))
 
-        time_taken = time.perf_counter() - start_time
-        logger.info(f"Done! Run Time = {time_taken:}s")
+    time_taken = time.perf_counter() - start_time
+    logger.info(f"Done! Run Time = {time_taken:}s")
 
 
 def create_arg_parser():
