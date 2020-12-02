@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def save_png_outputs(data, output_dir):
-    for i in tqdm(range(data.shape[0])):
+    for i in range(data.shape[0]):
         plt.imshow(data[i], cmap='gray')
         plt.savefig(output_dir + str(i) + '.png')
         plt.close()
@@ -58,7 +58,7 @@ def main(args):
     subjects = glob.glob(args.root + "/*/")
     logger.info(f"Total subjects: {len(subjects)}")
 
-    for subject in subjects:
+    for subject in tqdm(subjects):
         logger.info(f"Processing subject: {subject.split('/')[-2]}")
         acquisitions = glob.glob(subject + "/*/")
         logger.info(f"Total acquisitions: {len(acquisitions)}")
