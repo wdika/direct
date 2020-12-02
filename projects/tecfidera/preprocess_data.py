@@ -69,7 +69,7 @@ def main(args):
             # scans = glob.glob(acquisition + "*.cfl")
             logger.info(f"Total scans: {len(kspaces)}")
 
-            for kspace, csm in zip(kspaces, csms):
+            for (kspace, csm) in zip(kspaces, csms):
                 kspace = kspace.split('.')[0]
                 csm = csm.split('.')[0]
                 name = kspace.split('/')[-1].split('_')[0]
