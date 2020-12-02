@@ -65,14 +65,13 @@ def main(args):
         for acquisition in acquisitions:
             logger.info(f"Processing acquisition: {acquisition.split('/')[-2]}")
             kspaces = glob.glob(acquisition + "*kspace.cfl")
-            # csms = glob.glob(acquisition + "*csm.cfl")
             # scans = glob.glob(acquisition + "*.cfl")
             logger.info(f"Total scans: {len(kspaces)}")
 
-            for kspace in kspaces:
-                kspace = kspace.split('.')[0]
-                name = kspace.split('/')[-1].split('_')[0]
-                csm = kspace.split('_')[0] + '_csm'
+            for k in kspaces:
+                k = k.split('.')[0]
+                name = k.split('/')[-1].split('_')[0]
+                csm = k.split('_')[0] + '_csm'
 
                 logger.info(f"Processing scan: {name}")
 
@@ -83,7 +82,7 @@ def main(args):
                     Path(output_dir + '/axial/csms/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
                     # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
-                    preprocess_vol(readcfl(kspace), readcfl(csm), output_dir)
+                    preprocess_vol(readcfl(k), readcfl(csm), output_dir)
 
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
