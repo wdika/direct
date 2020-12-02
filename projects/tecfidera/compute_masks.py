@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def save_png_outputs(idx):
     plt.imshow(data, cmap='gray')
-    plt.savefig(args.output_dir + '/mask_ ' + str(idx) + '.png')
+    plt.savefig(args.output / str(idx) + '.png')
     plt.close()
 
 
@@ -54,7 +54,7 @@ def create_arg_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
-    parser.add_argument('output-dir', type=str, help='Output dir to save files.')
+    parser.add_argument('output', type=str, help='Output dir to save files.')
     parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
     parser.add_argument('--num-workers', type=int, default=32, help='Number of workers for data loading')
 
@@ -84,12 +84,12 @@ if __name__ == '__main__':
                 logger.info(f"Processing volume: {k.split('/')[-1]}")
 
                 if args.export_type == 'png':
-                    args.output_dir = args.output_dir / '/png/' / name
-                    Path(args.output_dir + '/axial/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output_dir + '/sagittal/').mkdir(parents=True, exist_ok=True)
-                    # Path(args.output_dir + '/transversal/').mkdir(parents=True, exist_ok=True)
+                    args.output = args.output / '/png/' / name / 'masks'
+                    Path(args.output + '/axial/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output + '/sagittal/').mkdir(parents=True, exist_ok=True)
+                    # Path(args.output + '/transversal/').mkdir(parents=True, exist_ok=True)
                 else:
-                    args.output_dir = args.output_dir / name
+                    args.output = args.output / name
 
                 data = preprocess_vol(readcfl(k))
 
