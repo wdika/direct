@@ -31,13 +31,13 @@ def save_png_outputs(data, output_dir):
 
 def preprocess_vol(input_kspace, input_csm, output_dir):
     kspace = torch.from_numpy(input_kspace)
-    csm = torch.from_numpy(input_csm).refine_names('slice', 'height', 'width', 'coil')
 
-    print(kspace.shape, csm.shape)
-    im = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
+    print(kspace.shape, input_csm.shape)
+    # im = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
 
     axial_imspace = torch.fft.ifftn(kspace.rename(None), dim=(0, 1, 2), norm="ortho").refine_names('slice', 'height',
                                                                                                    'width', 'coil')
+    csm = torch.from_numpy(input_csm).refine_names('slice', 'height', 'width', 'coil')
 
     axial_target = np.abs(torch.sum(axial_imspace * torch.conj(csm), dim='coil').detach().cpu().numpy())
 
