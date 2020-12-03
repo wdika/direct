@@ -83,8 +83,16 @@ def preprocessing(root, output, export_type, device):
                         plt.close()
 
                     elif export_type == 'h5':
-                        output_dir = output + '/h5/' + subject.split('/')[-2] + '/' + acquisition.split('/')[-2] + '/'
+                        output_dir = output + '/h5/'
                         create_dir(output_dir)
+
+                        output_dir_csm = output + '/csm/'
+                        create_dir(output_dir_csm)
+
+                        output_dir_mask = output + '/mask/'
+                        create_dir(output_dir_mask)
+
+                        name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                         # Save kspace
                         Process(target=save_h5_outputs, args=(
@@ -93,10 +101,10 @@ def preprocessing(root, output, export_type, device):
 
                         # Save csm
                         Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(csm), "sensitivity_map",
-                                                              output_dir + name + '_csm')).start()
+                                                              output_dir_csm + name)).start()
 
                         # Save mask
-                        Process(target=save_h5_outputs, args=(mask, "mask", output_dir + 'mask')).start()
+                        Process(target=save_h5_outputs, args=(mask, "mask", output_dir_mask + name)).start()
 
 
 def main(args):
