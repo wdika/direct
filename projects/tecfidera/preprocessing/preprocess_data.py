@@ -50,7 +50,7 @@ def preprocessing(root, output, export_type, device):
                         f" | scan: {name}")
 
                     input_imspace = preprocessing_ifft(torch.from_numpy(readcfl(kspace)).to(device))
-                    input_kspace = fftn(input_imspace, dim=(1, 2), norm="ortho")
+                    input_kspace = fftn(input_imspace, dim=(0, 1, 2), norm="ortho")
                     input_csm = torch.from_numpy(readcfl(csm)).to(device)
 
                     # fixed number of slices, selected after checking the pngs
