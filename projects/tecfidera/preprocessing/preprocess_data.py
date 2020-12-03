@@ -104,7 +104,7 @@ def preprocessing(root, output, export_type, device):
                                                               output_dir_csm + name)).start()
 
                         # Save mask
-                        Process(target=save_h5_outputs, args=(mask, "mask", output_dir_mask + name)).start()
+                        Process(target=save_h5_outputs, args=(mask, "masks", output_dir_mask + name)).start()
 
 
 def main(args):
