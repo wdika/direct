@@ -49,15 +49,18 @@ def preprocessing(root, output, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
                         f" | scan: {name}")
 
-                    input_kspace = torch.from_numpy(readcfl(kspace)).to(device)
+                    input_imspace = preprocessing_ifft(torch.from_numpy(readcfl(kspace)).to(device))
+                    input_kspace = fftn(input_imspace, dim=(1, 2), norm="ortho")
                     input_csm = torch.from_numpy(readcfl(csm)).to(device)
 
                     # fixed number of slices, selected after checking the pngs
-                    input_kspace = slice_selection(input_kspace, start=17, end=217)
-                    input_csm = slice_selection(input_csm, start=17, end=217)
+                    kspace = slice_selection(input_kspace, start=17, end=217)
+                    imspace = slice_selection(input_imspace, start=17, end=217)
+                    csm = slice_selection(input_csm, start=17, end=217)
 
-                    imspace = preprocessing_ifft(input_kspace)
-                    mask = extract_mask(input_kspace)
+                    del input_kspace, input_imspace, input_csm
+
+                    mask = complex_tensor_to_real_np(extract_mask(kspace))
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
@@ -66,16 +69,16 @@ def preprocessing(root, output, export_type, device):
 
                         # Save target (SENSE reconstructed) png images
                         Process(target=save_png_outputs, args=(
-                            complex_tensor_to_real_np(sense_reconstruction(imspace, input_csm, dim=-1)),
+                            complex_tensor_to_real_np(sense_reconstruction(imspace, csm, dim=-1)),
                             output_dir + '/targets/')).start()
 
                         # Save sense coil combined png images
                         Process(target=save_png_outputs, args=(
-                            complex_tensor_to_real_np(csm_sense_coil_combination(input_csm, dim=-1)),
+                            complex_tensor_to_real_np(csm_sense_coil_combination(csm, dim=-1)),
                             output_dir + '/csms/')).start()
 
                         # Save mask
-                        plt.imshow(torch.abs(mask).detach().cpu().numpy(), cmap='gray')
+                        plt.imshow(mask, cmap='gray')
                         plt.savefig(output_dir + '/mask.png')
                         plt.close()
 
@@ -85,15 +88,14 @@ def preprocessing(root, output, export_type, device):
 
                         # Save kspace
                         Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")), "kspace",
+                            complex_tensor_to_complex_np(kspace), "kspace",
                             output_dir + name)).start()
                         # Save csm
                         Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(input_csm), "sensitivity_map",
+                            complex_tensor_to_complex_np(csm), "sensitivity_map",
                             output_dir + name + '_csm')).start()
                         # Save mask
-                        Process(target=save_h5_outputs, args=(
-                            torch.abs(mask).detach().cpu().numpy(), "mask", output_dir + 'mask')).start()
+                        Process(target=save_h5_outputs, args=(mask, "mask", output_dir + 'mask')).start()
 
 
 def main(args):
