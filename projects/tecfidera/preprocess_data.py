@@ -23,41 +23,101 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def create_dir(path):
+    Path(path).mkdir(parents=True, exist_ok=True)
+
+
+def complex_tensor_to_real_np(x):
+    return torch.abs(x).detach().cpu().numpy()
+
+
 def save_png_outputs(data, output_dir):
+    create_dir(output_dir)
+
     for i in range(data.shape[0]):
         plt.imshow(data[i], cmap='gray')
         plt.savefig(output_dir + str(i) + '.png')
         plt.close()
 
 
-def preprocess_vol(kspace, csm, output_dir):
-    mask = torch.where(torch.sum(torch.sum(torch.abs(kspace), 0), -1) > 0, 1, 0).detach().cpu().numpy()
-    plt.imshow(mask, cmap='gray')
-    plt.savefig(output_dir + '/axial/mask.png')
-    plt.close()
+def preprocessing_ifft(kspace):
+    """
 
-    axial_imspace = T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=(0))
+    Parameters
+    ----------
+    kspace : torch.Tensor
 
-    axial_target = torch.abs(torch.sum(axial_imspace * torch.conj(csm), -1)).detach().cpu().numpy()
-    axial_csm = torch.abs(torch.sum(torch.conj(csm), -1)).detach().cpu().numpy()
+    Returns
+    -------
+    image space tensor of the axial plane transformed with the correct/fixed preprocessing steps
+    """
+    return T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=0)
 
-    Process(target=save_png_outputs, args=(axial_target, output_dir + '/axial/targets/')).start()
-    Process(target=save_png_outputs, args=(axial_csm, output_dir + '/axial/csms/')).start()
+
+def extract_mask(kspace):
+    """
+
+    Parameters
+    ----------
+    kspace : torch.Tensor
+
+    Returns
+    -------
+    extracts the mask from the subsampled kspace, after summing the slice and the coil dimensions
+    """
+    return torch.where(torch.sum(torch.sum(torch.abs(kspace), 0), -1) > 0, 1, 0)
 
 
-def main(args):
-    start_time = time.perf_counter()
-    logger.info("Saving data. This might take some time, please wait...")
+def sense_reconstruction(imspace, csm, dim=-1):
+    """
 
-    subjects = glob.glob(args.root + "/*/")
-    logger.info(f"Total subjects: {len(subjects)}")
+    Parameters
+    ----------
+    imspace : torch.Tensor
+    csm : torch.Tensor
+    dim : coil dimension
+
+    Returns
+    -------
+    reconstructed complex-valued image using SENSE
+    """
+    return torch.sum(imspace * torch.conj(csm), dim=dim)
+
+
+def csm_sense_coil_combination(csm, dim=-1):
+    """
+
+    Parameters
+    ----------
+    csm : torch.Tensor
+    dim : coil dimension
+
+    Returns
+    -------
+    coil combined image
+    """
+    return torch.sum(torch.conj(csm), dim=dim)
+
+
+def preprocessing(root, output, export_type, device):
+    """
+    Parses all subjects, acquisitions, and scans. Performs all the necessary preprocessing steps for the TECFIDERA data.
+
+    Parameters
+    ----------
+    root : root directory of containing cfl data
+    output : output directory to save data
+    export_type : h5 or png
+    device : cuda or cpu
+
+    """
+    subjects = glob.glob(root + "/*/")
 
     for subject in tqdm(subjects):
         acquisitions = glob.glob(subject + "/*/")
 
         for acquisition in acquisitions:
             kspaces = glob.glob(acquisition + "*kspace.cfl")
-            # scans = glob.glob(acquisition + "*.cfl")
 
             for kspace in kspaces:
                 kspace = kspace.split('.')[0]
@@ -67,17 +127,37 @@ def main(args):
                 logger.info(f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
                             f" | scan: {name}")
 
-                input_kspace = torch.from_numpy(readcfl(kspace)).to(args.device)
-                input_csm = torch.from_numpy(readcfl(csm)).to(args.device)
+                input_kspace = torch.from_numpy(readcfl(kspace)).to(device)
+                input_csm = torch.from_numpy(readcfl(csm)).to(device)
 
-                if args.export_type == 'png':
-                    output_dir = args.output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                imspace = preprocessing_ifft(input_kspace)
+                mask = extract_mask(input_kspace)
+
+                if export_type == 'png':
+                    output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
                         -2] + '/' + name
-                    Path(output_dir + '/axial/targets/').mkdir(parents=True, exist_ok=True)
-                    Path(output_dir + '/axial/csms/').mkdir(parents=True, exist_ok=True)
+                    create_dir(output_dir)
 
-                    preprocess_vol(input_kspace, input_csm, output_dir)
+                    # Save target (SENSE reconstructed) png images
+                    Process(target=save_png_outputs, args=(
+                        complex_tensor_to_real_np(sense_reconstruction(imspace, input_csm, dim=-1)),
+                        output_dir + '/axial/targets/')).start()
 
+                    # Save sense coil combined png images
+                    Process(target=save_png_outputs, args=(
+                        complex_tensor_to_real_np(csm_sense_coil_combination(input_csm, dim=-1)),
+                        output_dir + '/axial/csms/')).start()
+
+                    # Save mask
+                    plt.imshow(torch.abs(mask).detach().cpu().numpy(), cmap='gray')
+                    plt.savefig(output_dir + '/axial/mask.png')
+                    plt.close()
+
+
+def main(args):
+    start_time = time.perf_counter()
+    logger.info("Saving data. This might take some time, please wait...")
+    preprocessing(args.root, args.output, args.export_type, args.device)
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
 
@@ -95,5 +175,4 @@ def create_arg_parser():
 
 if __name__ == '__main__':
     args = create_arg_parser().parse_args(sys.argv[1:])
-
     main(args)
