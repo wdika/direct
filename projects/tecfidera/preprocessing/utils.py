@@ -1,7 +1,8 @@
 # encoding: utf-8
-
+from collections import defaultdict
 from pathlib import Path
 
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -39,6 +40,10 @@ def complex_tensor_to_real_np(x):
     return torch.abs(x).detach().cpu().numpy()
 
 
+def complex_tensor_to_complex_np(x):
+    return x.detach().cpu().numpy().astype(np.complex64)
+
+
 def save_png_outputs(data, output_dir):
     create_dir(output_dir)
 
@@ -46,6 +51,18 @@ def save_png_outputs(data, output_dir):
         plt.imshow(data[i], cmap='gray')
         plt.savefig(output_dir + str(i) + '.png')
         plt.close()
+
+
+def save_h5_outputs(data, output_dir):
+    kspaces = defaultdict(list)
+    for filename, slice_data, vol in data:
+        kspaces[filename].append((slice_data, vol))
+
+    kspace = {filename: np.stack([slice for _, slice in sorted(slices)]) for filename, slices in kspaces.items()}
+    for filename in kspace:
+        output_filename = (output_dir / filename).with_suffix(".h5")
+        with h5py.File(output_filename, "w") as f:
+            f["kspace"] = kspace[filename]
 
 
 def preprocessing_ifft(kspace):

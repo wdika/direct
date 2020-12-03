@@ -8,11 +8,10 @@ import sys
 import time
 from multiprocessing import Process
 
+from torch.fft import fftn
 from tqdm import tqdm
 
 from projects.tecfidera.preprocessing.utils import *
-
-# import h5py
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,6 +70,25 @@ def preprocessing(root, output, export_type, device):
                     plt.imshow(torch.abs(mask).detach().cpu().numpy(), cmap='gray')
                     plt.savefig(output_dir + '/axial/mask.png')
                     plt.close()
+
+                elif export_type == 'h5':
+                    output_dir = output + '/h5/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                        -2] + '/' + name
+                    create_dir(output_dir)
+
+                    kspace_outputs = [name, imspace.shape[0], complex_tensor_to_complex_np(
+                        fftn(sense_reconstruction(imspace, input_csm, dim=-1), dim=(1, 2), norm="ortho"))]
+                    csm_outputs = [name + '_csm', input_csm.shape[0], complex_tensor_to_complex_np(input_csm)]
+
+                    # Save kspace
+                    Process(target=save_h5_outputs, args=(kspace_outputs, output_dir + '/axial/')).start()
+
+                    # Save csm
+                    Process(target=save_h5_outputs, args=(csm_outputs, output_dir + '/axial/')).start()
+
+                    # Save mask
+                    with h5py.File((output_dir / 'mask').with_suffix(".h5"), "w") as f:
+                        f["mask"] = torch.abs(mask).detach().cpu().numpy()
 
 
 def main(args):
