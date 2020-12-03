@@ -87,7 +87,7 @@ def preprocessing(root, output, export_type, device):
                                                               output_dir + name + '_csm')).start()
                         # Save mask
                         Process(target=save_h5_outputs, args=(
-                        torch.abs(mask).detach().cpu().numpy(), "mask", output_dir / 'mask')).start()
+                        torch.abs(mask).detach().cpu().numpy(), "mask", output_dir + 'mask')).start()
 
 
 def main(args):
