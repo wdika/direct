@@ -75,16 +75,16 @@ def preprocessing(root, output, export_type, device):
                         plt.close()
 
                     elif export_type == 'h5':
-                        output_dir = output + '/h5/' + subject.split('/')[-2] + '/' + acquisition.split('/')[-2]
+                        output_dir = output + '/h5/' + subject.split('/')[-2] + '/' + acquisition.split('/')[-2] + '/'
                         create_dir(output_dir)
 
                         # Save kspace
                         Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(
                             fftn(sense_reconstruction(imspace, input_csm, dim=-1), dim=(1, 2), norm="ortho")), "kspace",
-                                                              output_dir / name)).start()
+                                                              output_dir + name)).start()
                         # Save csm
                         Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(input_csm), "sensitivity_map",
-                                                              output_dir / name + '_csm')).start()
+                                                              output_dir + name + '_csm')).start()
                         # Save mask
                         Process(target=save_h5_outputs, args=(
                         torch.abs(mask).detach().cpu().numpy(), "mask", output_dir / 'mask')).start()
