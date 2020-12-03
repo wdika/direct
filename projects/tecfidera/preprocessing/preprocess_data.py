@@ -40,52 +40,54 @@ def preprocessing(root, output, export_type, device):
             for kspace in kspaces:
                 kspace = kspace.split('.')[0]
                 name = kspace.split('/')[-1].split('_')[0]
-                csm = kspace.split('_')[0] + '_csm'
 
-                logger.info(f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
-                            f" | scan: {name}")
+                if name != '501': # exclude the sense ref scan
+                    name = 'AXFLAIR' if name == '301' else 'AXT1_MPRAGE'
+                    csm = kspace.split('_')[0] + '_csm'
 
-                input_kspace = torch.from_numpy(readcfl(kspace)).to(device)
-                input_csm = torch.from_numpy(readcfl(csm)).to(device)
+                    logger.info(f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
+                                f" | scan: {name}")
 
-                imspace = preprocessing_ifft(input_kspace)
-                mask = extract_mask(input_kspace)
+                    input_kspace = torch.from_numpy(readcfl(kspace)).to(device)
+                    input_csm = torch.from_numpy(readcfl(csm)).to(device)
 
-                if export_type == 'png':
-                    output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                        -2] + '/' + name
-                    create_dir(output_dir)
+                    imspace = preprocessing_ifft(input_kspace)
+                    mask = extract_mask(input_kspace)
 
-                    # Save target (SENSE reconstructed) png images
-                    Process(target=save_png_outputs, args=(
-                        complex_tensor_to_real_np(sense_reconstruction(imspace, input_csm, dim=-1)),
-                        output_dir + '/axial/targets/')).start()
+                    if export_type == 'png':
+                        output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                            -2] + '/' + name
+                        create_dir(output_dir)
 
-                    # Save sense coil combined png images
-                    Process(target=save_png_outputs, args=(
-                        complex_tensor_to_real_np(csm_sense_coil_combination(input_csm, dim=-1)),
-                        output_dir + '/axial/csms/')).start()
+                        # Save target (SENSE reconstructed) png images
+                        Process(target=save_png_outputs, args=(
+                            complex_tensor_to_real_np(sense_reconstruction(imspace, input_csm, dim=-1)),
+                            output_dir + '/targets/')).start()
 
-                    # Save mask
-                    plt.imshow(torch.abs(mask).detach().cpu().numpy(), cmap='gray')
-                    plt.savefig(output_dir + '/axial/mask.png')
-                    plt.close()
+                        # Save sense coil combined png images
+                        Process(target=save_png_outputs, args=(
+                            complex_tensor_to_real_np(csm_sense_coil_combination(input_csm, dim=-1)),
+                            output_dir + '/csms/')).start()
 
-                elif export_type == 'h5':
-                    output_dir = output + '/h5/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                        -2] + '/' + name
-                    create_dir(output_dir)
+                        # Save mask
+                        plt.imshow(torch.abs(mask).detach().cpu().numpy(), cmap='gray')
+                        plt.savefig(output_dir + '/mask.png')
+                        plt.close()
 
-                    # Save kspace
-                    Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(
-                        fftn(sense_reconstruction(imspace, input_csm, dim=-1), dim=(1, 2), norm="ortho")), "kspace",
-                                                          output_dir + '/axial/' + name)).start()
-                    # Save csm
-                    Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(input_csm), "sensitivity_map",
-                                                          output_dir + '/axial/' + name + '_csm')).start()
-                    # Save mask
-                    Process(target=save_h5_outputs, args=(
-                    torch.abs(mask).detach().cpu().numpy(), "mask", output_dir + '/axial/' + 'mask')).start()
+                    elif export_type == 'h5':
+                        output_dir = output + '/h5/' + subject.split('/')[-2] + '/' + acquisition.split('/')[-2]
+                        create_dir(output_dir)
+
+                        # Save kspace
+                        Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(
+                            fftn(sense_reconstruction(imspace, input_csm, dim=-1), dim=(1, 2), norm="ortho")), "kspace",
+                                                              output_dir / name)).start()
+                        # Save csm
+                        Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(input_csm), "sensitivity_map",
+                                                              output_dir / name + '_csm')).start()
+                        # Save mask
+                        Process(target=save_h5_outputs, args=(
+                        torch.abs(mask).detach().cpu().numpy(), "mask", output_dir / 'mask')).start()
 
 
 def main(args):
