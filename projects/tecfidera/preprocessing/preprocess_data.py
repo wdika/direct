@@ -52,6 +52,10 @@ def preprocessing(root, output, export_type, device):
                     input_kspace = torch.from_numpy(readcfl(kspace)).to(device)
                     input_csm = torch.from_numpy(readcfl(csm)).to(device)
 
+                    # fixed number of slices, selected after checking the pngs
+                    input_kspace = slice_selection(input_kspace, start=17, end=217)
+                    input_csm = slice_selection(input_csm, start=17, end=217)
+
                     imspace = preprocessing_ifft(input_kspace)
                     mask = extract_mask(input_kspace)
 
@@ -85,7 +89,8 @@ def preprocessing(root, output, export_type, device):
                             output_dir + name)).start()
                         # Save csm
                         Process(target=save_h5_outputs, args=(
-                        complex_tensor_to_complex_np(input_csm), "sensitivity_map", output_dir + name + '_csm')).start()
+                            complex_tensor_to_complex_np(input_csm), "sensitivity_map",
+                            output_dir + name + '_csm')).start()
                         # Save mask
                         Process(target=save_h5_outputs, args=(
                             torch.abs(mask).detach().cpu().numpy(), "mask", output_dir + 'mask')).start()
