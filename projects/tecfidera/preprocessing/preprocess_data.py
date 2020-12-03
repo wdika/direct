@@ -52,6 +52,7 @@ def preprocessing(root, output, export_type, device):
                     input_imspace = preprocessing_ifft(torch.from_numpy(readcfl(kspace)).to(device))
                     input_kspace = fftn(input_imspace, dim=(1, 2), norm="ortho")
                     input_csm = torch.from_numpy(readcfl(csm)).to(device)
+                    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     # fixed number of slices, selected after checking the pngs
                     kspace = slice_selection(input_kspace, start=17, end=217)
@@ -59,8 +60,6 @@ def preprocessing(root, output, export_type, device):
                     csm = slice_selection(input_csm, start=17, end=217)
 
                     del input_kspace, input_imspace, input_csm
-
-                    mask = complex_tensor_to_real_np(extract_mask(kspace))
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
