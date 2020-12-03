@@ -56,7 +56,7 @@ def save_png_outputs(data, output_dir):
 def save_h5_outputs(data, output_dir):
     kspaces = defaultdict(list)
 
-    print(data)
+    print(len(data))
 
     for filename, slice_data, vol in data:
         kspaces[filename].append((slice_data, vol))
