@@ -76,9 +76,9 @@ def preprocessing(root, output, export_type, device):
                         -2] + '/' + name
                     create_dir(output_dir)
 
-                    kspace_outputs = (name, imspace.shape[0], complex_tensor_to_complex_np(
-                        fftn(sense_reconstruction(imspace, input_csm, dim=-1), dim=(1, 2), norm="ortho")))
-                    csm_outputs = (name + '_csm', input_csm.shape[0], complex_tensor_to_complex_np(input_csm))
+                    kspace_outputs = [name, imspace.shape[0], complex_tensor_to_complex_np(
+                        fftn(sense_reconstruction(imspace, input_csm, dim=-1), dim=(1, 2), norm="ortho"))]
+                    csm_outputs = [name + '_csm', input_csm.shape[0], complex_tensor_to_complex_np(input_csm)]
 
                     # Save kspace
                     Process(target=save_h5_outputs, args=(kspace_outputs, output_dir + '/axial/')).start()

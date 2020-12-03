@@ -55,7 +55,7 @@ def save_png_outputs(data, output_dir):
 
 def save_h5_outputs(data, output_dir):
     kspaces = defaultdict(list)
-    for filename, slice_data, vol in data:
+    for (filename, slice_data, vol) in data:
         kspaces[filename].append((slice_data, vol))
 
     kspace = {filename: np.stack([slice for _, slice in sorted(slices)]) for filename, slices in kspaces.items()}
