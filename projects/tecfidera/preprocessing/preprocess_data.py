@@ -49,17 +49,16 @@ def preprocessing(root, output, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
                         f" | scan: {name}")
 
-                    input_imspace = preprocessing_ifft(torch.from_numpy(readcfl(kspace)).to(device))
-                    input_kspace = fftn(input_imspace, dim=(0, 1, 2), norm="ortho")
-                    input_csm = torch.from_numpy(readcfl(csm)).to(device)
+                    input_kspace = torch.from_numpy(readcfl(kspace)).to(device)
+                    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
+                    input_imspace = preprocessing_ifft(input_kspace)
 
                     # fixed number of slices, selected after checking the pngs
-                    kspace = slice_selection(input_kspace, start=17, end=217)
+                    kspace = slice_selection(fftn(input_imspace, dim=(1, 2), norm="ortho"), start=17, end=217)
                     imspace = slice_selection(input_imspace, start=17, end=217)
-                    csm = slice_selection(input_csm, start=17, end=217)
-                    mask = extract_mask(kspace)
+                    csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=17, end=217)
 
-                    del input_kspace, input_imspace, input_csm
+                    del input_kspace, input_imspace
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
@@ -77,7 +76,7 @@ def preprocessing(root, output, export_type, device):
                             output_dir + '/csms/')).start()
 
                         # Save mask
-                        plt.imshow(torch.abs(mask).detach().cpu().numpy(), cmap='gray')
+                        plt.imshow(mask, cmap='gray')
                         plt.savefig(output_dir + '/mask.png')
                         plt.close()
 
@@ -86,16 +85,15 @@ def preprocessing(root, output, export_type, device):
                         create_dir(output_dir)
 
                         # Save kspace
-                        Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(kspace), "kspace",
-                            output_dir + name)).start()
+                        Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(kspace), "kspace",
+                                                              output_dir + name)).start()
+
                         # Save csm
-                        Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(csm), "sensitivity_map",
-                            output_dir + name + '_csm')).start()
+                        Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(csm), "sensitivity_map",
+                                                              output_dir + name + '_csm')).start()
+
                         # Save mask
-                        Process(target=save_h5_outputs,
-                                args=(torch.abs(mask).detach().cpu().numpy(), "mask", output_dir + 'mask')).start()
+                        Process(target=save_h5_outputs, args=(mask, "mask", output_dir + 'mask')).start()
 
 
 def main(args):
