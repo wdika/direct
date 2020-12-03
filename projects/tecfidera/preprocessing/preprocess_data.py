@@ -76,20 +76,16 @@ def preprocessing(root, output, export_type, device):
                         -2] + '/' + name
                     create_dir(output_dir)
 
-                    kspace_outputs = [name, imspace.shape[0], complex_tensor_to_complex_np(
-                        fftn(sense_reconstruction(imspace, input_csm, dim=-1), dim=(1, 2), norm="ortho"))]
-                    csm_outputs = [name + '_csm', input_csm.shape[0], complex_tensor_to_complex_np(input_csm)]
-
                     # Save kspace
-                    Process(target=save_h5_outputs, args=(kspace_outputs, output_dir + '/axial/')).start()
-
+                    Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(
+                        fftn(sense_reconstruction(imspace, input_csm, dim=-1), dim=(1, 2), norm="ortho")), "kspace",
+                                                          output_dir + '/axial/' + name)).start()
                     # Save csm
-                    Process(target=save_h5_outputs, args=(csm_outputs, output_dir + '/axial/')).start()
-
+                    Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(input_csm), "sensitivity_map",
+                                                          output_dir + '/axial/' + name + '_csm')).start()
                     # Save mask
-                    # output_filename = (output_dir + '/mask.h5').with_suffix(".h5")
-                    with h5py.File(output_dir + '/mask', "w") as f:
-                        f["mask"] = torch.abs(mask).detach().cpu().numpy()
+                    Process(target=save_h5_outputs, args=(
+                    torch.abs(mask).detach().cpu().numpy(), "mask", output_dir + '/axial/' + 'mask')).start()
 
 
 def main(args):

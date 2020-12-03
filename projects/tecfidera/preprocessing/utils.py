@@ -1,5 +1,4 @@
 # encoding: utf-8
-from collections import defaultdict
 from pathlib import Path
 
 import h5py
@@ -53,18 +52,9 @@ def save_png_outputs(data, output_dir):
         plt.close()
 
 
-def save_h5_outputs(data, output_dir):
-    kspaces = defaultdict(list)
-
-    print(len(data))
-
-    for filename, slice_data, vol in data:
-        kspaces[filename].append((slice_data, vol))
-
-    kspace = {filename: np.stack([slice for _, slice in sorted(slices)]) for filename, slices in kspaces.items()}
-    for filename in kspace:
-        with h5py.File(output_dir / filename, "w") as f:
-            f["kspace"] = kspace[filename]
+def save_h5_outputs(data, key, filename):
+    with h5py.File(filename, "w") as f:
+        f[key] = data
 
 
 def preprocessing_ifft(kspace):
