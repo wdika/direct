@@ -612,13 +612,18 @@ def build_mri_transforms(
             )
         ),
 
+    # TODO (dk): Modify the condition when using precomputed sensitivity maps
+    if estimate_sensitivity_maps:
+        mri_transforms += [
+            EstimateSensitivityMap(
+                kspace_key="kspace",
+                backward_operator=backward_operator,
+                type_of_map="unit" if not estimate_sensitivity_maps else "rss_estimate",
+                gaussian_sigma=sensitivity_maps_gaussian,
+            ),
+        ]
+
     mri_transforms += [
-        EstimateSensitivityMap(
-            kspace_key="kspace",
-            backward_operator=backward_operator,
-            type_of_map="unit" if not estimate_sensitivity_maps else "rss_estimate",
-            gaussian_sigma=sensitivity_maps_gaussian,
-        ),
         DeleteKeys(keys=["acs_mask"]),
         CropAndMask(
             crop,
@@ -628,6 +633,7 @@ def build_mri_transforms(
             random_crop_sampler_type=crop_type,
         ),
     ]
+
     if estimate_body_coil_image and mask_func is not None:
         mri_transforms.append(
             EstimateBodyCoilImage(
