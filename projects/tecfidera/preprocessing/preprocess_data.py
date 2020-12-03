@@ -55,8 +55,11 @@ def preprocessing(root, output, export_type, device):
                     del input_kspace
 
                     # fixed number of slices, selected after checking the pngs
-                    imspace = slice_selection(input_imspace, start=17, end=217)
-                    csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=17, end=217)
+                    start = 17 if name == 'AXFLAIR' else 22
+                    end = 217 if name == 'AXFLAIR' else 222
+
+                    imspace = slice_selection(input_imspace, start=start, end=end)
+                    csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
                     del input_imspace
 
                     if export_type == 'png':
