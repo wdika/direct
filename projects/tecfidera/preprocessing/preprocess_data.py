@@ -87,7 +87,8 @@ def preprocessing(root, output, export_type, device):
                     Process(target=save_h5_outputs, args=(csm_outputs, output_dir + '/axial/')).start()
 
                     # Save mask
-                    with h5py.File((output_dir / 'mask').with_suffix(".h5"), "w") as f:
+                    output_filename = (output_dir / 'mask').with_suffix(".h5")
+                    with h5py.File(output_filename, "w") as f:
                         f["mask"] = torch.abs(mask).detach().cpu().numpy()
 
 
