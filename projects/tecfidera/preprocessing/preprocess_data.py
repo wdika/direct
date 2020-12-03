@@ -52,12 +52,12 @@ def preprocessing(root, output, export_type, device):
                     input_imspace = preprocessing_ifft(torch.from_numpy(readcfl(kspace)).to(device))
                     input_kspace = fftn(input_imspace, dim=(1, 2), norm="ortho")
                     input_csm = torch.from_numpy(readcfl(csm)).to(device)
-                    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     # fixed number of slices, selected after checking the pngs
                     kspace = slice_selection(input_kspace, start=17, end=217)
                     imspace = slice_selection(input_imspace, start=17, end=217)
                     csm = slice_selection(input_csm, start=17, end=217)
+                    mask = extract_mask(kspace)
 
                     del input_kspace, input_imspace, input_csm
 
@@ -77,7 +77,7 @@ def preprocessing(root, output, export_type, device):
                             output_dir + '/csms/')).start()
 
                         # Save mask
-                        plt.imshow(mask, cmap='gray')
+                        plt.imshow(torch.abs(mask).detach().cpu().numpy(), cmap='gray')
                         plt.savefig(output_dir + '/mask.png')
                         plt.close()
 
@@ -94,7 +94,8 @@ def preprocessing(root, output, export_type, device):
                             complex_tensor_to_complex_np(csm), "sensitivity_map",
                             output_dir + name + '_csm')).start()
                         # Save mask
-                        Process(target=save_h5_outputs, args=(mask, "mask", output_dir + 'mask')).start()
+                        Process(target=save_h5_outputs,
+                                args=(torch.abs(mask).detach().cpu().numpy(), "mask", output_dir + 'mask')).start()
 
 
 def main(args):
