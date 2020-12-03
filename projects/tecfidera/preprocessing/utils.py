@@ -60,8 +60,7 @@ def save_h5_outputs(data, output_dir):
 
     kspace = {filename: np.stack([slice for _, slice in sorted(slices)]) for filename, slices in kspaces.items()}
     for filename in kspace:
-        output_filename = (output_dir / filename).with_suffix(".h5")
-        with h5py.File(output_filename, "w") as f:
+        with h5py.File(output_dir / filename, "w") as f:
             f["kspace"] = kspace[filename]
 
 
