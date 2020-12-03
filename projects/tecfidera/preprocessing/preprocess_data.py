@@ -83,7 +83,7 @@ def preprocessing(root, output, export_type, device):
                         plt.close()
 
                     elif export_type == 'h5':
-                        output_dir = output + '/h5/'
+                        output_dir = output + '/kspaces/'
                         create_dir(output_dir)
 
                         output_dir_csm = output + '/csm/'
