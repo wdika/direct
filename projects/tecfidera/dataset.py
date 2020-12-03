@@ -35,6 +35,7 @@ class TECFIDERADataset(H5SliceData):
             pass_h5s=pass_h5s,
             pass_dictionaries=kwargs.get("pass_dictionaries", None),
         )
+        print('Hey TECFIDERA!!!!!!!!!!!!!!!!')
         # Sampling rate in the slice-encode direction
         self.transform = transform
         self.pass_mask: bool = pass_mask
