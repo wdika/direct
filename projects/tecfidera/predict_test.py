@@ -12,7 +12,6 @@ import functools
 
 from direct.environment import Args
 from direct.data.mri_transforms import Compose
-from direct.common.subsample import CalgaryCampinasMaskFunc
 from direct.inference import setup_inference_save_to_h5, build_inference_transforms
 from direct.utils import set_all_seeds
 
@@ -29,13 +28,7 @@ class CreateSamplingMask:
         self.masks_dict = masks_dict
 
     def __call__(self, sample, **kwargs):
-        sample["sampling_mask"] = self.masks_dict[sample["filename"]][
-            np.newaxis, ..., np.newaxis
-        ]
-        sample["acs_mask"] = CalgaryCampinasMaskFunc(
-            accelerations=[]
-        ).circular_centered_mask(sample["kspace"].shape[1:], 18)
-
+        sample["sampling_mask"] = self.masks_dict[sample["filename"]][np.newaxis, ..., np.newaxis]
         return sample
 
 
