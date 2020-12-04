@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # Process all masks
     all_maps = args.masks.glob("*.h5")
     logger.info("Loading masks...")
-    masks_dict = {np.load(filename, allow_pickle=True) for filename in all_maps}
+    masks_dict = {filename for filename in all_maps}
     logger.info(f"Loaded {len(masks_dict)} masks.")
 
     # setup_inference_save_to_h5 = functools.partial(
