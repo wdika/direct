@@ -102,9 +102,7 @@ def preprocessing(root, output, export_type, device):
                                                               output_dir_csm + name)).start()
 
                         # Save mask
-                        # Process(target=save_npy_masks, args=(output_dir_mask + name, mask)).start()
                         np.save(output_dir_mask + name + ".npy", mask)
-
 
 
 def main(args):

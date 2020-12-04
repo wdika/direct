@@ -61,7 +61,7 @@ def inference_cfg_validation(cfg):
 def _get_transforms(masks_dict, env):
     dataset_cfg = env.cfg.inference.dataset
     transforms = build_inference_transforms(env, None, dataset_cfg)
-    # transforms = Compose([CreateSamplingMask(masks_dict), transforms])
+    transforms = Compose([CreateSamplingMask(masks_dict), transforms])
     return dataset_cfg, transforms
 
 
