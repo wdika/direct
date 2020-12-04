@@ -21,6 +21,7 @@ class TECFIDERADataset(H5SliceData):
         transform: Optional[Callable] = None,
         regex_filter: Optional[str] = None,
         filenames_filter: Optional[List[PathOrString]] = None,
+        sensitivity_maps: Optional[pathlib.Path] = None,
         pass_mask: bool = False,
         pass_h5s: Optional[Dict] = None,
         **kwargs,
@@ -28,6 +29,7 @@ class TECFIDERADataset(H5SliceData):
         super().__init__(
             root=root,
             filenames_filter=filenames_filter,
+            sensitivity_maps=sensitivity_maps,
             regex_filter=regex_filter,
             metadata=None,
             extra_keys=None,
@@ -38,11 +40,12 @@ class TECFIDERADataset(H5SliceData):
         # Sampling rate in the slice-encode direction
         self.transform = transform
         self.pass_mask: bool = pass_mask
+        self.sensitivity_maps = sensitivity_maps
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
 
-        print('sensitivity_map', sample["sensitivity_map"].shape)
+        print('sensitivity_maps', self.sensitivity_maps)
 
         if self.transform:
             sample = self.transform(sample)
