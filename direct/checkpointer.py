@@ -109,7 +109,7 @@ class Checkpointer:
 
         # TODO: Model and other checkpointable objects should be treated on the same footing
         self.logger.info(f"Loading model...")
-        self.logger.info(f"Loading checkpoint...", self.model, checkpoint["model"])
+        self.logger.info(f"Loading checkpoint...", checkpoint["model"])
 
         self._load_model(self.model, checkpoint["model"])
 
