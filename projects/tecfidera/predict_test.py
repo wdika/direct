@@ -127,6 +127,8 @@ if __name__ == "__main__":
     set_all_seeds(args.seed)
     logger.info("Attempt to load masks...")
 
+    print(args.masks.glob("*.h5"))
+
     # Process all masks
     all_maps = args.masks.glob("*.npy")
     logger.info("Loading masks...")
