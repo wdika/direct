@@ -125,6 +125,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     set_all_seeds(args.seed)
+    logger.info("Attempt to load masks...")
 
     # Process all masks
     all_maps = args.masks.glob("*.npy")
@@ -134,9 +135,9 @@ if __name__ == "__main__":
     }
     logger.info(f"Loaded {len(masks_dict)} masks.")
 
-    setup_inference_save_to_h5 = functools.partial(
-        setup_inference_save_to_h5, functools.partial(_get_transforms, masks_dict)
-    )
+    # setup_inference_save_to_h5 = functools.partial(
+    #     setup_inference_save_to_h5, functools.partial(_get_transforms, masks_dict)
+    # )
     #
     # direct.launch.launch(
     #     setup_inference_save_to_h5,
