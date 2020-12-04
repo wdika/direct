@@ -86,10 +86,10 @@ def preprocessing(root, output, export_type, device):
                         output_dir = output + '/kspaces/'
                         create_dir(output_dir)
 
-                        output_dir_csm = output + '/csm/'
+                        output_dir_csm = output + '/csms/'
                         create_dir(output_dir_csm)
 
-                        output_dir_mask = output + '/mask/'
+                        output_dir_mask = output + '/masks/'
                         create_dir(output_dir_mask)
 
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
@@ -104,7 +104,7 @@ def preprocessing(root, output, export_type, device):
                                                               output_dir_csm + name)).start()
 
                         # Save mask
-                        Process(target=save_h5_outputs, args=(mask, "masks", output_dir_mask + name)).start()
+                        Process(target=save_h5_outputs, args=(mask, "mask", output_dir_mask + name)).start()
 
 
 def main(args):
