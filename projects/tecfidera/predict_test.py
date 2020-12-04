@@ -33,7 +33,7 @@ class CreateSamplingMask:
         print('sampling_mask', sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sampling_mask"].shape)
         import matplotlib.pyplot as plt
 
-        target = np.abs(np.sum(np.fft.ifftn(sample["kspace"], axes=(0, 1)) * sample["sensitivity_map"].conj, -1))
+        target = np.abs(np.sqrt(np.sum(np.fft.ifftn(sample["kspace"], axes=(0, 1)) ** 2, -1)))
         sense = np.abs(np.sum(sample["sensitivity_map"].conj, -1))
         mask = np.abs(sample["sampling_mask"][..., 0])
 
