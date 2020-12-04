@@ -28,7 +28,7 @@ class CreateSamplingMask:
         self.masks_dict = masks_dict
 
     def __call__(self, sample, **kwargs):
-        sample["sampling_mask"] = self.masks_dict[sample["filename"]][np.newaxis, ..., np.newaxis]
+        sample["sampling_mask"] = self.masks_dict[sample["mask"]][np.newaxis, ..., np.newaxis]
         return sample
 
 
