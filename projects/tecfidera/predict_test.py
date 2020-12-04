@@ -62,7 +62,7 @@ def _get_transforms(masks_dict, env):
     dataset_cfg = env.cfg.inference.dataset
     transforms = build_inference_transforms(env, None, dataset_cfg)
 
-    print(masks_dict)
+    print('masks_dict', masks_dict)
 
     #transforms = Compose([CreateSamplingMask(masks_dict), transforms])
     return dataset_cfg, transforms
