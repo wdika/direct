@@ -1,8 +1,6 @@
 # coding=utf-8
 # Copyright (c) DIRECT Contributors
 import logging
-
-import h5py
 import torch
 import sys
 import pathlib
@@ -17,7 +15,7 @@ from direct.data.mri_transforms import Compose
 from direct.inference import setup_inference_save_to_h5, build_inference_transforms
 from direct.utils import set_all_seeds
 
-logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,7 +28,7 @@ class CreateSamplingMask:
         self.masks_dict = masks_dict
 
     def __call__(self, sample, **kwargs):
-        sample["sampling_mask"] = self.masks_dict[sample["mask"]][np.newaxis, ..., np.newaxis]
+        sample["sampling_mask"] = self.masks_dict[sample["filename"]][np.newaxis, ..., np.newaxis]
         return sample
 
 
@@ -63,7 +61,7 @@ def inference_cfg_validation(cfg):
 def _get_transforms(masks_dict, env):
     dataset_cfg = env.cfg.inference.dataset
     transforms = build_inference_transforms(env, None, dataset_cfg)
-    transforms = Compose([CreateSamplingMask(masks_dict), transforms])
+    # transforms = Compose([CreateSamplingMask(masks_dict), transforms])
     return dataset_cfg, transforms
 
 
@@ -129,9 +127,11 @@ if __name__ == "__main__":
     set_all_seeds(args.seed)
 
     # Process all masks
-    all_maps = args.masks.glob("*.h5")
+    all_maps = args.masks.glob("*.npy")
     logger.info("Loading masks...")
-    masks_dict = {filename.name: h5py.File(filename, 'r') for filename in all_maps}
+    masks_dict = {
+        filename.name.replace(".npy", ".h5"): np.load(filename) for filename in all_maps
+    }
     logger.info(f"Loaded {len(masks_dict)} masks.")
 
     setup_inference_save_to_h5 = functools.partial(

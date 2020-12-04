@@ -536,7 +536,7 @@ class ToTensor(DirectClass):
             ).float()
         if "target" in sample:
             sample["target"] = sample["target"].refine_names(*names)
-        if "sampling_mask" or "mask" in sample:
+        if "sampling_mask" in sample:
             sample["sampling_mask"] = torch.from_numpy(sample["sampling_mask"]).byte()
         if "acs_mask" in sample:
             sample["acs_mask"] = torch.from_numpy(sample["acs_mask"])
