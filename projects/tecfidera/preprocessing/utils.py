@@ -57,6 +57,10 @@ def save_h5_outputs(data, key, filename):
         f[key] = data
 
 
+def save_npy_masks(mask, filename):
+    np.save(filename + ".npy", mask)
+
+
 def slice_selection(data, start, end):
     return data[start:end]
 
