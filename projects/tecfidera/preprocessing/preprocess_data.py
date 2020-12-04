@@ -52,7 +52,6 @@ def preprocessing(root, output, export_type, device):
                     input_kspace = torch.from_numpy(readcfl(kspace)).to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
                     input_imspace = preprocessing_ifft(input_kspace)
-                    del input_kspace
 
                     # fixed number of slices, selected after checking the pngs
                     start = 17 if name == 'AXFLAIR' else 22
@@ -104,7 +103,8 @@ def preprocessing(root, output, export_type, device):
                                                               output_dir_csm + name)).start()
 
                         # Save mask
-                        Process(target=save_npy_masks, args=(output_dir_mask + name, mask)).start()
+                        # Process(target=save_npy_masks, args=(output_dir_mask + name, mask)).start()
+                        np.saveo(output_dir_mask / (input_kspace.stem + ".npy"), mask)
 
 
 
