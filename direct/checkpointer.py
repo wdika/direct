@@ -109,8 +109,6 @@ class Checkpointer:
 
         # TODO: Model and other checkpointable objects should be treated on the same footing
         self.logger.info(f"Loading model...")
-        self.logger.info(f"Loading checkpoint...", checkpoint["model"])
-
         self._load_model(self.model, checkpoint["model"])
 
         for key in checkpointable_objects:
@@ -142,6 +140,9 @@ class Checkpointer:
         # Link has more elaborate checking for incompatibles in _log_incompatible_keys
         incompatible = obj.load_state_dict(state_dict, strict=False)
         if incompatible.missing_keys:
+            self.logger.warning(
+                f"Missing keys provided which cannot be loaded: {incompatible.missing_keys}."
+            )
             raise NotImplementedError
         if incompatible.unexpected_keys:
             self.logger.warning(
