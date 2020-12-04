@@ -363,6 +363,7 @@ def build_dataset_from_input(
     initial_images,
     initial_kspaces,
     filenames_filter,
+    sensitivity_maps,
     data_root,
     pass_dictionaries,
 ):
@@ -384,6 +385,7 @@ def build_dataset_from_input(
     dataset = build_dataset(
         root=data_root,
         filenames_filter=filenames_filter,
+        sensitivity_maps=sensitivity_maps,
         transforms=transforms,
         pass_h5s=pass_h5s,
         pass_dictionaries=pass_dictionaries,

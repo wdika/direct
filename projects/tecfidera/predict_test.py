@@ -11,7 +11,7 @@ import direct.launch
 import functools
 
 from direct.environment import Args
-from direct.data.mri_transforms import Compose, ToTensor
+from direct.data.mri_transforms import Compose
 from direct.inference import setup_inference_save_to_h5, build_inference_transforms
 from direct.utils import set_all_seeds
 
