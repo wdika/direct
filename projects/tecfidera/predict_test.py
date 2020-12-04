@@ -127,6 +127,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     set_all_seeds(args.seed)
+    logger.info("Attempt to load masks...")
 
     # Process all masks
     all_maps = args.masks.glob("*.h5")
@@ -136,25 +137,25 @@ if __name__ == "__main__":
     }
     logger.info(f"Loaded {len(masks_dict)} masks.")
 
-    setup_inference_save_to_h5 = functools.partial(
-        setup_inference_save_to_h5, functools.partial(_get_transforms, masks_dict)
-    )
-
-    direct.launch.launch(
-        setup_inference_save_to_h5,
-        args.num_machines,
-        args.num_gpus,
-        args.machine_rank,
-        args.dist_url,
-        args.name,
-        args.data_root,
-        args.experiment_directory,
-        args.output_directory,
-        args.filenames_filter,
-        args.checkpoint,
-        args.device,
-        args.num_workers,
-        args.machine_rank,
-        args.mixed_precision,
-        args.debug,
-    )
+    # setup_inference_save_to_h5 = functools.partial(
+    #     setup_inference_save_to_h5, functools.partial(_get_transforms, masks_dict)
+    # )
+    #
+    # direct.launch.launch(
+    #     setup_inference_save_to_h5,
+    #     args.num_machines,
+    #     args.num_gpus,
+    #     args.machine_rank,
+    #     args.dist_url,
+    #     args.name,
+    #     args.data_root,
+    #     args.experiment_directory,
+    #     args.output_directory,
+    #     args.filenames_filter,
+    #     args.checkpoint,
+    #     args.device,
+    #     args.num_workers,
+    #     args.machine_rank,
+    #     args.mixed_precision,
+    #     args.debug,
+    # )
