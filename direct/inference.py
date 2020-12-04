@@ -25,6 +25,7 @@ def setup_inference_save_to_h5(
     base_directory,
     output_directory,
     filenames_filter,
+    sensitivity_maps,
     checkpoint,
     device,
     num_workers: int,
@@ -45,6 +46,7 @@ def setup_inference_save_to_h5(
     base_directory :
     output_directory :
     filenames_filter :
+    sensitivity_maps :
     checkpoint :
     device :
     num_workers :
@@ -86,6 +88,7 @@ def setup_inference_save_to_h5(
             checkpoint=checkpoint,
             num_workers=num_workers,
             filenames_filter=curr_filenames_filter,
+            sensitivity_maps=sensitivity_maps,
         )
 
         # Perhaps aggregation to the main process would be most optimal here before writing.
@@ -120,6 +123,7 @@ def inference_on_environment(
     checkpoint,
     num_workers=0,
     filenames_filter=None,
+    sensitivity_maps=None,
 ):
 
     logger.warning(
@@ -136,6 +140,7 @@ def inference_on_environment(
         initial_images,
         initial_kspaces,
         filenames_filter,
+        sensitivity_maps,
         data_root,
         pass_dictionaries,
     )
