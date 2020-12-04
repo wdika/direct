@@ -38,8 +38,7 @@ def preprocessing(root, output, export_type, device):
             kspaces = glob.glob(acquisition + "*kspace.cfl")
 
             for kspace in kspaces:
-                kspace = kspace.split('.')[0]
-                name = kspace.split('/')[-1].split('_')[0]
+                name = kspace.split('.')[0].split('/')[-1].split('_')[0]
 
                 if name != '501':  # exclude the sense ref scan
                     name = 'AXFLAIR' if name == '301' else 'AXT1_MPRAGE'
@@ -49,7 +48,7 @@ def preprocessing(root, output, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
                         f" | scan: {name}")
 
-                    input_kspace = torch.from_numpy(readcfl(kspace)).to(device)
+                    input_kspace = torch.from_numpy(readcfl(kspace.split('.')[0])).to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
                     input_imspace = preprocessing_ifft(input_kspace)
 
@@ -104,7 +103,7 @@ def preprocessing(root, output, export_type, device):
 
                         # Save mask
                         # Process(target=save_npy_masks, args=(output_dir_mask + name, mask)).start()
-                        np.save(output_dir_mask / (name.stem + ".npy"), mask)
+                        np.save(output_dir_mask / (kspace.stem + ".npy"), mask)
 
 
 
