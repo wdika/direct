@@ -43,7 +43,7 @@ class TECFIDERADataset(H5SliceData):
         sample = super().__getitem__(idx)
 
         for k,v in enumerate(sample):
-            print(k, v.keys)
+            print(k, v)
 
         if self.pass_mask:
             # mask should be shape (1, h, w, 1) mask provided is only w
