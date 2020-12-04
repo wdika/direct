@@ -125,16 +125,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     set_all_seeds(args.seed)
-    logger.info("Attempt to load masks...")
-
-    print(args.masks.glob("*.h5"))
 
     # Process all masks
-    all_maps = args.masks.glob("*.npy")
+    all_maps = args.masks.glob("*.h5")
     logger.info("Loading masks...")
-    masks_dict = {
-        filename.name.replace(".npy", ".h5"): np.load(filename) for filename in all_maps
-    }
+    masks_dict = {np.load(filename) for filename in all_maps}
     logger.info(f"Loaded {len(masks_dict)} masks.")
 
     # setup_inference_save_to_h5 = functools.partial(
