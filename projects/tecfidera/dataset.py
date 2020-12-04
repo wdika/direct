@@ -50,13 +50,13 @@ class TECFIDERADataset(H5SliceData):
         import matplotlib.pyplot as plt
 
         target = np.abs(np.sqrt(np.sum(np.fft.ifftn(sample["kspace"], axes=(0, 1)) ** 2, -1)))
-        sense = np.abs(np.sum(sample["sensitivity_map"].conj, -1))
+        #sense = np.abs(np.sum(sample["sensitivity_map"].conj, -1))
         #mask = np.abs(sample["mask"])
 
-        plt.subplot(1, 2, 1)
+        #plt.subplot(1, 2, 1)
         plt.imshow(target, cmap='gray')
-        plt.subplot(1, 2, 2)
-        plt.imshow(sense, cmap='gray')
+        #plt.subplot(1, 2, 2)
+        #plt.imshow(sense, cmap='gray')
         #plt.subplot(1, 3, 3)
         #plt.imshow(mask, cmap='gray')
         plt.show()
