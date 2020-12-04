@@ -104,7 +104,7 @@ def preprocessing(root, output, export_type, device):
 
                         # Save mask
                         # Process(target=save_npy_masks, args=(output_dir_mask + name, mask)).start()
-                        np.save(output_dir_mask / (mask.stem + ".npy"), mask)
+                        np.save(output_dir_mask / (name.stem + ".npy"), mask)
 
 
 
