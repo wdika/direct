@@ -137,7 +137,7 @@ def inference_on_environment(
         initial_images,
         initial_kspaces,
         filenames_filter,
-        sensitivity_maps,
+        #sensitivity_maps,
         data_root,
         pass_dictionaries,
     )
