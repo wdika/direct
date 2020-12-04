@@ -53,7 +53,7 @@ def save_png_outputs(data, output_dir):
 
 
 def save_h5_outputs(data, key, filename):
-    with h5py.File(filename, "w") as f:
+    with h5py.File(filename.with_suffix(".h5"), "w") as f:
         f[key] = data
 
 
