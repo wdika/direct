@@ -137,22 +137,22 @@ if __name__ == "__main__":
     setup_inference_save_to_h5 = functools.partial(
         setup_inference_save_to_h5, functools.partial(_get_transforms, masks_dict)
     )
-
-    direct.launch.launch(
-        setup_inference_save_to_h5,
-        args.num_machines,
-        args.num_gpus,
-        args.machine_rank,
-        args.dist_url,
-        args.name,
-        args.data_root,
-        args.experiment_directory,
-        args.output_directory,
-        args.filenames_filter,
-        args.checkpoint,
-        args.device,
-        args.num_workers,
-        args.machine_rank,
-        args.mixed_precision,
-        args.debug,
-    )
+    #
+    # direct.launch.launch(
+    #     setup_inference_save_to_h5,
+    #     args.num_machines,
+    #     args.num_gpus,
+    #     args.machine_rank,
+    #     args.dist_url,
+    #     args.name,
+    #     args.data_root,
+    #     args.experiment_directory,
+    #     args.output_directory,
+    #     args.filenames_filter,
+    #     args.checkpoint,
+    #     args.device,
+    #     args.num_workers,
+    #     args.machine_rank,
+    #     args.mixed_precision,
+    #     args.debug,
+    # )
