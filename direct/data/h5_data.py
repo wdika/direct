@@ -204,7 +204,7 @@ class H5SliceData(DirectClass, Dataset):
         # If the sensitivity maps exist, load these
         if self.sensitivity_maps:
             sensitivity_map, _ = self.get_slice_data(
-                self.sensitivity_maps / filename.name, slice_no
+                self.sensitivity_maps / filename.name, slice_no, key="sensitivity_map"
             )
             sample["sensitivity_map"] = sensitivity_map
 
