@@ -130,7 +130,7 @@ if __name__ == "__main__":
     all_maps = args.masks.glob("*.h5")
     logger.info("Loading masks...")
     masks_dict = {
-        filename.name: np.load(filename, allow_pickle=True) for filename in all_maps
+        filename.name: filename for filename in all_maps
     }
     logger.info(f"Loaded {len(masks_dict)} masks.")
 
