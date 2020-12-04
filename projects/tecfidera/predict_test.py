@@ -28,9 +28,10 @@ class CreateSamplingMask:
         self.masks_dict = masks_dict
 
     def __call__(self, sample, **kwargs):
+        sample["sampling_mask"] = self.masks_dict[sample["filename"]][..., np.newaxis]
+
         print('sampling_mask', sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sampling_mask"].shape)
         import matplotlib.pyplot as plt
-        import numpy as np
 
         target = np.abs(np.sum(np.fft.ifftn(sample["kspace"], axes=(0, 1)) * sample["sensitivity_map"].conj, -1))
         sense = np.abs(np.sum(sample["sensitivity_map"].conj, -1))
@@ -44,8 +45,6 @@ class CreateSamplingMask:
         plt.imshow(mask, cmap='gray')
         plt.show()
 
-
-        sample["sampling_mask"] = self.masks_dict[sample["filename"]][..., np.newaxis]
         return sample
 
 
