@@ -162,4 +162,5 @@ if __name__ == "__main__":
         args.machine_rank,
         args.mixed_precision,
         args.debug,
+        args.sensitivity_maps,
     )
