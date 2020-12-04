@@ -14,6 +14,7 @@ from direct.types import PathOrString
 
 from torch.utils.data import Dataset, IterableDataset
 
+from projects.tecfidera.dataset import TECFIDERADataset
 
 try:
     import ismrmrd

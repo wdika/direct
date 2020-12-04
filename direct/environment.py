@@ -71,8 +71,7 @@ def load_model_from_name(model_name):
 
 def load_dataset_config(dataset_name):
     dataset_config = str_to_class(
-        #"direct.data.datasets_config", dataset_name + "Config"
-        "projects.tecfidera.data.dataset_config", dataset_name + "Config"
+        "direct.data.datasets_config", dataset_name + "Config"
     )
     return dataset_config
 
