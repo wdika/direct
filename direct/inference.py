@@ -120,7 +120,6 @@ def inference_on_environment(
     checkpoint,
     num_workers=0,
     filenames_filter=None,
-    sensitivity_maps=None,
 ):
 
     logger.warning(
@@ -137,7 +136,6 @@ def inference_on_environment(
         initial_images,
         initial_kspaces,
         filenames_filter,
-        #sensitivity_maps,
         data_root,
         pass_dictionaries,
     )
