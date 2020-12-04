@@ -44,7 +44,3 @@ class FastMRIConfig(DatasetConfig):
 class CalgaryCampinasConfig(DatasetConfig):
     pass_mask: bool = False
     crop_outer_slices: bool = False
-
-@dataclass
-class TECFIDERAConfig(DatasetConfig):
-    pass_mask: bool = False
