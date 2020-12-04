@@ -156,11 +156,11 @@ if __name__ == "__main__":
         args.experiment_directory,
         args.output_directory,
         args.filenames_filter,
+        args.sensitivity_maps,
         args.checkpoint,
         args.device,
         args.num_workers,
         args.machine_rank,
         args.mixed_precision,
         args.debug,
-        args.sensitivity_maps,
     )
