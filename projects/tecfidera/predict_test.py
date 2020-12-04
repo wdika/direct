@@ -30,6 +30,8 @@ class CreateSamplingMask:
     def __call__(self, sample, **kwargs):
         sample["sampling_mask"] = self.masks_dict[sample["filename"]][..., np.newaxis]
 
+        print(sample["sensitivity_map"])
+
         print('sampling_mask', sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sampling_mask"].shape)
         import matplotlib.pyplot as plt
 
