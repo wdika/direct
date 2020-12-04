@@ -1,6 +1,8 @@
 # coding=utf-8
 # Copyright (c) DIRECT Contributors
 import logging
+
+import h5py
 import torch
 import sys
 import pathlib
@@ -130,7 +132,7 @@ if __name__ == "__main__":
     all_maps = args.masks.glob("*.h5")
     logger.info("Loading masks...")
     masks_dict = {
-        filename.name: filename for filename in all_maps
+        filename.name: h5py.File(filename, 'r') for filename in all_maps
     }
     print(masks_dict)
     logger.info(f"Loaded {len(masks_dict)} masks.")
