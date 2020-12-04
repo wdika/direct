@@ -313,6 +313,7 @@ class EstimateSensitivityMap(DirectClass):
 
     def __call__(self, sample):
         if "sensitivity_map" in sample:
+            sample["sensitivity_map"] = sample["sensitivity_map"].refine_names(*sample["kspace"].names).to(sample["kspace"].device)
             return sample
         else:
             if self.type_of_map == "unit":
