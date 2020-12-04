@@ -1,6 +1,7 @@
 # coding=utf-8
 __author__ = 'Dimitrios Karkalousos'
 
+import numpy as np
 import pathlib
 
 from typing import Callable, Dict, Optional, Any, List
@@ -34,13 +35,21 @@ class TECFIDERADataset(H5SliceData):
             pass_h5s=pass_h5s,
             pass_dictionaries=kwargs.get("pass_dictionaries", None),
         )
-        print('Hey TECFIDERA!!!!!!!!!!!!!!!!')
         # Sampling rate in the slice-encode direction
         self.transform = transform
         self.pass_mask: bool = pass_mask
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
+
+        if self.pass_mask:
+            # mask should be shape (1, h, w, 1) mask provided is only w
+            sampling_mask = sample["mask"]
+            del sample["mask"]
+
+            sample["sampling_mask"] = sampling_mask[np.newaxis, ..., np.newaxis]
+
+            print('Hey TECFIDERA mask!!!!!!!!!!!!!!!!', sample["sampling_mask"].shape)
 
         if self.transform:
             sample = self.transform(sample)
