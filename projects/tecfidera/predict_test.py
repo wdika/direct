@@ -28,6 +28,8 @@ class CreateSamplingMask:
         self.masks_dict = masks_dict
 
     def __call__(self, sample, **kwargs):
+        print('sensitivity_maps', sample["sensitivity_map"].shape)
+
         sample["sampling_mask"] = self.masks_dict[sample["filename"]][..., np.newaxis]
         print('sampling_mask', sample["kspace"].shape, sample["sampling_mask"].shape)
         return sample
