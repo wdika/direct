@@ -49,3 +49,4 @@ class CalgaryCampinasConfig(DatasetConfig):
 @dataclass
 class TECFIDERAConfig(DatasetConfig):
     pass_mask: bool = False
+    sensitivity_maps: Optional[str] = None

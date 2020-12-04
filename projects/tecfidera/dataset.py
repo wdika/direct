@@ -46,7 +46,6 @@ class TECFIDERADataset(H5SliceData):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
 
-
         if self.transform:
             sample = self.transform(sample)
 
