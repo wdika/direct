@@ -99,15 +99,16 @@ def preprocessing(root, output, export_type, device):
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                         # Save kspace
+                        k = fftn(imspace, dim=(1, 2), norm="ortho")
                         Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")), "kspace",
+                            complex_tensor_to_complex_np(k), "kspace",
                             output_dir + name)).start()
 
                         csm = slice_selection(
                             torch.from_numpy(
                                 bart(1, f"caldir 60",
                                      complex_tensor_to_complex_np(
-                                         imspace.permute(1, 2, 0, 3)
+                                         k.permute(1, 2, 0, 3)
                                      )
                                      )
                             ).permute(2, 0, 1, 3), start=start, end=end)
