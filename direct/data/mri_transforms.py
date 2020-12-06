@@ -214,6 +214,14 @@ class CropAndMask(DirectClass):
         print(sample["target"].shape, sample["kspace"].shape, sample["masked_kspace"].shape,
               sample["sensitivity_map"].shape, sample["sampling_mask"].shape, )
 
+        import matplotlib.pyplot as plt
+        backprojected_masked_kspace = self.backward_operator(sample["masked_kspace"])
+        backprojected_masked_kspace = backprojected_masked_kspace * T.conjugate(sample["sensitivity_map"])
+        backprojected_masked_kspace = torch.sum(backprojected_masked_kspace, dim="coil")
+        backprojected_masked_kspace = T.tensor_to_complex_numpy(backprojected_masked_kspace)
+        plt.imshow(np.abs(backprojected_masked_kspace), cmap='gray')
+        plt.show()
+
         return sample
 
 
