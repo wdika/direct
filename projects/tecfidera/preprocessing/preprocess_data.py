@@ -1,6 +1,7 @@
 # encoding: utf-8
 __author__ = 'Dimitrios Karkalousos'
 
+import os
 import argparse
 import glob
 import logging
@@ -12,6 +13,10 @@ from torch.fft import fftn
 from tqdm import tqdm
 
 from projects.tecfidera.preprocessing.utils import *
+
+os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00"
+sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
+from bart import bart
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,7 +62,11 @@ def preprocessing(root, output, export_type, device):
                     end = 217 if name == 'AXFLAIR' else 222
 
                     imspace = slice_selection(input_imspace, start=start, end=end)
-                    csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
+                    # csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
+                    csm = bart(1, f"caldir -r 30", input_kspace)
+                    print(csm.shape)
+                    csm = slice_selection(torch.from_numpy(csm).to(device), start=start, end=end)
+                    print(csm.shape)
                     del input_imspace
 
                     if export_type == 'png':
