@@ -45,10 +45,7 @@ class TECFIDERADataset(H5SliceData):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
 
-
         if self.transform:
             sample = self.transform(sample)
-
-        print(sample["masked_kspace"].shape, sample["sensitivity_map"].shape)
 
         return sample
