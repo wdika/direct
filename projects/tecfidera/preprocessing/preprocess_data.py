@@ -63,7 +63,7 @@ def preprocessing(root, output, export_type, device):
 
                     imspace = slice_selection(input_imspace, start=start, end=end)
                     # csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
-                    csm = bart(1, f"caldir -r 30", input_kspace)
+                    csm = bart(1, f"caldir -r 30", complex_tensor_to_complex_np(input_kspace))
                     print(csm.shape)
                     csm = slice_selection(torch.from_numpy(csm).to(device), start=start, end=end)
                     print(csm.shape)
