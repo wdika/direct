@@ -45,12 +45,12 @@ class TECFIDERADataset(H5SliceData):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
 
-        if self.pass_mask:
-            print('pass maskkkkkkkkkkkkkkkkkk')
-            sample["mask"] = (sample["sampling_mask"] * np.ones(sample["kspace"].shape).astype(np.int32))[
-                ..., np.newaxis
-            ]
-            print(sample["mask"].shape)
+        # if self.pass_mask:
+        #     print('pass maskkkkkkkkkkkkkkkkkk')
+        #     sample["mask"] = (sample["sampling_mask"] * np.ones(sample["kspace"].shape).astype(np.int32))[
+        #         ..., np.newaxis
+        #     ]
+        #     print(sample["mask"].shape)
 
         if self.transform:
             sample = self.transform(sample)
