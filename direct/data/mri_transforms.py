@@ -630,18 +630,17 @@ def build_mri_transforms(
             ),
         ]
 
-    if crop or mask_func:
-        mri_transforms += [
-            DeleteKeys(keys=["acs_mask"]),
-            CropAndMask(
-                crop,
-                mask_func,
-                forward_operator=forward_operator,
-                backward_operator=backward_operator,
-                image_space_center_crop=image_center_crop,
-                random_crop_sampler_type=crop_type,
-            ),
-        ]
+    mri_transforms += [
+        DeleteKeys(keys=["acs_mask"]),
+        CropAndMask(
+            crop,
+            mask_func,
+            forward_operator=forward_operator,
+            backward_operator=backward_operator,
+            image_space_center_crop=image_center_crop,
+            random_crop_sampler_type=crop_type,
+        ),
+    ]
 
     if estimate_body_coil_image and mask_func is not None:
         mri_transforms.append(
