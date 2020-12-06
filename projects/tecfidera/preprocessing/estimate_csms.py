@@ -57,7 +57,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
                     coil_sensitivities_maps = []
                     for ref_kspace in range(input_sense_ref_scan_kspace.shape[0]):
                         coil_sensitivities_maps.append(bart(1, f"caldir {calibration_region_size}",
-                                                            np.expand_dims(input_sense_ref_scan_kspace[0], 0)))
+                                                            np.expand_dims(input_sense_ref_scan_kspace[0], -2)))
                     input_csm = np.concatenate(coil_sensitivities_maps, 0)
 
                     csm = np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype),
