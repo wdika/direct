@@ -211,6 +211,9 @@ class CropAndMask(DirectClass):
         if sensitivity_map is not None:
             sample["sensitivity_map"] = sensitivity_map
 
+        print(sample["target"].shape, sample["kspace"].shape, sample["masked_kspace"].shape,
+              sample["sensitivity_map"].shape, sample["sampling_mask"].shape, )
+
         return sample
 
 

@@ -52,8 +52,5 @@ class TECFIDERADataset(H5SliceData):
 
         if self.transform:
             sample = self.transform(sample)
-        #
-        # print(sample["kspace"].shape, sample["masked_kspace"].shape,
-        #       sample["sensitivity_map"].shape, sample["sampling_mask"].shape, )
 
         return sample
