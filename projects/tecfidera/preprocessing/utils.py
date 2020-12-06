@@ -52,10 +52,9 @@ def save_png_outputs(data, output_dir):
         plt.close()
 
 
-def save_h5_outputs(output):
-    for (data, key, filename) in output:
-        with h5py.File(filename + ".h5", "w") as f:
-            f[key] = data
+def save_h5_outputs(data, key, filename):
+    with h5py.File(filename + ".h5", "w") as f:
+        f[key] = data
 
 
 def slice_selection(data, start, end):
