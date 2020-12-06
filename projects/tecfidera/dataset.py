@@ -40,10 +40,15 @@ class TECFIDERADataset(H5SliceData):
         # Sampling rate in the slice-encode direction
         self.transform = transform
         self.pass_mask: bool = pass_mask
-        # self.sensitivity_maps = sensitivity_maps
+        self.sensitivity_maps = sensitivity_maps
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
+
+        sample["kspace"] = np.ascontiguousarray(sample["kspace"].transpose(2, 0, 1))
+
+        if self.sensitivity_maps is not None:
+            sample["sensitivity_map"] = np.ascontiguousarray(sample["sensitivity_map"].transpose(2, 0, 1))
 
         if self.transform:
             sample = self.transform(sample)
