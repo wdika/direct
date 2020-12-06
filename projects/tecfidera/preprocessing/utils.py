@@ -5,7 +5,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.fft import ifftn
+from torch.fft import ifftn, fftn
 
 from direct.data import transforms as T
 
@@ -70,9 +70,23 @@ def preprocessing_ifft(kspace):
 
     Returns
     -------
-    image space tensor of the axial plane transformed with the correct/fixed preprocessing steps
+    kspace tensor of the axial plane transformed with the correct/fixed preprocessing steps to estimate sense maps
     """
     return T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=0)
+
+
+def preprocessing_csm_fft(kspace):
+    """
+
+    Parameters
+    ----------
+    kspace : torch.Tensor
+
+    Returns
+    -------
+    image space tensor of the axial plane transformed with the correct/fixed preprocessing steps
+    """
+    return T.fftshift(fftn(preprocessing_ifft(kspace), dim=(1, 2), norm="ortho"), dim=(1, 2))
 
 
 def extract_mask(kspace):
