@@ -228,7 +228,7 @@ class CropAndMask(DirectClass):
         plt.subplot(1, 7, 2)
         plt.imshow(np.abs(sense), cmap='gray')
         plt.subplot(1, 7, 3)
-        plt.imshow(np.angle(sense2), cmap='gray')
+        plt.imshow(np.angle(sense), cmap='gray')
         plt.subplot(1, 7, 4)
         plt.imshow(np.abs(backprojected_masked_kspace), cmap='gray')
         plt.subplot(1, 7, 5)
