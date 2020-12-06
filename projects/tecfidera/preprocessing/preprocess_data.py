@@ -1,7 +1,6 @@
 # encoding: utf-8
 __author__ = 'Dimitrios Karkalousos'
 
-import os
 import argparse
 import glob
 import logging
@@ -13,10 +12,6 @@ from torch.fft import fftn
 from tqdm import tqdm
 
 from projects.tecfidera.preprocessing.utils import *
-
-os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00"
-sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
-from bart import bart
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,21 +50,23 @@ def preprocessing(root, output, export_type, device):
 
                     input_kspace = torch.from_numpy(readcfl(kspace.split('.')[0])).to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-                    input_imspace = preprocessing_ifft(input_kspace)
+                    input_imspace = complex_tensor_to_complex_np(preprocessing_ifft(input_kspace))
+                    input_csm = readcfl(csm)
+
+                    # Normalize data
+                    imspace = torch.from_numpy(np.where(input_imspace == 0, np.array([0.0], dtype=input_imspace.dtype),
+                                                        (input_imspace / np.max(input_imspace))))
+                    csm = torch.from_numpy(np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype),
+                                                    (input_csm / np.max(input_csm))))
+
+                    del input_imspace, input_csm
 
                     # fixed number of slices, selected after checking the pngs
                     start = 17 if name == 'AXFLAIR' else 22
                     end = 217 if name == 'AXFLAIR' else 222
 
-                    imspace = complex_tensor_to_complex_np(slice_selection(input_imspace, start=start, end=end))
-                    csm = slice_selection(readcfl(csm), start=start, end=end)
-                    del input_imspace
-
-                    imspace = torch.from_numpy(imspace / np.max(imspace))
-                    csm = torch.from_numpy(csm / np.max(csm))
-
-                    print(np.max(complex_tensor_to_real_np(imspace)), np.min(complex_tensor_to_real_np(imspace)),
-                          np.max(complex_tensor_to_real_np(csm)), np.min(complex_tensor_to_real_np(csm)))
+                    imspace = slice_selection(imspace, start=start, end=end)
+                    csm = slice_selection(csm, start=start, end=end)
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
