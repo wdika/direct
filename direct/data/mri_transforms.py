@@ -319,10 +319,7 @@ class EstimateSensitivityMap(DirectClass):
         return acs_image
 
     def __call__(self, sample):
-        if "sensitivity_map" in sample:
-            sample["sensitivity_map"] = sample["sensitivity_map"].refine_names(*sample["kspace"].names).to(sample["kspace"].device)
-
-        elif self.type_of_map == "unit":
+        if self.type_of_map == "unit":
             kspace = sample["kspace"]
             sensitivity_map = torch.zeros(kspace.shape).float()
             # TODO(jt): Named variant, this assumes the complex channel is last.
@@ -623,14 +620,15 @@ def build_mri_transforms(
         ),
 
     # TODO (dk): Modify the condition when using precomputed sensitivity maps
-    mri_transforms += [
-        EstimateSensitivityMap(
-            kspace_key="kspace",
-            backward_operator=backward_operator,
-            type_of_map="unit" if not estimate_sensitivity_maps else "rss_estimate",
-            gaussian_sigma=sensitivity_maps_gaussian,
-        ),
-    ]
+    if estimate_sensitivity_maps:
+        mri_transforms += [
+            EstimateSensitivityMap(
+                kspace_key="kspace",
+                backward_operator=backward_operator,
+                type_of_map="unit" if not estimate_sensitivity_maps else "rss_estimate",
+                gaussian_sigma=sensitivity_maps_gaussian,
+            ),
+        ]
 
     mri_transforms += [
         DeleteKeys(keys=["acs_mask"]),
