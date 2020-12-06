@@ -208,12 +208,6 @@ class H5SliceData(DirectClass, Dataset):
             )
             sample["sensitivity_map"] = sensitivity_map
 
-            print(sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sensitivity_map"].dtype)
-            import matplotlib.pyplot as plt
-            plt.imshow(np.abs(np.sum(np.fft.ifftn(sample["kspace"], axes=(0,1)
-                              ) * sample["sensitivity_map"].conj(), -1)), cmap='gray')
-            plt.show()
-
         if metadata is not None:
             sample["metadata"] = metadata
 

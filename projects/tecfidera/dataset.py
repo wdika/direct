@@ -45,17 +45,12 @@ class TECFIDERADataset(H5SliceData):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
 
-        print(sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sensitivity_map"].dtype)
-        import matplotlib.pyplot as plt
-
-        sense = np.abs(np.sum(sample["sensitivity_map"].conj, -1))
-        #mask = np.abs(sample["mask"])
-
-        #plt.subplot(1, 2, 1)
-        plt.imshow(sense, cmap='gray')
-        #plt.subplot(1, 3, 3)
-        #plt.imshow(mask, cmap='gray')
-        plt.show()
+        if self.sensitivity_maps is not None:
+            print(sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sensitivity_map"].dtype)
+            import matplotlib.pyplot as plt
+            plt.imshow(np.abs(np.sum(np.fft.ifftn(sample["kspace"], axes=(0, 1)
+                                                  ) * sample["sensitivity_map"].conj(), -1)), cmap='gray')
+            plt.show()
 
         if self.transform:
             sample = self.transform(sample)
