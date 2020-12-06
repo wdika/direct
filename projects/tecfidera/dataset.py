@@ -45,6 +45,8 @@ class TECFIDERADataset(H5SliceData):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
 
+        sample["kspace"] = np.ascontiguousarray(sample["kspace"].transpose(2, 0, 1))
+
         if self.transform:
             sample = self.transform(sample)
 
