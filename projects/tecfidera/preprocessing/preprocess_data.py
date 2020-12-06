@@ -62,8 +62,7 @@ def preprocessing(root, output, export_type, device):
                     end = 217 if name == 'AXFLAIR' else 222
 
                     imspace = slice_selection(input_imspace, start=start, end=end)
-                    # csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
-
+                    csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
                     del input_imspace
 
                     if export_type == 'png':
@@ -99,31 +98,9 @@ def preprocessing(root, output, export_type, device):
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                         # Save kspace
-                        k = fftn(imspace, dim=(1, 2), norm="ortho")
                         Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(k), "kspace",
+                            complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")), "kspace",
                             output_dir + name)).start()
-
-                        csm = slice_selection(
-                            torch.from_numpy(
-                                bart(1, f"ecalib -r 30",
-                                     complex_tensor_to_complex_np(
-                                         T.fftshift(k, dim=(0, 1, 2)).permute(1, 2, 0, 3)
-                                     )
-                                     )
-                            ).permute(2, 0, 1, 3), start=start, end=end)
-
-                        import matplotlib.pyplot as plt
-                        sense = complex_tensor_to_complex_np(torch.sum(torch.conj(csm), -1))
-                        sense2 = complex_tensor_to_complex_np(torch.sum(csm, dim=-1))
-                        for i in range(sense.shape[0]):
-                            plt.subplot(1, 3, 1)
-                            plt.imshow(np.abs(complex_tensor_to_complex_np(torch.sum(imspace[i], dim=-1))), cmap='gray')
-                            plt.subplot(1, 3, 2)
-                            plt.imshow(np.abs(sense[i]), cmap='gray')
-                            plt.subplot(1, 3, 3)
-                            plt.imshow(np.abs(sense2[i]), cmap='gray')
-                            plt.show()
 
                         # Save csm
                         Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(csm), "sensitivity_map",
