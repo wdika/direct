@@ -48,6 +48,6 @@ class TECFIDERADataset(H5SliceData):
         if self.transform:
             sample = self.transform(sample)
 
-        print(sample['kspace'].names)
+        print(sample['masked_kspace'].names)
 
         return sample
