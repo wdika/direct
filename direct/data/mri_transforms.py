@@ -312,33 +312,29 @@ class EstimateSensitivityMap(DirectClass):
         return acs_image
 
     def __call__(self, sample):
-        if "sensitivity_map" in sample:
-            sample["sensitivity_map"] = sample["sensitivity_map"].refine_names(*sample["kspace"].names).to(sample["kspace"].device)
-            return sample
+        if self.type_of_map == "unit":
+            kspace = sample["kspace"]
+            sensitivity_map = torch.zeros(kspace.shape).float()
+            # TODO(jt): Named variant, this assumes the complex channel is last.
+            if not kspace.names[-1] == "complex":
+                raise NotImplementedError(f"Assuming last channel is complex.")
+            sensitivity_map[..., 0] = 1.0
+            sample["sensitivity_map"] = sensitivity_map.refine_names(*kspace.names).to(
+                kspace.device
+            )
+
+        elif self.type_of_map == "rss_estimate":
+            acs_image = self.estimate_acs_image(sample)
+            acs_image_rss = T.root_sum_of_squares(acs_image, dim="coil").align_as(
+                acs_image
+            )
+            sample["sensitivity_map"] = T.safe_divide(acs_image, acs_image_rss)
         else:
-            if self.type_of_map == "unit":
-                kspace = sample["kspace"]
-                sensitivity_map = torch.zeros(kspace.shape).float()
-                # TODO(jt): Named variant, this assumes the complex channel is last.
-                if not kspace.names[-1] == "complex":
-                    raise NotImplementedError(f"Assuming last channel is complex.")
-                sensitivity_map[..., 0] = 1.0
-                sample["sensitivity_map"] = sensitivity_map.refine_names(*kspace.names).to(
-                    kspace.device
-                )
+            raise ValueError(
+                f"Expected type of map to be either `unit` or `rss_estimate`. Got {self.type_of_map}."
+            )
 
-            elif self.type_of_map == "rss_estimate":
-                acs_image = self.estimate_acs_image(sample)
-                acs_image_rss = T.root_sum_of_squares(acs_image, dim="coil").align_as(
-                    acs_image
-                )
-                sample["sensitivity_map"] = T.safe_divide(acs_image, acs_image_rss)
-            else:
-                raise ValueError(
-                    f"Expected type of map to be either `unit` or `rss_estimate`. Got {self.type_of_map}."
-                )
-
-            return sample
+        return sample
 
 
 class DeleteKeys(DirectClass):
@@ -617,14 +613,15 @@ def build_mri_transforms(
         ),
 
     # TODO (dk): Modify the condition when using precomputed sensitivity maps
-    mri_transforms += [
-        EstimateSensitivityMap(
-            kspace_key="kspace",
-            backward_operator=backward_operator,
-            type_of_map="unit" if not estimate_sensitivity_maps else "rss_estimate",
-            gaussian_sigma=sensitivity_maps_gaussian,
-        ),
-    ]
+    if estimate_sensitivity_maps:
+        mri_transforms += [
+            EstimateSensitivityMap(
+                kspace_key="kspace",
+                backward_operator=backward_operator,
+                type_of_map="unit" if not estimate_sensitivity_maps else "rss_estimate",
+                gaussian_sigma=sensitivity_maps_gaussian,
+            ),
+        ]
 
     mri_transforms += [
         DeleteKeys(keys=["acs_mask"]),
