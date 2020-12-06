@@ -50,10 +50,7 @@ def estimate_csms(root, output, export_type, device):
                         f" | scan: {name}")
 
                     input_sense_ref_scan = torch.from_numpy(readcfl(sense_ref_scan.split('.')[0])).to(device)
-                    # input_sense_ref_scan_kspace = fftn(preprocessing_ifft(input_sense_ref_scan), dim=(1, 2),
-                    #                                    norm="ortho")
-                    input_sense_ref_scan_kspace = input_sense_ref_scan.permute(1, 2, 0,
-                                                                                      3)  # readout dir, phase-encoding dir, slices, coils
+                    input_sense_ref_scan_kspace = input_sense_ref_scan.permute(1, 2, 0, 3)  # readout dir, phase-encoding dir, slices, coils
                     input_sense_ref_scan_kspace = complex_tensor_to_complex_np(input_sense_ref_scan_kspace)
 
                     input_csm = bart(1, f"caldir 60", input_sense_ref_scan_kspace)
@@ -61,7 +58,7 @@ def estimate_csms(root, output, export_type, device):
 
                     csm = np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype),
                                    (input_csm / np.max(input_csm)))
-                    csm = torch.from_numpy(csm)
+                    csm = T.ifftshift(torch.from_numpy(csm), dim=(1, 2))
 
                     # fixed number of slices, selected after checking the pngs
                     AXFLAIR_csm = slice_selection(csm, start=17, end=217)
