@@ -63,7 +63,7 @@ def preprocessing(root, output, export_type, device):
 
                     imspace = slice_selection(input_imspace, start=start, end=end)
                     # csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
-                    csm = slice_selection(torch.from_numpy(bart(1, f"caldir 25", complex_tensor_to_complex_np(input_kspace.permute(1, 2, 0, 3)))).permute(2, 0, 1, 3), start=start, end=end)
+                    csm = slice_selection(torch.from_numpy(bart(1, f"caldir 25", complex_tensor_to_complex_np(input_kspace))), start=start, end=end)
                     del input_imspace
 
                     import matplotlib.pyplot as plt
