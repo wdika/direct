@@ -106,7 +106,7 @@ def preprocessing(root, output, export_type, device):
 
                         csm = slice_selection(
                             torch.from_numpy(
-                                bart(1, f"caldir 60",
+                                bart(1, f"caldir -r 30",
                                      complex_tensor_to_complex_np(
                                          T.fftshift(k, dim=(0, 1, 2)).permute(1, 2, 0, 3)
                                      )
