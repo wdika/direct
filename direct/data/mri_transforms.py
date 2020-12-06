@@ -110,6 +110,7 @@ class CropAndMask(DirectClass):
     def __init__(
         self,
         crop,
+        mask_func,
         use_seed=True,
         forward_operator=T.fft2,
         backward_operator=T.ifft2,
@@ -150,6 +151,8 @@ class CropAndMask(DirectClass):
                 self.crop_func = functools.partial(
                     T.complex_random_crop, sampler=self.random_crop_sampler_type
                 )
+
+        self.mask_func = mask_func
 
         self.random_crop_sampler_type = random_crop_sampler_type
 
@@ -194,7 +197,11 @@ class CropAndMask(DirectClass):
             # Compute new k-space for the cropped input_image
             kspace = self.forward_operator(backprojected_kspace)
 
-        masked_kspace, sampling_mask = T.apply_mask(kspace, sampling_mask)
+        # TODO (dk): check if data are already subsampled. Is the condition here correct?
+        if self.mask_func:
+            masked_kspace, sampling_mask = T.apply_mask(kspace, sampling_mask)
+        else:
+            masked_kspace = kspace
 
         sample["target"] = T.root_sum_of_squares(backprojected_kspace, dim="coil")
         sample["masked_kspace"] = masked_kspace
@@ -628,6 +635,7 @@ def build_mri_transforms(
             DeleteKeys(keys=["acs_mask"]),
             CropAndMask(
                 crop,
+                mask_func,
                 forward_operator=forward_operator,
                 backward_operator=backward_operator,
                 image_space_center_crop=image_center_crop,
