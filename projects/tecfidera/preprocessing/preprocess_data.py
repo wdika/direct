@@ -65,8 +65,8 @@ def preprocessing(root, output, export_type, device):
                     csm = slice_selection(readcfl(csm), start=start, end=end)
                     del input_imspace
 
-                    imspace = torch.from_numpy(np.where(np.max(imspace) == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace))))
-                    csm = torch.from_numpy(np.where(np.max(csm) == 0, np.array([0.0], dtype=csm.dtype), (csm / np.max(csm))))
+                    imspace = torch.from_numpy(np.where(imspace == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace))))
+                    csm = torch.from_numpy(np.where(csm == 0, np.array([0.0], dtype=csm.dtype), (csm / np.max(csm))))
 
                     print(np.max(complex_tensor_to_real_np(imspace)), np.min(complex_tensor_to_real_np(imspace)),
                           np.max(complex_tensor_to_real_np(csm)), np.min(complex_tensor_to_real_np(csm)))
