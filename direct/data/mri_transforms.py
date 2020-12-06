@@ -199,6 +199,8 @@ class CropAndMask(DirectClass):
 
         # TODO (dk): check if data are already subsampled. Is the condition here correct?
         if self.mask_func is not None:
+            print('not noneeeeeeee')
+            print(self.mask_func)
             masked_kspace, sampling_mask = T.apply_mask(kspace, sampling_mask)
         else:
             print('maskeddddddddddddddddddddddddddddddddd')
