@@ -61,12 +61,12 @@ def preprocessing(root, output, export_type, device):
                     start = 17 if name == 'AXFLAIR' else 22
                     end = 217 if name == 'AXFLAIR' else 222
 
-                    imspace = slice_selection(input_imspace, start=start, end=end)
-                    csm = slice_selection(readcfl(csm), start=start, end=end)
+                    imspace = complex_tensor_to_complex_np(slice_selection(input_imspace, start=start, end=end))
+                    csm = complex_tensor_to_complex_np(slice_selection(readcfl(csm), start=start, end=end))
                     del input_imspace
 
-                    imspace = np.where(np.max(imspace) == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace)))
-                    csm = np.where(np.max(csm) == 0, np.array([0.0], dtype=csm.dtype), (csm / np.max(csm)))
+                    imspace = torch.from_numpy(np.where(np.max(imspace) == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace))))
+                    csm = torch.from_numpy(np.where(np.max(csm) == 0, np.array([0.0], dtype=csm.dtype), (csm / np.max(csm))))
 
                     print(np.max(complex_tensor_to_real_np(imspace)), np.min(complex_tensor_to_real_np(imspace)),
                           np.max(complex_tensor_to_real_np(csm)), np.min(complex_tensor_to_real_np(csm)))
