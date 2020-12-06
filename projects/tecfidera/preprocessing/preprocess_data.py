@@ -65,6 +65,8 @@ def preprocessing(root, output, export_type, device):
                     csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
                     del input_imspace
 
+                    print(imspace.max(), imspace.min(), csm.max(), csm.min())
+
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
                             -2] + '/' + name
