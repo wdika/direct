@@ -56,7 +56,7 @@ def estimate_csms(root, output, export_type, device):
                                                                                       3)  # readout dir, phase-encoding dir, slices, coils
                     input_sense_ref_scan_kspace = complex_tensor_to_complex_np(input_sense_ref_scan_kspace)
 
-                    input_csm = bart(1, f"caldir 30", input_sense_ref_scan_kspace)
+                    input_csm = bart(1, f"caldir 60", input_sense_ref_scan_kspace)
                     input_csm = np.transpose(input_csm, axes=(2, 0, 1, 3))
 
                     csm = np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype),
