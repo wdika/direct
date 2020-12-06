@@ -65,7 +65,7 @@ def preprocessing(root, output, export_type, device):
                     csm = slice_selection(torch.from_numpy(readcfl(csm)).to(device), start=start, end=end)
                     del input_imspace
 
-                    print(torch.max(imspace), torch.min(imspace), torch.max(csm), torch.min(csm))
+                    print(np.max(complex_tensor_to_complex_np(imspace)), np.min(complex_tensor_to_complex_np(imspace)), np.max(complex_tensor_to_complex_np(csm)), np.min(complex_tensor_to_complex_np(csm)))
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
