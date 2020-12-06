@@ -47,7 +47,7 @@ class TECFIDERADataset(H5SliceData):
 
         if self.pass_mask:
             print('pass maskkkkkkkkkkkkkkkkkk')
-            sample["mask"] = (sample["mask"] * np.ones(sample["kspace"].shape).astype(np.int32))[
+            sample["mask"] = (sample["sampling_mask"] * np.ones(sample["kspace"].shape).astype(np.int32))[
                 ..., np.newaxis
             ]
             print(sample["mask"].shape)
