@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 def estimate_csms(root, output, export_type, device):
     """
-    Parses all subjects, acquisitions, and scans. Performs all the necessary preprocessing steps for the TECFIDERA data.
+    Parses all subjects, acquisitions, and scans. Estimates csms using the sense ref scan [501] for the TECFIDERA data.
 
     Parameters
     ----------

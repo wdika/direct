@@ -24,7 +24,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
     ----------
     root : root directory of containing cfl data
     output : output directory to save data
-    store_csm : by default this option is enabled to store the csms
+    skip_csm : toggle this option to skip storing the csms
     export_type : h5 or png
     device : cuda or cpu
 
@@ -131,7 +131,7 @@ def create_arg_parser():
 
     parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
     parser.add_argument('output', type=str, help='Output dir to save files.')
-    parser.add_argument('--skip_csm', action="store_true",
+    parser.add_argument('--skip-csm', action="store_true",
                         help='In case you have precomputed the sense maps in another way, '
                              'then toggle this option to skip saving sense maps.')
     parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
