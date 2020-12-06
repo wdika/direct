@@ -80,15 +80,13 @@ def estimate_csms(root, output, export_type, device):
                         create_dir(output_dir)
 
                         # Save csm
-                        Process(target=save_h5_outputs,
-                                args=(complex_tensor_to_complex_np(AXFLAIR_csm), "sensitivity_map",
+                        save_h5_outputs(complex_tensor_to_complex_np(AXFLAIR_csm), "sensitivity_map",
                                       output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[
-                                          -2] + '_AXFLAIR')).start()
+                                          -2] + '_AXFLAIR')
 
-                        Process(target=save_h5_outputs,
-                                args=(complex_tensor_to_complex_np(AXT1_MPRAGE_csm), "sensitivity_map",
+                        save_h5_outputs(complex_tensor_to_complex_np(AXT1_MPRAGE_csm), "sensitivity_map",
                                       subject.split('/')[-2] + '_' + acquisition.split('/')[
-                                          -2] + '_AXT1_MPRAGE')).start()
+                                          -2] + '_AXT1_MPRAGE')
 
 
 def main(args):
