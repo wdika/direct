@@ -212,7 +212,7 @@ class CropAndMask(DirectClass):
             sample["sensitivity_map"] = sensitivity_map
 
         print(sample["target"].shape, sample["masked_kspace"].shape, sample["sampling_mask"].shape,
-              sample["kspace"].shape, sample["sensitivity_map"].shape, sample["input_image"].shape, )
+              sample["kspace"].shape, sample["sensitivity_map"].shape)
 
         return sample
 
