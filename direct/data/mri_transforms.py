@@ -215,17 +215,23 @@ class CropAndMask(DirectClass):
               sample["sensitivity_map"].shape, sample["sampling_mask"].shape, )
 
         import matplotlib.pyplot as plt
+        sense = T.tensor_to_complex_numpy(torch.sum(torch.conj(sample["sensitivity_map"]), dim="coil"))
         backprojected_masked_kspace = T.tensor_to_complex_numpy(torch.sum(self.backward_operator(
             sample["masked_kspace"]) * torch.conj(sample["sensitivity_map"]), dim="coil"))
 
+        sense2 = T.tensor_to_complex_numpy(torch.sum(sample["sensitivity_map"], dim="coil"))
         backprojected_masked_kspace2 = T.tensor_to_complex_numpy(torch.sum(self.backward_operator(
             sample["masked_kspace"]) * sample["sensitivity_map"], dim="coil"))
 
-        plt.subplot(1, 3, 1)
+        plt.subplot(1, 5, 1)
         plt.imshow(np.abs(sample["target"].detach().cpu().numpy()), cmap='gray')
-        plt.subplot(1, 3, 2)
-        plt.imshow(np.abs(backprojected_masked_kspace), cmap='gray')
-        plt.subplot(1, 3, 3)
+        plt.subplot(1, 5, 2)
+        plt.imshow(np.abs(sense), cmap='gray')
+        plt.subplot(1, 5, 3)
+        plt.imshow(np.abs(backprojected_masked_kspace2), cmap='gray')
+        plt.subplot(1, 5, 4)
+        plt.imshow(np.abs(sense2), cmap='gray')
+        plt.subplot(1, 5, 5)
         plt.imshow(np.abs(backprojected_masked_kspace2), cmap='gray')
         plt.show()
 
