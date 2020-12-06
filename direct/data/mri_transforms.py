@@ -224,7 +224,7 @@ class CropAndMask(DirectClass):
         plt.subplot(1, 4, 2)
         plt.imshow(np.abs(T.tensor_to_complex_numpy(torch.sum(T.conjugate(sample["sensitivity_map"]), dim="coil"))), cmap='gray')
         plt.subplot(1, 4, 3)
-        plt.imshow(np.abs(sample["sampling_mask"].detach().cpu().numpy()), cmap='gray')
+        plt.imshow(np.abs(sample["sampling_mask"][0,:,:,0].detach().cpu().numpy()), cmap='gray')
         plt.subplot(1, 4, 4)
         plt.imshow(np.abs(backprojected_masked_kspace), cmap='gray')
         plt.show()
