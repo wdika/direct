@@ -36,7 +36,7 @@ def create_dir(path):
 
 
 def complex_tensor_to_real_np(x):
-    return torch.abs(x).detach().cpu().numpy()
+    return torch.angle(x).detach().cpu().numpy()
 
 
 def complex_tensor_to_complex_np(x):
