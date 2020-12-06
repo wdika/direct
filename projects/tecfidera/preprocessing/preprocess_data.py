@@ -69,11 +69,12 @@ def preprocessing(root, output, export_type, device):
                     import matplotlib.pyplot as plt
                     sense = complex_tensor_to_complex_np(torch.sum(torch.conj(csm), -1))
                     sense2 = complex_tensor_to_complex_np(torch.sum(csm, dim=-1))
-                    plt.subplot(1, 2, 1)
-                    plt.imshow(np.abs(sense[80]), cmap='gray')
-                    plt.subplot(1, 2, 2)
-                    plt.imshow(np.abs(sense2[80]), cmap='gray')
-                    plt.show()
+                    for i in range(sense.shape[0]):
+                        plt.subplot(1, 2, 1)
+                        plt.imshow(np.abs(sense[i]), cmap='gray')
+                        plt.subplot(1, 2, 2)
+                        plt.imshow(np.abs(sense2[i]), cmap='gray')
+                        plt.show()
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
