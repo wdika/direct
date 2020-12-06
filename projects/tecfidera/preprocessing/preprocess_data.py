@@ -67,7 +67,7 @@ def preprocessing(root, output, export_type, device):
                         torch.from_numpy(
                             bart(1, f"caldir 60",
                                  complex_tensor_to_complex_np(
-                                     input_kspace.permute(1, 2, 0, 3)
+                                     fftn(imspace, dim=(1, 2), norm="ortho").permute(1, 2, 0, 3)
                                  )
                                  )
                         ).permute(2, 0, 1, 3),
