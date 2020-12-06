@@ -45,8 +45,8 @@ def preprocessing(root, output, export_type, device):
                     csm = kspace.split('_')[0] + '_csm'
 
                     logger.info(
-                        f"Processing subject: {subject.split('/')[-2]} | acquisition: {acquisition.split('/')[-2]}"
-                        f" | scan: {name}")
+                        f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
+                        f" | acquisition: {name}")
 
                     input_kspace = torch.from_numpy(readcfl(kspace.split('.')[0])).to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
