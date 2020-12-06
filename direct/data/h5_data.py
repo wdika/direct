@@ -203,12 +203,15 @@ class H5SliceData(DirectClass, Dataset):
 
         # If the sensitivity maps exist, load these
         if self.sensitivity_maps:
-            print('SENSE MAPSSSSSSSSSSSSSS')
             sensitivity_map, _ = self.get_slice_data(
                 self.sensitivity_maps / filename.name, slice_no, key="sensitivity_map",
             )
-            # sample["sensitivity_map"] = sensitivity_map
-            sample.update({"sensitivity_map": sensitivity_map})
+            sample["sensitivity_map"] = sensitivity_map
+
+            print(sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sensitivity_map"].dtype)
+            import matplotlib.pyplot as plt
+            plt.imshow(np.abs(np.sum(sample["sensitivity_map"].conj, -1)), cmap='gray')
+            plt.show()
 
         if metadata is not None:
             sample["metadata"] = metadata
