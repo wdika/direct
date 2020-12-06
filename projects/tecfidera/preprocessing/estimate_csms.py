@@ -50,9 +50,9 @@ def estimate_csms(root, output, export_type, device):
                         f" | scan: {name}")
 
                     input_sense_ref_scan = torch.from_numpy(readcfl(sense_ref_scan.split('.')[0])).to(device)
-                    input_sense_ref_scan_kspace = T.fftshift(fftn(preprocessing_ifft(input_sense_ref_scan), dim=(1, 2),
-                                                       norm="ortho"), dim=(1, 2))
-                    input_sense_ref_scan_kspace = input_sense_ref_scan_kspace.permute(1, 2, 0,
+                    # input_sense_ref_scan_kspace = fftn(preprocessing_ifft(input_sense_ref_scan), dim=(1, 2),
+                    #                                    norm="ortho")
+                    input_sense_ref_scan_kspace = input_sense_ref_scan.permute(1, 2, 0,
                                                                                       3)  # readout dir, phase-encoding dir, slices, coils
                     input_sense_ref_scan_kspace = complex_tensor_to_complex_np(input_sense_ref_scan_kspace)
 
