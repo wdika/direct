@@ -65,9 +65,6 @@ def preprocessing(root, output, export_type, device):
                     csm = slice_selection(readcfl(csm), start=start, end=end)
                     del input_imspace
 
-                    imspace = imspace / imspace.max()
-                    csm = csm / csm.max()
-
                     imspace = np.where(np.max(imspace) == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace)))
                     csm = np.where(np.max(csm) == 0, np.array([0.0], dtype=csm.dtype), (csm / np.max(csm)))
 
