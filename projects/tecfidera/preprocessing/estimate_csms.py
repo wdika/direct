@@ -46,6 +46,7 @@ def estimate_csms(root, output, export_type, device):
                 name = sense_ref_scan.split('.')[0].split('/')[-1].split('_')[0]
 
                 if name == '501':  # estimate csms from the sense ref scan
+                    name = "SENSEREFSCAN"
                     csm_name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                     logger.info(
@@ -62,6 +63,7 @@ def estimate_csms(root, output, export_type, device):
                     input_csm = np.transpose(input_csm, axes=(2, 0, 1, 3))
 
                     csm = np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype), (input_csm / np.max(input_csm)))
+                    csm = torch.from_numpy(csm)
 
                     # fixed number of slices, selected after checking the pngs
                     AXFLAIR_csm = slice_selection(csm, start=17, end=217)
