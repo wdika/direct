@@ -97,7 +97,14 @@ def preprocessing(root, output, export_type, device):
                             complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")), "kspace",
                             output_dir + name)).start()
 
-                        print(complex_tensor_to_complex_np(csm).shape)
+                        import matplotlib.pyplot as plt
+                        sense = complex_tensor_to_complex_np(torch.sum(torch.conj(csm), -1))
+                        sense2 = complex_tensor_to_complex_np(torch.sum(csm, dim=-1))
+                        plt.subplot(1, 2, 1)
+                        plt.imshow(np.abs(sense[80]), cmap='gray')
+                        plt.subplot(1, 2, 2)
+                        plt.imshow(np.abs(sense2[80]), cmap='gray')
+                        plt.show()
 
                         # Save csm
                         Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(csm), "sensitivity_map",
