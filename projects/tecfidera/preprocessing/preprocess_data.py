@@ -62,7 +62,7 @@ def preprocessing(root, output, export_type, device):
                     end = 217 if name == 'AXFLAIR' else 222
 
                     imspace = complex_tensor_to_complex_np(slice_selection(input_imspace, start=start, end=end))
-                    csm = complex_tensor_to_complex_np(slice_selection(readcfl(csm), start=start, end=end))
+                    csm = slice_selection(readcfl(csm), start=start, end=end)
                     del input_imspace
 
                     imspace = torch.from_numpy(np.where(np.max(imspace) == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace))))
