@@ -199,11 +199,8 @@ class CropAndMask(DirectClass):
 
         # TODO (dk): check if data are already subsampled. Is the condition here correct?
         if self.mask_func is not None:
-            print('not noneeeeeeee')
-            print(self.mask_func)
             masked_kspace, sampling_mask = T.apply_mask(kspace, sampling_mask)
         else:
-            print('maskeddddddddddddddddddddddddddddddddd')
             masked_kspace = kspace
 
         sample["target"] = T.root_sum_of_squares(backprojected_kspace, dim="coil")
@@ -213,6 +210,9 @@ class CropAndMask(DirectClass):
 
         if sensitivity_map is not None:
             sample["sensitivity_map"] = sensitivity_map
+
+        print(sample["target"].shape, sample["masked_kspace"].shape, sample["sampling_mask"].shape,
+              sample["kspace"].shape, sample["sensitivity_map"].shape, sample["input_image"].shape, )
 
         return sample
 
