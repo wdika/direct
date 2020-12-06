@@ -119,7 +119,7 @@ def preprocessing(root, output, export_type, device):
                         sense2 = complex_tensor_to_complex_np(torch.sum(csm, dim=-1))
                         for i in range(sense.shape[0]):
                             plt.subplot(1, 3, 1)
-                            plt.imshow(np.abs(complex_tensor_to_complex_np(torch.sum(imspace[i]), dim=-1)), cmap='gray')
+                            plt.imshow(np.abs(complex_tensor_to_complex_np(torch.sum(imspace[i], dim=-1))), cmap='gray')
                             plt.subplot(1, 3, 2)
                             plt.imshow(np.abs(sense[i]), cmap='gray')
                             plt.subplot(1, 3, 3)
