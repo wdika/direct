@@ -651,6 +651,7 @@ def center_crop(data: torch.Tensor, shape: Tuple[int, int]) -> torch.Tensor:
     -------
     torch.Tensor : The center cropped data.
     """
+    print(shape, data.shape)
     # TODO: Make dimension independent.
     if not (0 < shape[0] <= data.shape[-2]) or not (0 < shape[1] <= data.shape[-1]):
         raise ValueError(
