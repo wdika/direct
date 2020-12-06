@@ -108,7 +108,7 @@ def preprocessing(root, output, export_type, device):
                             torch.from_numpy(
                                 bart(1, f"caldir 60",
                                      complex_tensor_to_complex_np(
-                                         k.permute(1, 2, 0, 3)
+                                         T.fftshift(k, dim=(0, 1, 2)).permute(1, 2, 0, 3)
                                      )
                                      )
                             ).permute(2, 0, 1, 3), start=start, end=end)
