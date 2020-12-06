@@ -97,6 +97,8 @@ def preprocessing(root, output, export_type, device):
                             complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")), "kspace",
                             output_dir + name)).start()
 
+                        print(complex_tensor_to_complex_np(csm).shape)
+
                         # Save csm
                         Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(csm), "sensitivity_map",
                                                               output_dir_csm + name)).start()
