@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def estimate_csms(root, output, export_type, device):
+def estimate_csms(root, output, calibration_region_size, export_type, device):
     """
     Parses all subjects, acquisitions, and scans. Estimates csms using the sense ref scan [501] for the TECFIDERA data.
 
@@ -29,6 +29,7 @@ def estimate_csms(root, output, export_type, device):
     ----------
     root : root directory of containing cfl data
     output : output directory to save data
+    calibration_region_size : size of the calibration region
     export_type : h5 or png
     device : cuda or cpu
 
@@ -53,7 +54,7 @@ def estimate_csms(root, output, export_type, device):
                     input_sense_ref_scan_kspace = complex_tensor_to_complex_np(
                         input_sense_ref_scan.permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
 
-                    input_csm = bart(1, f"caldir 60", input_sense_ref_scan_kspace)
+                    input_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
                     csm = np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype),
                                    (input_csm / np.max(input_csm)))
                     csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
@@ -95,7 +96,7 @@ def estimate_csms(root, output, export_type, device):
 def main(args):
     start_time = time.perf_counter()
     logger.info("Saving data. This might take some time, please wait...")
-    estimate_csms(args.root, args.output, args.export_type, args.device)
+    estimate_csms(args.root, args.output, args.calibration_region_size, args.export_type, args.device)
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
 
@@ -105,6 +106,8 @@ def create_arg_parser():
 
     parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
     parser.add_argument('output', type=str, help='Output dir to save files.')
+    parser.add_argument('calibration-region-size', type=int, help='Size of the calibration region.'
+                                                                  'For the caldir method.')
     parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda', help='Enable GPU.')
 
