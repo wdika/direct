@@ -106,7 +106,7 @@ def create_arg_parser():
 
     parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
     parser.add_argument('output', type=str, help='Output dir to save files.')
-    parser.add_argument('calibration-region-size', type=int, help='Size of the calibration region.'
+    parser.add_argument('calibration_region_size', type=int, help='Size of the calibration region.'
                                                                   'For the caldir method.')
     parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda', help='Enable GPU.')
