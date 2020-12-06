@@ -62,7 +62,6 @@ def estimate_csms(root, output, export_type, device):
                     csm = np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype),
                                    (input_csm / np.max(input_csm)))
                     csm = torch.from_numpy(csm)
-                    csm = T.ifftshift(csm, dim=(1, 2))
 
                     # fixed number of slices, selected after checking the pngs
                     AXFLAIR_csm = slice_selection(csm, start=17, end=217)
