@@ -40,17 +40,10 @@ class TECFIDERADataset(H5SliceData):
         # Sampling rate in the slice-encode direction
         self.transform = transform
         self.pass_mask: bool = pass_mask
-        self.sensitivity_maps = sensitivity_maps
+        # self.sensitivity_maps = sensitivity_maps
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
-
-        if self.sensitivity_maps is not None:
-            print(sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sensitivity_map"].dtype)
-            import matplotlib.pyplot as plt
-            plt.imshow(np.abs(np.sum(np.fft.ifftn(sample["kspace"], axes=(0, 1)
-                                                  ) * sample["sensitivity_map"].conj(), -1)), cmap='gray')
-            plt.show()
 
         if self.transform:
             sample = self.transform(sample)
