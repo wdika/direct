@@ -45,10 +45,7 @@ class TECFIDERADataset(H5SliceData):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
 
-        print(self.sensitivity_maps)
-
-
-        print(sample["kspace"].shape, sample["sensitivity_map"].shape)
+        print(sample["kspace"].shape, sample["sensitivity_map"].shape, sample["sensitivity_map"].dtype)
         import matplotlib.pyplot as plt
 
         sense = np.abs(np.sum(sample["sensitivity_map"].conj, -1))
