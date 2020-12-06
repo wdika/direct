@@ -99,9 +99,8 @@ def preprocessing(root, output, export_type, device):
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                         # Save kspace
-                        imspace = fftn(imspace, dim=(1, 2), norm="ortho")
                         Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(imspace), "kspace",
+                            complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")), "kspace",
                             output_dir + name)).start()
 
                         csm = slice_selection(
@@ -111,8 +110,7 @@ def preprocessing(root, output, export_type, device):
                                          imspace.permute(1, 2, 0, 3)
                                      )
                                      )
-                            ).permute(2, 0, 1, 3),
-                            start=start, end=end)
+                            ).permute(2, 0, 1, 3), start=start, end=end)
 
                         import matplotlib.pyplot as plt
                         sense = complex_tensor_to_complex_np(torch.sum(torch.conj(csm), -1))
