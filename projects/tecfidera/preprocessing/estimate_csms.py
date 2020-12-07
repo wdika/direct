@@ -70,7 +70,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             from torchvision.transforms import Compose, Resize
             print(AXFLAIR_csm.shape)
 
-            AXFLAIR_kspace_resize = Compose([Resize(AXFLAIR_kspace.shape)])
+            AXFLAIR_kspace_resize = Compose([Resize(AXFLAIR_kspace.size())])
             AXFLAIR_csm = AXFLAIR_kspace_resize(AXFLAIR_csm)
 
             print(AXFLAIR_csm.shape)
