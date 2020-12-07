@@ -66,7 +66,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             AXFLAIR_kspace = torch.from_numpy(readcfl(time_point + '/301_kspace'))
 
-            print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape)
+            print(AXFLAIR_kspace.shape, csm.shape)
             slices = []
             for slice in range(csm.shape[0]):
                 coils = []
