@@ -50,14 +50,21 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    input_sense_ref_scan = torch.from_numpy(readcfl(sense_ref_scan.split('.')[0])).to(device)
-                    input_sense_ref_scan_kspace = complex_tensor_to_complex_np(
-                        input_sense_ref_scan.permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
+                    input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
+                        readcfl(sense_ref_scan.split('.')[0])
+                    ).to(device).permute(1, 2, 0, 3)) # readout dir, phase-encoding dir, slices, coils
 
-                    input_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
-                    csm = np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype),
-                                   (input_csm / np.max(input_csm)))
-                    csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
+                    shape = input_sense_ref_scan_kspace.shape
+
+                    caldir_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
+
+                    del input_sense_ref_scan_kspace
+
+                    # Normalize data
+                    csm = np.where(caldir_csm == 0, np.array([0.0], dtype=caldir_csm.dtype), (caldir_csm / np.max(caldir_csm)))
+                    del caldir_csm
+
+                    csm = T.ifftshift(torch.from_numpy(csm.resize(shape)).permute(2, 0, 1, 3), dim=(1, 2))
 
                     # fixed number of slices, selected after checking the pngs
                     AXFLAIR_csm = slice_selection(csm, start=17, end=217)
