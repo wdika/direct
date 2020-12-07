@@ -37,67 +37,71 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
     subjects = glob.glob(root + "/*/")
 
     for subject in tqdm(subjects):
-        acquisitions = glob.glob(subject + "/*/")
+        time_points = glob.glob(subject + "/*/")
 
-        for acquisition in acquisitions:
-            sense_ref_scans = glob.glob(acquisition + "*kspace.cfl")
+        for time_point in time_points:
+            # sense_ref_scans = glob.glob(time_point + "*kspace.cfl")
 
-            for sense_ref_scan in sense_ref_scans:
-                name = sense_ref_scan.split('.')[0].split('/')[-1].split('_')[0]
+            # for sense_ref_scan in sense_ref_scans:
+            #     name = '/'.join(sense_ref_scan.split('/')[-1])
 
-                if name == '501':  # estimate csms from the sense ref scan
-                    logger.info(
-                        f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
-                        f" | acquisition: Sense Ref Scan")
+            # if name == '501':  # estimate csms from the sense ref scan
+            logger.info(
+                f"Processing subject: {subject.split('/')[-2]} | time-point: {time_point.split('/')[-2]}"
+                f" | acquisition: Sense Ref Scan")
 
-                    input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
-                        readcfl(sense_ref_scan.split('.')[0])
-                    ).to(device).permute(1, 2, 0, 3)) # readout dir, phase-encoding dir, slices, coils
+            input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
+                readcfl(time_point + '/501_kspace')
+            ).to(device).permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
 
-                    caldir_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
+            caldir_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
 
-                    # Normalize data
-                    csm = np.where(caldir_csm == 0, np.array([0.0], dtype=caldir_csm.dtype), (caldir_csm / np.max(caldir_csm)))
-                    del caldir_csm
+            del input_sense_ref_scan_kspace
 
-                    print('before', csm.shape, input_sense_ref_scan_kspace.shape)
-                    csm.resize(input_sense_ref_scan_kspace.shape)
-                    print('after', csm.shape)
+            # Normalize data
+            csm = np.where(caldir_csm == 0, np.array([0.0], dtype=caldir_csm.dtype),
+                           (caldir_csm / np.max(caldir_csm)))
+            del caldir_csm
 
-                    csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
+            csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
-                    # fixed number of slices, selected after checking the pngs
-                    AXFLAIR_csm = slice_selection(csm, start=17, end=217)
-                    AXT1_MPRAGE_csm = slice_selection(csm, start=22, end=222)
+            AXFLAIR_kspace = readcfl(time_point + '/301_kspace')
+            AXT1_MPRAGE_kspace = readcfl(time_point + '/402_kspace')
 
-                    if export_type == 'png':
-                        output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                            -2] + '/SENSEREFSCAN/'
-                        create_dir(output_dir)
+            print(AXFLAIR_kspace.shape, AXT1_MPRAGE_kspace.shape)
 
-                        # Save sense coil combined png images
-                        Process(target=save_png_outputs, args=(
-                            complex_tensor_to_real_np(csm_sense_coil_combination(AXFLAIR_csm, dim=-1)),
-                            output_dir + 'AXFLAIR/')).start()
+            # fixed number of slices, selected after checking the pngs
+            AXFLAIR_csm = slice_selection(csm, start=17, end=217)
+            AXT1_MPRAGE_csm = slice_selection(csm, start=22, end=222)
 
-                        Process(target=save_png_outputs, args=(
-                            complex_tensor_to_real_np(csm_sense_coil_combination(AXT1_MPRAGE_csm, dim=-1)),
-                            output_dir + 'AXT1_MPRAGE/')).start()
+            if export_type == 'png':
+                output_dir = output + '/png/' + subject.split('/')[-2] + '/' + time_point.split('/')[
+                    -2] + '/SENSEREFSCAN/'
+                create_dir(output_dir)
 
-                    elif export_type == 'h5':
-                        output_dir = output + '/csms/'
-                        create_dir(output_dir)
+                # Save sense coil combined png images
+                Process(target=save_png_outputs, args=(
+                    complex_tensor_to_real_np(csm_sense_coil_combination(AXFLAIR_csm, dim=-1)),
+                    output_dir + 'AXFLAIR/')).start()
 
-                        # Save csm
-                        Process(target=save_h5_outputs,
-                                args=(complex_tensor_to_complex_np(AXFLAIR_csm), "sensitivity_map",
-                                      output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[
-                                          -2] + '_AXFLAIR')).start()
+                Process(target=save_png_outputs, args=(
+                    complex_tensor_to_real_np(csm_sense_coil_combination(AXT1_MPRAGE_csm, dim=-1)),
+                    output_dir + 'AXT1_MPRAGE/')).start()
 
-                        Process(target=save_h5_outputs,
-                                args=(complex_tensor_to_complex_np(AXT1_MPRAGE_csm), "sensitivity_map",
-                                      output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[
-                                          -2] + '_AXT1_MPRAGE')).start()
+            elif export_type == 'h5':
+                output_dir = output + '/csms/'
+                create_dir(output_dir)
+
+                # Save csm
+                Process(target=save_h5_outputs,
+                        args=(complex_tensor_to_complex_np(AXFLAIR_csm), "sensitivity_map",
+                              output_dir + subject.split('/')[-2] + '_' + time_point.split('/')[
+                                  -2] + '_AXFLAIR')).start()
+
+                Process(target=save_h5_outputs,
+                        args=(complex_tensor_to_complex_np(AXT1_MPRAGE_csm), "sensitivity_map",
+                              output_dir + subject.split('/')[-2] + '_' + time_point.split('/')[
+                                  -2] + '_AXT1_MPRAGE')).start()
 
 
 def main(args):
