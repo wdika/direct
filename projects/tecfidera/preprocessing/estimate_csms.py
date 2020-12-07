@@ -64,14 +64,14 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             AXFLAIR_csm = AXT1_MPRAGE_csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
-            AXFLAIR_shape = readcfl(time_point + '/301_kspace').shape
+            AXFLAIR_kspace = readcfl(time_point + '/301_kspace')
 
-            print(AXFLAIR_shape, AXFLAIR_csm.shape)
+            print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape)
 
-            pad = torch.nn.ZeroPad2d(((AXFLAIR_shape[1] - AXFLAIR_csm.shape[1]) // 2,
-                                      (AXFLAIR_shape[1] - AXFLAIR_csm.shape[1]) // 2,
-                                      (AXFLAIR_shape[2] - AXFLAIR_csm.shape[2]) // 2,
-                                      (AXFLAIR_shape[2] - AXFLAIR_csm.shape[2]) // 2))
+            pad = torch.nn.ZeroPad2d(((AXFLAIR_kspace.shape[1] - AXFLAIR_csm.shape[1]) // 2,
+                                      (AXFLAIR_kspace.shape[1] - AXFLAIR_csm.shape[1]) // 2,
+                                      (AXFLAIR_kspace.shape[2] - AXFLAIR_csm.shape[2]) // 2,
+                                      (AXFLAIR_kspace.shape[2] - AXFLAIR_csm.shape[2]) // 2))
 
             AXFLAIR_csm = pad(AXFLAIR_csm[0, :, :, 0])
 
