@@ -40,12 +40,6 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
         time_points = glob.glob(subject + "/*/")
 
         for time_point in time_points:
-            # sense_ref_scans = glob.glob(time_point + "*kspace.cfl")
-
-            # for sense_ref_scan in sense_ref_scans:
-            #     name = '/'.join(sense_ref_scan.split('/')[-1])
-
-            # if name == '501':  # estimate csms from the sense ref scan
             logger.info(
                 f"Processing subject: {subject.split('/')[-2]} | time-point: {time_point.split('/')[-2]}"
                 f" | acquisition: Sense Ref Scan")
@@ -64,19 +58,11 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
-            AXFLAIR_shape = readcfl(time_point + '/301_kspace').shape
-            AXT1_MPRAGE_shape = readcfl(time_point + '/301_kspace').shape
-
-            AXFLAIR_csm = make_csm_from_sense_ref_scan(AXFLAIR_shape, csm)
-            AXT1_MPRAGE_csm = make_csm_from_sense_ref_scan(AXT1_MPRAGE_shape, csm)
-
-            print(AXFLAIR_shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
-
             # fixed number of slices, selected after checking the pngs
-            AXFLAIR_csm = slice_selection(AXFLAIR_csm, start=17, end=217)
-            AXT1_MPRAGE_csm = slice_selection(AXT1_MPRAGE_csm, start=22, end=222)
-
-            print(AXFLAIR_shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
+            AXFLAIR_csm = slice_selection(make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, csm),
+                                          start=17, end=217)
+            AXT1_MPRAGE_csm = slice_selection(
+                make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, csm), start=22, end=222)
 
             if export_type == 'png':
                 output_dir = output + '/png/' + subject.split('/')[-2] + '/' + time_point.split('/')[
