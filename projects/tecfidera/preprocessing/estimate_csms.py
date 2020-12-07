@@ -52,11 +52,11 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
                 readcfl(time_point + '/501_kspace')
-            ).unsqueeze(-2).to(device)) # .permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
+            ).to(device)) # .permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
 
             csms = []
             for i in range(input_sense_ref_scan_kspace.shape[0]):
-                csms.append(bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace[i]))
+                csms.append(bart(1, f"caldir {calibration_region_size}", np.expand_dims(input_sense_ref_scan_kspace[i], -2)))
             caldir_csm = np.concatenate(csms, -2)
             print(caldir_csm.shape)
 
