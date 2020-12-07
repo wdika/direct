@@ -136,8 +136,8 @@ def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
     -------
 
     """
-    pad = ((kspace_shape[1] - input_csm.shape[1]) // 2, (kspace_shape[1] - input_csm.shape[1]) // 2,
-           (kspace_shape[2] - input_csm.shape[2]) // 2, (kspace_shape[2] - input_csm.shape[2]) // 2)
+    pad = ((kspace_shape[2] - input_csm.shape[2]) // 2, (kspace_shape[2] - input_csm.shape[2]) // 2,
+           (kspace_shape[1] - input_csm.shape[1]) // 2, (kspace_shape[1] - input_csm.shape[1]) // 2)
 
     slices = []
     for slice in range(input_csm.shape[0]):
