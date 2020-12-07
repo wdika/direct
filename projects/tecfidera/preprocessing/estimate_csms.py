@@ -64,7 +64,9 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
                     csm = np.where(caldir_csm == 0, np.array([0.0], dtype=caldir_csm.dtype), (caldir_csm / np.max(caldir_csm)))
                     del caldir_csm
 
-                    csm = T.ifftshift(torch.from_numpy(csm.resize(shape)).permute(2, 0, 1, 3), dim=(1, 2))
+                    csm.resize(shape)
+
+                    csm = T.ifftshift(torch.from_numpy().permute(2, 0, 1, 3), dim=(1, 2))
 
                     # fixed number of slices, selected after checking the pngs
                     AXFLAIR_csm = slice_selection(csm, start=17, end=217)
