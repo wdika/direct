@@ -48,7 +48,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
                 if name == '501':  # estimate csms from the sense ref scan
                     logger.info(
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
-                        f" | acquisition: {name}")
+                        f" | acquisition: Sense Ref Scan")
 
                     input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
                         readcfl(sense_ref_scan.split('.')[0])
@@ -66,7 +66,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
                     csm.resize(shape)
 
-                    csm = T.ifftshift(torch.from_numpy().permute(2, 0, 1, 3), dim=(1, 2))
+                    csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
                     # fixed number of slices, selected after checking the pngs
                     AXFLAIR_csm = slice_selection(csm, start=17, end=217)
