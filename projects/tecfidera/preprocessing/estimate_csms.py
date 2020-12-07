@@ -64,16 +64,10 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             AXFLAIR_csm = AXT1_MPRAGE_csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
-            AXFLAIR_kspace = readcfl(time_point + '/301_kspace')
-
-            left = right = (AXFLAIR_kspace.shape[1] - AXFLAIR_csm.shape[1]) // 2
-            top = bottom = (AXFLAIR_kspace.shape[2] - AXFLAIR_csm.shape[2]) // 2
+            AXFLAIR_kspace = torch.from_numpy(readcfl(time_point + '/301_kspace'))
 
             print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape)
-            print(left, right, top, bottom)
-
-            AXFLAIR_csm = torch.nn.functional.pad(AXFLAIR_csm[0, :, :, 0], (left, right, top, bottom))
-
+            AXFLAIR_csm = torch.nn.functional.pad(AXFLAIR_csm, AXFLAIR_kspace.shape, mode='constant', value=0)
             print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape)
 
             # fixed number of slices, selected after checking the pngs
