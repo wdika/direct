@@ -5,7 +5,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.fft import ifftn
+from torch.fft import ifftn, fftn
 
 from direct.data import transforms as T
 
@@ -121,6 +121,8 @@ def csm_sense_coil_combination(csm, dim=-1):
 
 
 def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
+    input_csm = fftn(input_csm, dim=(0, 1, 2), norm="ortho")
+
     pad = ((kspace_shape[2] - input_csm.shape[2]) // 2, (kspace_shape[2] - input_csm.shape[2]) // 2,
            (kspace_shape[1] - input_csm.shape[1]) // 2, (kspace_shape[1] - input_csm.shape[1]) // 2)
 
@@ -131,6 +133,8 @@ def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
             coils.append(torch.nn.functional.pad(input_csm[slice, :, :, coil], pad, mode='constant', value=0))
         slices.append(torch.stack(coils, -1))
     padded_input_csm = torch.stack(slices, 0)
+
+    padded_input_csm = ifftn(padded_input_csm, dim=(0, 1, 2), norm="ortho")
 
     slices_ratio = kspace_shape[0] // input_csm.shape[0]
     remaining_ratio = np.abs((kspace_shape[0] / input_csm.shape[0]) - slices_ratio)
