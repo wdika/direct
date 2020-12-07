@@ -66,6 +66,8 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             AXFLAIR_shape = readcfl(time_point + '/301_kspace').shape
 
+            print(AXFLAIR_shape, AXFLAIR_csm.shape)
+
             pad = torch.nn.ZeroPad2d(((AXFLAIR_shape[1] - AXFLAIR_csm.shape[1]) // 2,
                                       (AXFLAIR_shape[1] - AXFLAIR_csm.shape[1]) // 2,
                                       (AXFLAIR_shape[2] - AXFLAIR_csm.shape[2]) // 2,
