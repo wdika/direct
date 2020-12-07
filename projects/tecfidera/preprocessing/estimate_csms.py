@@ -66,8 +66,8 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             f = readcfl(time_point + '/301_kspace')
             print(f.shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
-            AXFLAIR_csm.resize_as_(torch.from_numpy(f))
-            AXT1_MPRAGE_csm.resize_as_(torch.from_numpy(readcfl(time_point + '/402_kspace')))
+            AXFLAIR_csm = torch.reshape(AXFLAIR_csm, torch.from_numpy(f).shape)
+            AXT1_MPRAGE_csm = torch.reshape(AXT1_MPRAGE_csm, torch.from_numpy(readcfl(time_point + '/402_kspace')).shape)
 
             print(AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
