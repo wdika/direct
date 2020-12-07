@@ -69,8 +69,8 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             print(AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
-            AXFLAIR_csm.resize(readcfl(time_point + '/301_kspace').shape)
-            AXT1_MPRAGE_csm.resize(readcfl(time_point + '/402_kspace').shape)
+            AXFLAIR_csm.resize_(readcfl(time_point + '/301_kspace').shape)
+            AXT1_MPRAGE_csm.resize_(readcfl(time_point + '/402_kspace').shape)
 
             print(AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
