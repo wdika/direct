@@ -75,7 +75,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             AXFLAIR_csm = pad(AXFLAIR_csm[0, :, :, 0])
 
-            print(AXFLAIR_shape, AXFLAIR_csm.shape)
+            print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape)
 
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = slice_selection(csm, start=17, end=217)
