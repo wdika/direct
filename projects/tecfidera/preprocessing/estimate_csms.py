@@ -70,7 +70,14 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             from torchvision.transforms import Compose, Resize
             print(AXFLAIR_csm.shape)
 
-            AXFLAIR_csm = np.array(AXFLAIR_csm.resize(AXFLAIR_shape))
+            AXFLAIR_csm = AXFLAIR_csm.resize(AXFLAIR_shape)
+
+            AXFLAIR_pad = torch.nn.ZeroPad2d((AXFLAIR_shape[0] - AXFLAIR_csm.shape[0],
+                                              AXFLAIR_shape[1] - AXFLAIR_csm.shape[1],
+                                               AXFLAIR_shape[2] - AXFLAIR_csm.shape[2],
+                                                AXFLAIR_shape[3]))
+
+            AXFLAIR_csm = AXFLAIR_pad(AXFLAIR_csm)
 
             print(AXFLAIR_csm.shape)
 
