@@ -55,7 +55,6 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             ).to(device).permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
 
             caldir_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
-            print(caldir_csm.shape)
             # del input_sense_ref_scan_kspace
 
             # Normalize data
@@ -66,7 +65,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             AXFLAIR_csm = AXT1_MPRAGE_csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
             AXFLAIR_shape = readcfl(time_point + '/301_kspace').shape
-            print(AXFLAIR_shape)
+            print(AXFLAIR_shape, AXFLAIR_csm.shape)
 
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = slice_selection(csm, start=17, end=217)
