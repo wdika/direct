@@ -82,7 +82,8 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             new_csm = []
             for slice in range(AXFLAIR_kspace.shape[0]):
                 if count < slices_ratio:
-                    new_csm.append(AXFLAIR_csm[slice])
+                    new_csm.append(AXFLAIR_csm[slice - count])
+                    count = count + 1
                 else:
                     count = 0
 
