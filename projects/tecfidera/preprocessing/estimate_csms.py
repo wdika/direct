@@ -67,10 +67,10 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             AXFLAIR_kspace = torch.from_numpy(readcfl(time_point + '/301_kspace'))
             # AXT1_MPRAGE_kspace = torch.from_numpy(readcfl(time_point + '/402_kspace'))
 
-            from torchvision.transforms import Resize
+            from torchvision.transforms import Compose, Resize
             print(AXFLAIR_csm.shape)
 
-            AXFLAIR_kspace_resize = torch.nn.Sequential(Resize(AXFLAIR_kspace.shape))
+            AXFLAIR_kspace_resize = Compose([Resize(AXFLAIR_kspace.shape)])
             AXFLAIR_csm = AXFLAIR_kspace_resize(AXFLAIR_csm)
 
             print(AXFLAIR_csm.shape)
