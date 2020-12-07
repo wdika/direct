@@ -56,8 +56,8 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             csms = []
             for i in range(input_sense_ref_scan_kspace.shape[0]):
-                csms.append(bart(1, f"caldir {calibration_region_size}", np.expand_dims(input_sense_ref_scan_kspace[i], -2)))
-            caldir_csm = np.concatenate(csms, -2)
+                csms.append(bart(1, f"caldir {calibration_region_size}", np.expand_dims(input_sense_ref_scan_kspace[i], 0)))
+            caldir_csm = np.concatenate(csms, 0)
             print(caldir_csm.shape)
 
             # del input_sense_ref_scan_kspace
