@@ -49,10 +49,12 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, sense_ref_scan_kspace)
             AXFLAIR_csm = bart(1, f"caldir {calibration_region_size}", AXFLAIR_csm)
-            AXFLAIR_csm = T.ifftshift(torch.from_numpy(normalize(AXFLAIR_csm)).permute(2, 0, 1, 3), dim=(1, 2))
+            AXFLAIR_csm = T.ifftshift(torch.from_numpy(AXFLAIR_csm).permute(2, 0, 1, 3), dim=(1, 2))
 
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = slice_selection(AXFLAIR_csm, start=17, end=217)
+
+            AXFLAIR_csm = normalize(AXFLAIR_csm)
 
             if export_type == 'png':
                 output_dir = output + '/png/' + subject.split('/')[-2] + '/' + time_point.split('/')[

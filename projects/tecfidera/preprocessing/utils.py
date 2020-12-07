@@ -62,7 +62,7 @@ def slice_selection(data, start, end):
 
 
 def normalize(data):
-    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data)))
+    return torch.where(data == 0, torch.tensor([0.0], dtype=data.dtype), (data / torch.max(data)))
 
 
 def preprocessing_ifft(kspace):
