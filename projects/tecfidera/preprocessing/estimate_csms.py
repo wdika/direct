@@ -55,19 +55,16 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             ).to(device).permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
 
             caldir_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
-
-            del input_sense_ref_scan_kspace
+            # del input_sense_ref_scan_kspace
 
             # Normalize data
             csm = np.where(caldir_csm == 0, np.array([0.0], dtype=caldir_csm.dtype),
                            (caldir_csm / np.max(caldir_csm)))
             del caldir_csm
 
-            csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
+            AXFLAIR_csm = AXT1_MPRAGE_csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
-            AXFLAIR_csm = AXT1_MPRAGE_csm = csm
-
-            print(AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
+            print(input_sense_ref_scan_kspace.shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
             AXFLAIR_csm.resize_(readcfl(time_point + '/301_kspace').shape)
             AXT1_MPRAGE_csm.resize_(readcfl(time_point + '/402_kspace').shape)
