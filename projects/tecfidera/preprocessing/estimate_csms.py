@@ -64,44 +64,19 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
-            AXFLAIR_kspace = torch.from_numpy(readcfl(time_point + '/301_kspace'))
+            AXFLAIR_shape = readcfl(time_point + '/301_kspace').shape
+            AXT1_MPRAGE_shape = readcfl(time_point + '/301_kspace').shape
 
-            pad = ((AXFLAIR_kspace.shape[2] - csm.shape[2]) // 2, (AXFLAIR_kspace.shape[2] - csm.shape[2]) // 2,
-                   (AXFLAIR_kspace.shape[1] - csm.shape[1]) // 2, (AXFLAIR_kspace.shape[1] - csm.shape[1]) // 2)
+            AXFLAIR_csm = make_csm_from_sense_ref_scan(AXFLAIR_shape, csm)
+            AXT1_MPRAGE_csm = make_csm_from_sense_ref_scan(AXT1_MPRAGE_shape, csm)
 
-            slices = []
-            for slice in range(csm.shape[0]):
-                coils = []
-                for coil in range(csm.shape[-1]):
-                    coils.append(torch.nn.functional.pad(csm[slice,:,:,coil], pad, mode='constant', value=0))
-                slices.append(torch.stack(coils, -1))
-            AXFLAIR_csm = torch.stack(slices, 0)
-
-            slices_ratio = AXFLAIR_kspace.shape[0] // AXFLAIR_csm.shape[0]
-            new_csm = []
-            remaining_ratio = ((AXFLAIR_kspace.shape[0] / AXFLAIR_csm.shape[0]) - \
-                                 (AXFLAIR_kspace.shape[0] // AXFLAIR_csm.shape[0]))
-            add_one_more_slice = remaining_ratio
-
-            for slice in range(AXFLAIR_csm.shape[0]):
-                count = 0
-                while count < slices_ratio:
-                    new_csm.append(AXFLAIR_csm[slice - count])
-                    count = count + 1
-
-                if add_one_more_slice >= 1:
-                    new_csm.append(AXFLAIR_csm[slice - count])
-                    add_one_more_slice = remaining_ratio
-                else:
-                    add_one_more_slice = add_one_more_slice + remaining_ratio
-            new_csm.append(AXFLAIR_csm[-1])
-            new_csm = torch.stack(new_csm, 0)
-
-            print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape, new_csm.shape)
+            print(AXFLAIR_shape.shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = slice_selection(csm, start=17, end=217)
             AXT1_MPRAGE_csm = slice_selection(csm, start=22, end=222)
+
+            print(AXFLAIR_shape.shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
             if export_type == 'png':
                 output_dir = output + '/png/' + subject.split('/')[-2] + '/' + time_point.split('/')[

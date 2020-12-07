@@ -5,7 +5,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.fft import ifftn, fftn
+from torch.fft import ifftn
 
 from direct.data import transforms as T
 
@@ -118,3 +118,35 @@ def csm_sense_coil_combination(csm, dim=-1):
     coil combined image
     """
     return torch.sum(torch.conj(csm), dim=dim)
+
+
+def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
+    slices_ratio = kspace_shape.shape[0] // input_csm.shape[0]
+    remaining_ratio = np.abs((kspace_shape.shape[0] / input_csm.shape[0]) - slices_ratio)
+    add_one_more_slice = remaining_ratio
+
+    pad = ((kspace_shape.shape[2] - input_csm.shape[2]) // 2, (kspace_shape.shape[2] - input_csm.shape[2]) // 2,
+           (kspace_shape.shape[1] - input_csm.shape[1]) // 2, (kspace_shape.shape[1] - input_csm.shape[1]) // 2)
+
+    slices = []
+    for slice in range(input_csm.shape[0]):
+        coils = []
+        count = 0
+
+        for coil in range(input_csm.shape[-1]):
+            coils.append(torch.nn.functional.pad(input_csm[slice, :, :, coil], pad, mode='constant', value=0))
+
+        stacked_coils = torch.stack(coils, -1)
+        while count < slices_ratio:
+            slices.append(stacked_coils[slice - count])
+            count = count + 1
+
+        if add_one_more_slice >= 1:
+            slices.append(stacked_coils[slice - count])
+            add_one_more_slice = remaining_ratio
+        else:
+            add_one_more_slice = add_one_more_slice + remaining_ratio
+
+    slices.append(stacked_coils[-1])
+
+    return torch.stack(slices, 0)
