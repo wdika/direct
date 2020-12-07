@@ -68,7 +68,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             # AXT1_MPRAGE_kspace = torch.from_numpy(readcfl(time_point + '/402_kspace'))
 
             from torchvision.transforms import Compose, Resize
-            print(AXFLAIR_csm.shape)
+            print(AXFLAIR_shape, AXFLAIR_csm.shape)
 
             AXFLAIR_pad = torch.nn.ZeroPad2d((AXFLAIR_shape[0] - AXFLAIR_csm.shape[0],
                                               AXFLAIR_shape[1] - AXFLAIR_csm.shape[1],
