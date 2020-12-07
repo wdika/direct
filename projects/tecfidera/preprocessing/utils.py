@@ -152,7 +152,6 @@ def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
             add_one_more_slice = remaining_ratio
         else:
             add_one_more_slice = add_one_more_slice + remaining_ratio
-
     csm.append(padded_input_csm[-1])
 
-    return torch.stack(csm, 0)
+    return complex_tensor_to_complex_np(torch.stack(csm, 0).permute(1, 2, 0, 3))

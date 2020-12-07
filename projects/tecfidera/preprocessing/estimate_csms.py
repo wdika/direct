@@ -44,23 +44,11 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
                 f"Processing subject: {subject.split('/')[-2]} | time-point: {time_point.split('/')[-2]}"
                 f" | acquisition: Sense Ref Scan")
 
-            # input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
-            #     readcfl(time_point + '/501_kspace')
-            # ).to(device).permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
-
-            input_sense_ref_scan_kspace = torch.from_numpy(readcfl(time_point + '/501_kspace')).to(device)
+            sense_ref_scan_kspace = torch.from_numpy(readcfl(time_point + '/501_kspace')).to(device)
 
             # fixed number of slices, selected after checking the pngs
-            AXFLAIR_csm = complex_tensor_to_complex_np(
-                make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape,
-                                             input_sense_ref_scan_kspace).permute(1, 2, 0, 3))
-            # AXT1_MPRAGE_csm = complex_tensor_to_complex_np(
-            #     make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape,
-            #                                  input_sense_ref_scan_kspace).permute(1, 2, 0, 3))
-
+            AXFLAIR_csm = make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, sense_ref_scan_kspace)
             AXFLAIR_csm = bart(1, f"caldir {calibration_region_size}", AXFLAIR_csm)
-            # del input_sense_ref_scan_kspace
-
             AXFLAIR_csm = T.ifftshift(torch.from_numpy(normalize(AXFLAIR_csm)).permute(2, 0, 1, 3), dim=(1, 2))
 
             # fixed number of slices, selected after checking the pngs
