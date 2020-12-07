@@ -121,8 +121,8 @@ def csm_sense_coil_combination(csm, dim=-1):
 
 
 def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
-    pad = ((kspace_shape.shape[2] - input_csm.shape[2]) // 2, (kspace_shape.shape[2] - input_csm.shape[2]) // 2,
-           (kspace_shape.shape[1] - input_csm.shape[1]) // 2, (kspace_shape.shape[1] - input_csm.shape[1]) // 2)
+    pad = ((kspace_shape[2] - input_csm.shape[2]) // 2, (kspace_shape[2] - input_csm.shape[2]) // 2,
+           (kspace_shape[1] - input_csm.shape[1]) // 2, (kspace_shape.she[1] - input_csm.shape[1]) // 2)
 
     slices = []
     for slice in range(input_csm.shape[0]):
@@ -132,8 +132,8 @@ def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
         slices.append(torch.stack(coils, -1))
     padded_input_csm = torch.stack(slices, 0)
 
-    slices_ratio = kspace_shape.shape[0] // input_csm.shape[0]
-    remaining_ratio = np.abs((kspace_shape.shape[0] / input_csm.shape[0]) - slices_ratio)
+    slices_ratio = kspace_shape[0] // input_csm.shape[0]
+    remaining_ratio = np.abs((kspace_shape[0] / input_csm.shape[0]) - slices_ratio)
     add_one_more_slice = remaining_ratio
 
     csm = []
