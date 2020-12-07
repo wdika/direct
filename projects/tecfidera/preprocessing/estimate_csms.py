@@ -66,8 +66,8 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             AXFLAIR_kspace = readcfl(time_point + '/301_kspace')
 
-            left = right = AXFLAIR_kspace.shape[1] - AXFLAIR_csm.shape[1]
-            top = bottom = AXFLAIR_kspace.shape[2] - AXFLAIR_csm.shape[2]
+            left = right = (AXFLAIR_kspace.shape[1] - AXFLAIR_csm.shape[1]) // 2
+            top = bottom = (AXFLAIR_kspace.shape[2] - AXFLAIR_csm.shape[2]) // 2
 
             print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape)
             print(left, right, top, bottom)
