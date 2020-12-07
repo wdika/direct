@@ -44,25 +44,31 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
                 f"Processing subject: {subject.split('/')[-2]} | time-point: {time_point.split('/')[-2]}"
                 f" | acquisition: Sense Ref Scan")
 
-            input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
-                readcfl(time_point + '/501_kspace')
-            ).to(device).permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
+            # input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
+            #     readcfl(time_point + '/501_kspace')
+            # ).to(device).permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
 
-            caldir_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
-            del input_sense_ref_scan_kspace
-
-            # Normalize data
-            csm = np.where(caldir_csm == 0, np.array([0.0], dtype=caldir_csm.dtype),
-                           (caldir_csm / np.max(caldir_csm)))
-            del caldir_csm
-
-            csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
+            input_sense_ref_scan_kspace = torch.from_numpy(readcfl(time_point + '/501_kspace')).to(device)
 
             # fixed number of slices, selected after checking the pngs
-            AXFLAIR_csm = slice_selection(make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, csm),
-                                          start=17, end=217)
-            AXT1_MPRAGE_csm = slice_selection(
-                make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, csm), start=22, end=222)
+            AXFLAIR_csm = complex_tensor_to_complex_np(slice_selection(make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, input_sense_ref_scan_kspace), start=17, end=217).permute(1, 2, 0, 3))
+            AXT1_MPRAGE_csm = complex_tensor_to_complex_np(slice_selection(make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, input_sense_ref_scan_kspace), start=22, end=222).permute(1, 2, 0, 3))
+
+            AXFLAIR_csm = bart(1, f"caldir {calibration_region_size}", AXFLAIR_csm)
+            AXT1_MPRAGE_csm = bart(1, f"caldir {calibration_region_size}", AXT1_MPRAGE_csm)
+            # del input_sense_ref_scan_kspace
+
+            # Normalize data
+            AXFLAIR_csm = np.where(AXFLAIR_csm == 0, np.array([0.0], dtype=AXFLAIR_csm.dtype), (AXFLAIR_csm / np.max(AXFLAIR_csm)))
+            AXT1_MPRAGE_csm = np.where(AXT1_MPRAGE_csm == 0, np.array([0.0], dtype=AXT1_MPRAGE_csm.dtype), (AXT1_MPRAGE_csm / np.max(AXT1_MPRAGE_csm)))
+            # del caldir_csm
+
+            AXFLAIR_csm = T.ifftshift(torch.from_numpy(AXFLAIR_csm).permute(2, 0, 1, 3), dim=(1, 2))
+            AXT1_MPRAGE_csm = T.ifftshift(torch.from_numpy(AXT1_MPRAGE_csm).permute(2, 0, 1, 3), dim=(1, 2))
+
+            # fixed number of slices, selected after checking the pngs
+            AXFLAIR_csm = slice_selection(AXFLAIR_csm, start=17, end=217)
+            AXT1_MPRAGE_csm = slice_selection(AXT1_MPRAGE_csm, start=22, end=222)
 
             if export_type == 'png':
                 output_dir = output + '/png/' + subject.split('/')[-2] + '/' + time_point.split('/')[
