@@ -70,13 +70,13 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             AXFLAIR_csm = make_csm_from_sense_ref_scan(AXFLAIR_shape, csm)
             AXT1_MPRAGE_csm = make_csm_from_sense_ref_scan(AXT1_MPRAGE_shape, csm)
 
-            print(AXFLAIR_shape.shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
+            print(AXFLAIR_shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = slice_selection(csm, start=17, end=217)
             AXT1_MPRAGE_csm = slice_selection(csm, start=22, end=222)
 
-            print(AXFLAIR_shape.shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
+            print(AXFLAIR_shape, AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
             if export_type == 'png':
                 output_dir = output + '/png/' + subject.split('/')[-2] + '/' + time_point.split('/')[
