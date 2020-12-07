@@ -69,7 +69,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             pad = torch.nn.ZeroPad2d((AXFLAIR_shape[1] // 2, AXFLAIR_shape[1] // 2,
                                 AXFLAIR_shape[2] // 2, AXFLAIR_shape[2] // 2))
 
-            AXFLAIR_csm = pad(AXFLAIR_csm[1:2])
+            AXFLAIR_csm = pad(AXFLAIR_csm[0, :, :, 0])
 
             print(AXFLAIR_shape, AXFLAIR_csm.shape)
 
