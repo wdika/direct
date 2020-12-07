@@ -54,7 +54,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = slice_selection(AXFLAIR_csm, start=17, end=217)
 
-            AXFLAIR_csm = normalize(AXFLAIR_csm)
+            AXFLAIR_csm = normalize(complex_tensor_to_complex_np(AXFLAIR_csm))
 
             if export_type == 'png':
                 output_dir = output + '/png/' + subject.split('/')[-2] + '/' + time_point.split('/')[
@@ -76,8 +76,9 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
                 # Save csm
                 Process(target=save_h5_outputs,
-                        args=(complex_tensor_to_complex_np(AXFLAIR_csm), "sensitivity_map",
-                              output_dir + subject.split('/')[-2] + '_' + time_point.split('/')[
+                        #args=(complex_tensor_to_complex_np(AXFLAIR_csm), "sensitivity_map",
+                        args=(AXFLAIR_csm, "sensitivity_map",
+                        output_dir + subject.split('/')[-2] + '_' + time_point.split('/')[
                                   -2] + '_AXFLAIR')).start()
 
                 # Process(target=save_h5_outputs,
