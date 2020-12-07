@@ -52,9 +52,14 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             input_sense_ref_scan_kspace = complex_tensor_to_complex_np(torch.from_numpy(
                 readcfl(time_point + '/501_kspace')
-            ).to(device).permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
+            ).unsqueeze(-2).to(device)) # .permute(1, 2, 0, 3))  # readout dir, phase-encoding dir, slices, coils
 
-            caldir_csm = bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace)
+            csms = []
+            for i in range(input_sense_ref_scan_kspace.shape[0]):
+                csms.append(bart(1, f"caldir {calibration_region_size}", input_sense_ref_scan_kspace[i]))
+            caldir_csm = np.concatenate(csms, 0)
+            print(caldir_csm.shape)
+
             # del input_sense_ref_scan_kspace
 
             # Normalize data
@@ -65,19 +70,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             AXFLAIR_csm = AXT1_MPRAGE_csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
             AXFLAIR_shape = readcfl(time_point + '/301_kspace').shape
-            # AXT1_MPRAGE_kspace = torch.from_numpy(readcfl(time_point + '/402_kspace'))
-
-            from torchvision.transforms import Compose, Resize
-            print(AXFLAIR_shape, AXFLAIR_csm.shape)
-
-            AXFLAIR_pad = torch.nn.ZeroPad2d((AXFLAIR_shape[0] - AXFLAIR_csm.shape[0],
-                                              AXFLAIR_shape[1] - AXFLAIR_csm.shape[1],
-                                               AXFLAIR_shape[2] - AXFLAIR_csm.shape[2],
-                                                AXFLAIR_shape[3]))
-
-            AXFLAIR_csm = AXFLAIR_pad(AXFLAIR_csm)
-
-            print(AXFLAIR_csm.shape)
+            print(AXFLAIR_shape)
 
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = slice_selection(csm, start=17, end=217)
