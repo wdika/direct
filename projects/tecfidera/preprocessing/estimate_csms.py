@@ -65,10 +65,14 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
-            AXFLAIR_kspace = readcfl(time_point + '/301_kspace')
-            AXT1_MPRAGE_kspace = readcfl(time_point + '/402_kspace')
+            AXFLAIR_csm, AXT1_MPRAGE_csm = csm
 
-            print(AXFLAIR_kspace.shape, AXT1_MPRAGE_kspace.shape)
+            print(AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
+
+            AXFLAIR_csm.resize(readcfl(time_point + '/301_kspace').shape)
+            AXT1_MPRAGE_csm.resize(readcfl(time_point + '/402_kspace').shape)
+
+            print(AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = slice_selection(csm, start=17, end=217)
