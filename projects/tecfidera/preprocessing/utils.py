@@ -121,32 +121,34 @@ def csm_sense_coil_combination(csm, dim=-1):
 
 
 def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
-    slices_ratio = kspace_shape[0] // input_csm.shape[0]
-    remaining_ratio = np.abs((kspace_shape[0] / input_csm.shape[0]) - slices_ratio)
-    add_one_more_slice = remaining_ratio
-
-    pad = ((kspace_shape[2] - input_csm.shape[2]) // 2, (kspace_shape[2] - input_csm.shape[2]) // 2,
-           (kspace_shape[1] - input_csm.shape[1]) // 2, (kspace_shape[1] - input_csm.shape[1]) // 2)
+    pad = ((kspace_shape.shape[2] - input_csm.shape[2]) // 2, (kspace_shape.shape[2] - input_csm.shape[2]) // 2,
+           (kspace_shape.shape[1] - input_csm.shape[1]) // 2, (kspace_shape.shape[1] - input_csm.shape[1]) // 2)
 
     slices = []
     for slice in range(input_csm.shape[0]):
         coils = []
-        count = 0
-
         for coil in range(input_csm.shape[-1]):
             coils.append(torch.nn.functional.pad(input_csm[slice, :, :, coil], pad, mode='constant', value=0))
+        slices.append(torch.stack(coils, -1))
+    padded_input_csm = torch.stack(slices, 0)
 
-        stacked_coils = torch.stack(coils, -1)
+    slices_ratio = kspace_shape.shape[0] // input_csm.shape[0]
+    remaining_ratio = np.abs((kspace_shape.shape[0] / input_csm.shape[0]) - slices_ratio)
+    add_one_more_slice = remaining_ratio
+
+    csm = []
+    for slice in range(padded_input_csm.shape[0]):
+        count = 0
         while count < slices_ratio:
-            slices.append(stacked_coils[slice - count])
+            csm.append(padded_input_csm[slice - count])
             count = count + 1
 
         if add_one_more_slice >= 1:
-            slices.append(stacked_coils[slice - count])
+            csm.append(padded_input_csm[slice - count])
             add_one_more_slice = remaining_ratio
         else:
             add_one_more_slice = add_one_more_slice + remaining_ratio
 
-    slices.append(stacked_coils[-1])
+    csm.append(padded_input_csm[-1])
 
-    return torch.stack(slices, 0)
+    return torch.stack(csm, 0)
