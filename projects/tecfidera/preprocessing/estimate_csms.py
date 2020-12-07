@@ -65,7 +65,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             csm = T.ifftshift(torch.from_numpy(csm).permute(2, 0, 1, 3), dim=(1, 2))
 
-            AXFLAIR_csm, AXT1_MPRAGE_csm = csm
+            AXFLAIR_csm = AXT1_MPRAGE_csm = csm
 
             print(AXFLAIR_csm.shape, AXT1_MPRAGE_csm.shape)
 
