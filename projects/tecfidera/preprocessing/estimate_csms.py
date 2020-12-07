@@ -44,7 +44,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
                 f"Processing subject: {subject.split('/')[-2]} | time-point: {time_point.split('/')[-2]}"
                 f" | acquisition: Sense Ref Scan")
 
-            sense_ref_scan_kspace = torch.from_numpy(readcfl(time_point + '/501_kspace')).to(device)
+            sense_ref_scan_kspace = torch.from_numpy(readcfl(time_point + '/501_kspace')).to(device).permute(0, 2, 1, 3)
 
             # fixed number of slices, selected after checking the pngs
             AXFLAIR_csm = make_csm_from_sense_ref_scan(readcfl(time_point + '/301_kspace').shape, sense_ref_scan_kspace)

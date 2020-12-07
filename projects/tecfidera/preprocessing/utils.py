@@ -145,7 +145,7 @@ def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
         for coil in range(input_csm.shape[-1]):
             coils.append(torch.nn.functional.pad(input_csm[slice, :, :, coil], pad, mode='constant', value=0))
         slices.append(torch.stack(coils, -1))
-    padded_input_csm = torch.stack(slices, 0).permute(0, 2, 1, 3)
+    padded_input_csm = torch.stack(slices, 0)
 
     slices_ratio = kspace_shape[0] // input_csm.shape[0]
     remaining_ratio = np.abs((kspace_shape[0] / input_csm.shape[0]) - slices_ratio)
