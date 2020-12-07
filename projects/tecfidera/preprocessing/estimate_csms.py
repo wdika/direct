@@ -68,7 +68,7 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
             print(AXFLAIR_kspace.shape, csm.shape)
 
-            pad = (1, AXFLAIR_kspace.shape[1], 2, AXFLAIR_kspace.shape[2])
+            pad = (1, AXFLAIR_kspace.shape[1] // 2, 2, AXFLAIR_kspace.shape[2] // 2)
 
             slices = []
             for slice in range(csm.shape[0]):
