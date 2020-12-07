@@ -78,14 +78,12 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
             AXFLAIR_csm = torch.stack(slices, 0)
 
             slices_ratio = AXFLAIR_kspace.shape[0] // AXFLAIR_csm.shape[0]
-            count = 0
             new_csm = []
-            for slice in range(AXFLAIR_kspace.shape[0]):
-                if count < slices_ratio:
+            for slice in range(AXFLAIR_csm.shape[0]):
+                count = 0
+                while count < slices_ratio:
                     new_csm.append(AXFLAIR_csm[slice - count])
                     count = count + 1
-                else:
-                    count = 0
 
             print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape, new_csm.shape)
 
