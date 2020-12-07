@@ -75,8 +75,8 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
                 coils = []
                 for coil in range(csm.shape[-1]):
                     coils.append(torch.nn.functional.pad(csm[slice,:,:,coil], pad, mode='constant', value=0))
-                slices.append(torch.cat(coils, -1))
-            AXFLAIR_csm = torch.cat(slices, 0)
+                slices.append(torch.stack(coils, -1))
+            AXFLAIR_csm = torch.stack(slices, 0)
             print(AXFLAIR_kspace.shape, AXFLAIR_csm.shape)
 
             # fixed number of slices, selected after checking the pngs
