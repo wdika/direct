@@ -69,7 +69,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
                         input_csm = np.fft.ifftn(np.fft.fftn(imspace, axes=(1, 2)), axes=(1, 2))
 
-                        csm = torch.from_numpy(normalize(input_csm))
+                        csm = torch.from_numpy(input_csm)
                         csm = slice_selection(csm, start=start, end=end)
                         del input_csm
 
