@@ -50,16 +50,15 @@ def pics_recon(data, device, reg=0.01):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
     """
-    input_masked_kspace = data[()]['kspace']
-    input_sensitivity_map = data[()]['sensitivity_map']
-    # input_sensitivity_map = normalize(input_sensitivity_map)
-
-    input_sensitivity_map = input_sensitivity_map / np.expand_dims(np.sqrt(np.sum(input_sensitivity_map.conj() * input_sensitivity_map, -1).real), -1)
-    input_sensitivity_map[np.isnan(input_sensitivity_map)] = 0 + 0j
 
     for i in range(20, len(data)):
-        masked_kspace = input_masked_kspace[i]
-        sensitivity_map = input_sensitivity_map[i]
+        input_masked_kspace = data[i]['kspace']
+        input_sensitivity_map = data[i]['sensitivity_map']
+        # input_sensitivity_map = normalize(input_sensitivity_map)
+
+        input_sensitivity_map = input_sensitivity_map / np.expand_dims(
+            np.sqrt(np.sum(input_sensitivity_map.conj() * input_sensitivity_map, -1).real), -1)
+        input_sensitivity_map[np.isnan(input_sensitivity_map)] = 0 + 0j
 
         kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0))
         sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map), dim=(1, 2)).permute(1, 2, 0).unsqueeze(0))
