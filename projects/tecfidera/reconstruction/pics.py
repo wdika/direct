@@ -64,7 +64,7 @@ def pics_recon(data, device, reg=0.01):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
     """
-    for i in range(len(data)):
+    for i in range(20, len(data)):
         masked_kspace = np.fft.fft2(normalize(np.fft.ifft2(data[i]['kspace'], axes=(1, 2))), axes=(1, 2))
         sensitivity_map = normalize(data[i]['sensitivity_map'])
 
