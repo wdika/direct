@@ -78,10 +78,13 @@ def pics_recon(data, device, reg=0.01):
         if plot:
             import matplotlib.pyplot as plt
             imspace = np.fft.ifft2(masked_kspace, axes=(1, 2))
-            target = normalize(np.sum(sensitivity_map.conj() * imspace, 0))
+            # target = normalize(np.sum(sensitivity_map.conj() * imspace, 0))
             # sense = normalize(np.sum(sensitivity_map.conj(), 0))
 
-            sense = sense / np.expand_dims(np.sqrt(np.sum(sense.conj() * sense, -1)), -1)
+            imspace = normalize(imspace)
+            sense = normalize(sensitivity_map)
+
+            target = np.sum(sensitivity_map.conj() * imspace, 0)
             sense = np.sum(sensitivity_map.conj(), 0)
 
             rss_target = normalize(np.sqrt(np.sum(imspace ** 2, 0)))
