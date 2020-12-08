@@ -66,8 +66,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         # Normalize data
                         # csm = torch.from_numpy(normalize(input_csm))
-                        print(input_csm.shape)
-                        input_csm = input_csm * np.sqrt(np.sum(input_csm.conj() * input_csm, -1))
+                        input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
                         print('1', np.max(np.abs(input_csm)), np.min(np.abs(input_csm)))
                         input_csm = normalize(input_csm)
                         print('2', np.max(np.abs(input_csm)), np.min(np.abs(input_csm)))
