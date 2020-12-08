@@ -56,7 +56,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_imspace = complex_tensor_to_complex_np(preprocessing_ifft(input_kspace))
 
                     # Normalize data
-                    imspace = torch.from_numpy(normalize(input_imspace))
+                    input_imspace /= np.max(normalize(input_imspace))
+                    imspace = torch.from_numpy(input_imspace)
                     del input_imspace
 
                     imspace = slice_selection(imspace, start=start, end=end)
@@ -66,6 +67,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         # Normalize data
                         # csm = torch.from_numpy(normalize(input_csm))
+                        input_csm /= np.max(normalize(input_csm))
+
                         csm = torch.from_numpy(input_csm)
                         csm = slice_selection(csm, start=start, end=end)
                         del input_csm
