@@ -15,7 +15,7 @@ import h5py
 import numpy as np
 import torch
 
-import direct.data.transforms as T
+from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
 from projects.tecfidera.dataset import TECFIDERADataset
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
@@ -65,8 +65,8 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
     """
     print(masked_kspace.shape, sensitivity_map.shape)
 
-    masked_kspace = T.tensor_to_complex_numpy(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2))
-    sensitivity_map = T.tensor_to_complex_numpy(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2))
+    masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2))
+    sensitivity_map = complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2))
 
     pred = bart(1, f'pics -S -g', masked_kspace, sensitivity_map)
 
