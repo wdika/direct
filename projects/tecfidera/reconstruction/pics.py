@@ -60,6 +60,7 @@ def pics_recon(data, device, reg=0.01):
 
         pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}', kspace, sense)
         pred = complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(1, 2)))[0]
+        pred = normalize(pred)
 
         plot = True
         if plot:
