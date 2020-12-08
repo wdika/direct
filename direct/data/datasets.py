@@ -11,8 +11,9 @@ from direct.data.h5_data import H5SliceData
 from direct.utils import str_to_class, remove_keys
 from direct.types import PathOrString
 
-
 from torch.utils.data import Dataset, IterableDataset
+
+from projects.tecfidera.dataset import TECFIDERADataset
 
 try:
     import ismrmrd
