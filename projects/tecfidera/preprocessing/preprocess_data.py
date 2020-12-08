@@ -109,7 +109,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         # kspace = fftn(imspace, dim=(0, 1, 2), norm="ortho")
                         # imspace = ifftn(kspace, dim=(0, 1, 2), norm="ortho")
-                        kspace = np.fft.fftn(complex_tensor_to_complex_np(imspace), axes=(0, 1, 2))
+                        kspace = np.fft.fftn(complex_tensor_to_complex_np(imspace), axes=(1, 2))
                         Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
 
                         if not skip_csm:
