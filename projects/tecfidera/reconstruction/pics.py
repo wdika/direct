@@ -50,13 +50,13 @@ class DataTransform:
         pass
 
     def __call__(self, sample):
-        masked_kspace = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
+        # masked_kspace = T.tensor_to_complex_numpy(
+        #     T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
+        #
+        # sensitivity_map = T.tensor_to_complex_numpy(
+        #     T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
 
-        sensitivity_map = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
-
-        return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
+        return sample["kspace"], sample["sensitivity_map"], sample["filename"], sample["slice_no"]
 
 
 def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
