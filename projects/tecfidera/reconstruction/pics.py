@@ -73,8 +73,8 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
     plot = True
     if plot:
         import matplotlib.pyplot as plt
-        target = np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(0, 1, 2)), 0)
-        sense = np.sum(sensitivity_map.conj(), 0)
+        target = np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(0, 1)), -1)[-1]
+        sense = np.sum(sensitivity_map.conj(), -1)[-1]
         print(target.shape, sense.shape, pred.shape)
 
         plt.subplot(1, 6, 1)
