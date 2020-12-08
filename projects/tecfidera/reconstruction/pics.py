@@ -69,6 +69,8 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.01):
     kspace = complex_tensor_to_complex_np(fftshift(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1)))
     sense = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1))))
 
+    print('kspace', np.max(np.abs(kspace)), np.min(np.abs(kspace)), np.max(np.abs(sense)), np.min(np.abs(sense)))
+
     pred = bart(1, f'pics -S -g -l1 -r {reg}', kspace, sense)
     pred = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(0, 1))))
 
