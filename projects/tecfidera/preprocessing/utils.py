@@ -33,6 +33,18 @@ def readcfl(cfl):
     return a
 
 
+def writecfl(name, array):
+    h = open(name + ".hdr", "w")
+    h.write('# Dimensions\n')
+    for i in (array.shape):
+        h.write("%d " % i)
+    h.write('\n')
+    h.close()
+    d = open(name + ".cfl", "w")
+    array.T.astype(np.complex64).tofile(d)  # tranpose for column-major order
+    d.close()
+
+
 def create_dir(path):
     Path(path).mkdir(parents=True, exist_ok=True)
 
