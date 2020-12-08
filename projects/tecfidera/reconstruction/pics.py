@@ -64,7 +64,7 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.01):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
     """
-    print(masked_kspace.shape, sensitivity_map.shape)
+    print('masked_kspace', np.max(np.abs(masked_kspace)), np.min(np.abs(masked_kspace)), np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
 
     kspace = complex_tensor_to_complex_np(fftshift(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1)))
     sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1)))
@@ -77,6 +77,8 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.01):
         import matplotlib.pyplot as plt
         target = normalize(np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(1, 2)), 0))
         sense = np.sum(sensitivity_map.conj(), 0)
+
+        print('target', np.max(np.abs(target)), np.min(np.abs(target)), np.max(np.abs(pred)), np.min(np.abs(pred)))
 
         plt.subplot(1, 6, 1)
         plt.imshow(np.abs(target), cmap='gray')
