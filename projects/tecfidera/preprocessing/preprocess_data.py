@@ -102,13 +102,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
-                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(0, 1, 2), norm="ortho"))
+                        kspace = fftn(imspace, dim=(0, 1, 2), norm="ortho"))
 
-                        imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
-                        print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)), np.max(np.abs(complex_tensor_to_complex_np(csm))), np.min(np.abs(complex_tensor_to_complex_np(csm))))
+                        imspace = ifftn(kspace, dim=(0, 1, 2), norm="ortho"))
+                        print('imspace', torch.max(torch.abs(imspace)), torch.min(torch.abs(imspace)), torch.max(torch.abs(csm)), torch.min(torch.abs(csm)))
 
                         # Save kspace
-                        Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
+                        Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(kspace), "kspace", output_dir + name)).start()
 
                         if not skip_csm:
                             output_dir_csm = output + '/csms/'
