@@ -68,20 +68,16 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
     plot = True
     if plot:
         import matplotlib.pyplot as plt
-        print(masked_kspace.shape)
-        target = np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(0, 1)), -1)
+        target = np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(1, 2)), -1)
 
         plt.subplot(1, 3, 1)
-        plt.imshow(np.abs(target), cmap='gray')
-        plt.title('target max ' + str(np.abs(target).max()))
+        plt.imshow(np.abs(target[0]), cmap='gray')
         plt.colorbar()
         plt.subplot(1, 3, 2)
         plt.imshow(np.abs(pred[0]), cmap='gray')
-        plt.title('pics')
         plt.colorbar()
         plt.subplot(1, 3, 3)
         plt.imshow(np.angle(pred[0]), cmap='gray')
-        plt.title('pics')
         plt.colorbar()
         plt.show()
 
