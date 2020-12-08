@@ -84,7 +84,7 @@ def pics_recon(data, device, reg=0.01):
             target = np.sum(sensitivity_map.conj() * imspace, 0)
             sense = np.sum(sensitivity_map.conj(), 0)
 
-            rss_target = normalize(np.sqrt(np.sum(imspace ** 2, 0)))
+            rss_target = np.sqrt(np.sum(imspace ** 2, 0))
 
             plt.subplot(2, 4, 1)
             plt.imshow(np.abs(rss_target), cmap='gray')
