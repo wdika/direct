@@ -1,4 +1,6 @@
-# encoding: utf-8
+# coding=utf-8
+__author__ = 'Dimitrios Karkalousos'
+
 from pathlib import Path
 
 import h5py
