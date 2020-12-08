@@ -116,7 +116,7 @@ def pics_recon(data, device, reg=0.01):
 
 def main(args):
     start_time = time.perf_counter()
-    data = TECFIDERADataset(root=args.data_root, transform=None, sensitivity_maps=args.sensitivity_maps_root)
+    data = TECFIDERADataset(root=args.data_root, sensitivity_maps=args.sensitivity_maps_root)
 
     pics_recon(data=data, device=args.device)
     time_taken = time.perf_counter() - start_time
