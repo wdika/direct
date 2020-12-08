@@ -81,9 +81,6 @@ def pics_recon(data, device, reg=0.01):
             # target = normalize(np.sum(sensitivity_map.conj() * imspace, 0))
             # sense = normalize(np.sum(sensitivity_map.conj(), 0))
 
-            imspace = normalize(imspace)
-            sense = normalize(sensitivity_map)
-
             target = np.sum(sensitivity_map.conj() * imspace, 0)
             sense = np.sum(sensitivity_map.conj(), 0)
 
