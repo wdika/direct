@@ -52,7 +52,10 @@ def pics_recon(data, device, reg=0.01):
     """
     input_masked_kspace = data[()]['kspace']
     input_sensitivity_map = data[()]['sensitivity_map']
-    input_sensitivity_map = normalize(input_sensitivity_map)
+    # input_sensitivity_map = normalize(input_sensitivity_map)
+
+    input_sensitivity_map = input_sensitivity_map / np.expand_dims(np.sqrt(np.sum(input_sensitivity_map.conj() * input_sensitivity_map, -1).real), -1)
+    input_sensitivity_map[np.isnan(input_sensitivity_map)] = 0 + 0j
 
     for i in range(20, len(data)):
         masked_kspace = input_masked_kspace[i]
