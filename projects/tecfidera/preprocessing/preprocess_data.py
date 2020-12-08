@@ -65,13 +65,10 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         input_csm = readcfl(kspace.split('_')[0] + '_csm')
 
                         # Normalize data
-                        # csm = torch.from_numpy(normalize(input_csm))
+                        # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
                         input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
-                        print('1', np.max(np.abs(input_csm)), np.min(np.abs(input_csm)))
-                        input_csm = normalize(input_csm)
-                        print('2', np.max(np.abs(input_csm)), np.min(np.abs(input_csm)))
 
-                        csm = torch.from_numpy(input_csm)
+                        csm = torch.from_numpy(normalize(input_csm))
                         csm = slice_selection(csm, start=start, end=end)
                         del input_csm
 
@@ -105,10 +102,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
+                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho"))
+
+                        imspace = np.fft.ifftn(kspace, axes=(1, 2))
+                        print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)), np.max(np.abs(complex_tensor_to_complex_np(csm))), np.min(np.abs(complex_tensor_to_complex_np(csm))))
+
                         # Save kspace
-                        Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")), "kspace",
-                            output_dir + name)).start()
+                        Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
 
                         if not skip_csm:
                             output_dir_csm = output + '/csms/'
