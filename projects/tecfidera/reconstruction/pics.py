@@ -56,10 +56,10 @@ class DataTransform:
         sensitivity_map = T.tensor_to_complex_numpy(
             T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
 
-        return sample["kspace"], masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
+        return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
 
-def compute_pics_recon(kspace, masked_kspace, sensitivity_map, reg=0.0):
+def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
     """
@@ -69,10 +69,8 @@ def compute_pics_recon(kspace, masked_kspace, sensitivity_map, reg=0.0):
     if plot:
         import matplotlib.pyplot as plt
         target = torch.sum(
-            T.complex_multiplication(
-                T.conjugate(sensitivity_map), T.ifft2(kspace.refine_names("slice", "height", "width", "coil"))
-            ), dim="coil"
-        ).cpu().numpy()
+            torch.conj(sensitivity_map) * T.ifft2(masked_kspace.refine_names("slice", "height", "width", "coil"))
+        ).detach().cpu().numpy()
 
         plt.subplot(1, 3, 1)
         plt.imshow(np.abs(target), cmap='gray')
@@ -92,9 +90,8 @@ def compute_pics_recon(kspace, masked_kspace, sensitivity_map, reg=0.0):
 
 
 def run_model(idx):
-    kspace, masked_kspace, sensitivity_map, filename, slice_no = data[idx]
-    pics = compute_pics_recon(kspace, masked_kspace, sensitivity_map)
-    return filename, slice_no, pics
+    masked_kspace, sensitivity_map, filename, slice_no = data[idx]
+    return filename, slice_no, compute_pics_recon(masked_kspace, sensitivity_map)
 
 
 def chunks(lst, n):
