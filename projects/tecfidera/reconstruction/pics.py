@@ -67,18 +67,18 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.01):
     imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
     print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)), np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
 
-    kspace = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1))))
+    kspace = complex_tensor_to_complex_np(fftshift(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1)))
     sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1)))
 
     print('kspace', np.max(np.abs(kspace)), np.min(np.abs(kspace)), np.max(np.abs(sense)), np.min(np.abs(sense)))
 
     pred = bart(1, f'pics -S -g -l1 -r {reg}', kspace, sense)
-    pred = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(0, 1))))
+    pred = complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(0, 1)))
 
     plot = True
     if plot:
         import matplotlib.pyplot as plt
-        target = normalize(np.sum(sensitivity_map.conj() * imspace, 0))
+        target = np.sum(sensitivity_map.conj() * imspace, 0)
         sense = np.sum(sensitivity_map.conj(), 0)
 
         print('target', np.max(np.abs(target)), np.min(np.abs(target)), np.max(np.abs(pred)), np.min(np.abs(pred)))
