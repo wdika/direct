@@ -70,7 +70,7 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.01):
     pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}', kspace, sense)
     pred = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(1, 2))))[0]
 
-    plot = True
+    plot = False
     if plot:
         import matplotlib.pyplot as plt
         imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
