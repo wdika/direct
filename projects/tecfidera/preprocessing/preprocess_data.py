@@ -56,7 +56,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_imspace = complex_tensor_to_complex_np(preprocessing_ifft(input_kspace))
 
                     # Normalize data
-                    imspace = torch.from_numpy(normalize(input_imspace))
+                    # imspace = torch.from_numpy(normalize(input_imspace))
+                    imspace = torch.from_numpy(input_imspace)
                     del input_imspace
 
                     imspace = slice_selection(imspace, start=start, end=end)
@@ -66,9 +67,10 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         # Normalize data
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
-                        input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
+                        # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
 
-                        csm = torch.from_numpy(normalize(input_csm))
+                        # csm = torch.from_numpy(normalize(input_csm))
+                        csm = torch.from_numpy(input_csm)
                         csm = slice_selection(csm, start=start, end=end)
                         del input_csm
 

@@ -54,11 +54,7 @@ def pics_recon(data, device, reg=0.01):
     for i in range(20, len(data)):
         masked_kspace = data[i]['kspace']
         sensitivity_map = data[i]['sensitivity_map']
-        # sensitivity_map = normalize(sensitivity_map)
-
-        sensitivity_map = sensitivity_map / np.expand_dims(
-            np.sqrt(np.sum(sensitivity_map.conj() * sensitivity_map, -1).real), -1)
-        sensitivity_map[np.isnan(sensitivity_map)] = 0 + 0j
+        sensitivity_map = normalize(sensitivity_map)
 
         kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0))
         sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map), dim=(1, 2)).permute(1, 2, 0).unsqueeze(0))
