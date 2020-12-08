@@ -102,9 +102,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
-                        kspace = fftn(imspace, dim=(0, 1, 2), norm="ortho"))
+                        kspace = fftn(imspace, dim=(0, 1, 2), norm="ortho")
 
-                        imspace = ifftn(kspace, dim=(0, 1, 2), norm="ortho"))
+                        imspace = ifftn(kspace, dim=(0, 1, 2), norm="ortho")
                         print('imspace', torch.max(torch.abs(imspace)), torch.min(torch.abs(imspace)), torch.max(torch.abs(csm)), torch.min(torch.abs(csm)))
 
                         # Save kspace
