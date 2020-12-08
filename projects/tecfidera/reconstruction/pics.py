@@ -131,6 +131,7 @@ if __name__ == "__main__":
     parser.add_argument("output_path", type=Path, default=None, help="Path to save the sensitivity maps to", )
     parser.add_argument("--seed", default=42, type=int, help="Seed for random number generators.")
     parser.add_argument('--num_workers', type=int, default=4, help='Number of workers for data loading')
+    parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda', help='Enable GPU.')
     args = parser.parse_args()
 
     random.seed(args.seed)
