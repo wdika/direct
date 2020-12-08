@@ -58,7 +58,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # Normalize data
                     # imspace = torch.from_numpy(normalize(input_imspace))
                     input_imspace /= np.max(input_imspace)
-                    print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
+                    print('imspace', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
                     imspace = torch.from_numpy(input_imspace)
 
                     del input_imspace
