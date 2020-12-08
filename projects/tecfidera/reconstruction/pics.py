@@ -46,20 +46,6 @@ def save_outputs(outputs, output_path):
             f["pics"] = pics_recon
 
 
-# class DataTransform:
-#     def __init__(self):
-#         pass
-#
-#     def __call__(self, sample):
-#         # masked_kspace = T.tensor_to_complex_numpy(
-#         #     T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
-#         #
-#         # sensitivity_map = T.tensor_to_complex_numpy(
-#         #     T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
-#
-#         return sample["kspace"], sample["sensitivity_map"], sample["filename"], sample["slice_no"]
-
-
 def pics_recon(data, device, reg=0.01):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
@@ -123,10 +109,6 @@ def pics_recon(data, device, reg=0.01):
 
     return pred
 
-
-# def run_model(idx):
-#     masked_kspace, sensitivity_map, filename, slice_no = data[idx]
-#     return filename, slice_no, compute_pics_recon(masked_kspace, sensitivity_map)
 
 def main(args):
     start_time = time.perf_counter()
