@@ -67,6 +67,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Normalize data
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
                         # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
+
                         csm = torch.from_numpy(input_csm)
                         csm = slice_selection(csm, start=start, end=end)
                         del input_csm
@@ -106,9 +107,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         #  so the norm doesn't change the scale of the data.
                         #  For now I will be using numpy, but that's inefficient.
 
-                        # kspace = fftn(imspace, dim=(0, 1, 2), norm="ortho")
+                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(0, 1, 2), norm="ortho"))
                         # imspace = ifftn(kspace, dim=(0, 1, 2), norm="ortho")
-                        kspace = np.fft.fftn(complex_tensor_to_complex_np(imspace), axes=(1, 2))
+                        # kspace = np.fft.fftn(complex_tensor_to_complex_np(imspace), axes=(1, 2))
                         Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
 
                         if not skip_csm:
