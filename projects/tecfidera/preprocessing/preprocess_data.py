@@ -102,9 +102,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
-                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho"))
+                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(0, 1, 2), norm="ortho"))
 
-                        imspace = np.fft.ifftn(kspace, axes=(1, 2))
+                        imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
                         print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)), np.max(np.abs(complex_tensor_to_complex_np(csm))), np.min(np.abs(complex_tensor_to_complex_np(csm))))
 
                         # Save kspace
