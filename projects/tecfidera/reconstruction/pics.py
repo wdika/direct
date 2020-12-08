@@ -60,7 +60,7 @@ class DataTransform:
         return sample["kspace"], sample["sensitivity_map"], sample["filename"], sample["slice_no"]
 
 
-def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
+def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.01):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
     """
@@ -69,14 +69,14 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
     kspace = complex_tensor_to_complex_np(fftshift(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1)))
     sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1)))
 
-    pred = bart(1, f'pics -S -g', kspace, sense)
+    pred = bart(1, f'pics -S -g -l1 -r {reg}', kspace, sense)
     pred = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(0, 1))))
 
     plot = True
     if plot:
         import matplotlib.pyplot as plt
         target = normalize(np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(1, 2)), 0))
-        sense = normalize(np.sum(sensitivity_map.conj(), 0))
+        sense = np.sum(sensitivity_map.conj(), 0)
 
         plt.subplot(1, 6, 1)
         plt.imshow(np.abs(target), cmap='gray')
