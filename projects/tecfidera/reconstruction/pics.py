@@ -70,7 +70,7 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
         import matplotlib.pyplot as plt
         target = torch.sum(
             torch.conj(torch.from_numpy(sensitivity_map)) * \
-            T.ifft2(torch.from_numpy(masked_kspace).refine_names("slice", "height", "width", "coil"))
+            T.ifft2_new(torch.from_numpy(masked_kspace).refine_names("slice", "height", "width", "coil"))
         ).detach().cpu().numpy()
 
         plt.subplot(1, 3, 1)
