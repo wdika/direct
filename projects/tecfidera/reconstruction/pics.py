@@ -90,10 +90,10 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
         plt.imshow(np.angle(sense), cmap='gray')
         plt.colorbar()
         plt.subplot(1, 6, 5)
-        plt.imshow(np.abs(pred[0]), cmap='gray')
+        plt.imshow(np.abs(pred), cmap='gray')
         plt.colorbar()
         plt.subplot(1, 6, 6)
-        plt.imshow(np.angle(pred[0]), cmap='gray')
+        plt.imshow(np.angle(pred), cmap='gray')
         plt.colorbar()
         plt.show()
 
