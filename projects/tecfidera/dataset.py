@@ -45,11 +45,10 @@ class TECFIDERADataset(H5SliceData):
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         sample = super().__getitem__(idx)
 
-        # sample["kspace"] = np.ascontiguousarray(sample["kspace"].transpose(2, 0, 1))
-        sample["kspace"] = sample["kspace"].transpose(2, 0, 1)
+        sample["kspace"] = np.ascontiguousarray(sample["kspace"].transpose(2, 0, 1))
 
         if self.sensitivity_maps is not None:
-            sample["sensitivity_map"] = sample["sensitivity_map"].transpose(2, 0, 1)
+            sample["sensitivity_map"] = np.ascontiguousarray(sample["sensitivity_map"].transpose(2, 0, 1))
 
         if self.transform:
             sample = self.transform(sample)
