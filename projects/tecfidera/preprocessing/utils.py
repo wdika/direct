@@ -79,6 +79,10 @@ def normalize(data):
     return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data)))
 
 
+def rss_normalize(data, coil_dim=0):
+    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(np.sqrt(np.sum(data ** 2, coil_dim)))))
+
+
 def preprocessing_ifft(kspace):
     """
 
