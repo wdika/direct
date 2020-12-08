@@ -69,9 +69,10 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
     if plot:
         import matplotlib.pyplot as plt
         target = np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(0, 1, 2)), -1)
+        print(target.shape, pred.shape)
 
         plt.subplot(1, 3, 1)
-        plt.imshow(np.abs(target[0]), cmap='gray')
+        plt.imshow(np.abs(target), cmap='gray')
         plt.colorbar()
         plt.subplot(1, 3, 2)
         plt.imshow(np.abs(pred[0]), cmap='gray')
