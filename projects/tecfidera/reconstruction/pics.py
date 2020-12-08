@@ -16,7 +16,7 @@ import numpy as np
 import torch
 
 from direct.data.transforms import fftshift
-from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
+from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np, normalize
 from projects.tecfidera.dataset import TECFIDERADataset
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
@@ -70,14 +70,13 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
     sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2), dim=(0, 1)))
 
     pred = bart(1, f'pics -S -g', kspace, sense)
-    pred = complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(0, 1)))
+    pred = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(0, 1))))
 
     plot = True
     if plot:
         import matplotlib.pyplot as plt
-        target = np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(1, 2)), 0)
-        sense = np.sum(sensitivity_map.conj(), 0)
-        print(target.shape, sense.shape, pred.shape)
+        target = normalize(np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(1, 2)), 0))
+        sense = normalize(np.sum(sensitivity_map.conj(), 0))
 
         plt.subplot(1, 6, 1)
         plt.imshow(np.abs(target), cmap='gray')
