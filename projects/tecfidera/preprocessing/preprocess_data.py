@@ -102,15 +102,14 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
+                        # Save kspace
+                        # TODO (dk) : find the correct transformation in pytorch,
+                        #  so the norm doesn't change the scale of the data.
+                        #  For now I will be using numpy, but that's inefficient.
+
                         # kspace = fftn(imspace, dim=(0, 1, 2), norm="ortho")
                         # imspace = ifftn(kspace, dim=(0, 1, 2), norm="ortho")
-
                         kspace = np.fft.fftn(complex_tensor_to_complex_np(imspace), axes=(0, 1, 2))
-                        imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
-
-                        print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
-
-                        # Save kspace
                         Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
 
                         if not skip_csm:
