@@ -77,7 +77,7 @@ def pics_recon(data, device, reg=0.01):
         plot = True
         if plot:
             import matplotlib.pyplot as plt
-            imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
+            imspace = np.fft.ifftshift(np.fft.fftshift(np.fft.ifftn(masked_kspace, axes=(1, 2)), axes=(1, 2)), axes=(1, 2))
             target = normalize(np.sum(sensitivity_map.conj() * imspace, 0))
             sense = normalize(np.sum(sensitivity_map.conj(), 0))
 
