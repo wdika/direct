@@ -65,16 +65,16 @@ def compute_pics_recon(masked_kspace, sensitivity_map, reg=0.0):
     """
     print(masked_kspace.shape, sensitivity_map.shape)
 
-    masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2))
-    sensitivity_map = complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2))
+    kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(-2))
+    sense = complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(-2))
 
-    pred = bart(1, f'pics -S -g', masked_kspace, sensitivity_map)
+    pred = bart(1, f'pics -S -g', kspace, sense)
 
     plot = True
     if plot:
         import matplotlib.pyplot as plt
-        target = np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(0, 1)), -1)[-1]
-        sense = np.sum(sensitivity_map.conj(), -1)[-1]
+        target = np.sum(sensitivity_map.conj() * np.fft.ifftn(masked_kspace, axes=(1, 2)), 0)
+        sense = np.sum(sensitivity_map.conj(), 0)
         print(target.shape, sense.shape, pred.shape)
 
         plt.subplot(1, 6, 1)
