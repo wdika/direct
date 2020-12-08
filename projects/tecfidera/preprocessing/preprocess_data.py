@@ -56,10 +56,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_imspace = complex_tensor_to_complex_np(preprocessing_ifft(input_kspace))
 
                     # Normalize data
-                    input_imspace = normalize(input_imspace)
-                    print('imspace', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
-                    imspace = torch.from_numpy(input_imspace)
-
+                    imspace = torch.from_numpy(normalize(input_imspace))
                     del input_imspace
 
                     imspace = slice_selection(imspace, start=start, end=end)
@@ -72,6 +69,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         csm = torch.from_numpy(input_csm)
                         csm = slice_selection(csm, start=start, end=end)
                         del input_csm
+
+                    print('imspace', np.max(np.abs(complex_tensor_to_complex_np(imspace))), np.min(np.abs(complex_tensor_to_complex_np(imspace))))
+                    print('csm', np.max(np.abs(complex_tensor_to_complex_np(csm))), np.min(np.abs(complex_tensor_to_complex_np(csm))))
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
