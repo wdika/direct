@@ -64,18 +64,18 @@ def pics_recon(data, device, reg=0.01):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
     """
-    print(len(data))
-    masked_kspace = data['masked_kspace']
-    sensitivity_map = data['sensitivity_map']
+    for i in range(len(data)):
+        masked_kspace = data['masked_kspace'][i]
+        sensitivity_map = data['sensitivity_map'][i]
 
-    kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0))
-    sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map), dim=(1, 2)).permute(1, 2, 0).unsqueeze(0))
+        kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0))
+        sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map), dim=(1, 2)).permute(1, 2, 0).unsqueeze(0))
 
-    pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}', kspace, sense)
-    pred = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(1, 2))))[0]
+        pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}', kspace, sense)
+        pred = normalize(complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(1, 2))))[0]
 
-    plot = False
-    if plot:
+        plot = True
+        if plot:
         import matplotlib.pyplot as plt
         imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
         target = normalize(np.sum(sensitivity_map.conj() * imspace, 0))
