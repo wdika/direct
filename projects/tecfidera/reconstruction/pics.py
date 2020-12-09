@@ -57,7 +57,7 @@ def pics_recon(data, device, reg=0.01):
 
         print(masked_kspace.shape,sensitivity_map.shape)
 
-        sensitivity_map = normalize(sensitivity_map)
+        # sensitivity_map = normalize(sensitivity_map)
 
         imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
         imspace = normalize(imspace)
