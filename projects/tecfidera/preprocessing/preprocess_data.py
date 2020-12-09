@@ -56,13 +56,16 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_imspace = slice_selection(preprocessing_ifft(input_kspace), start=start, end=end)
 
                     # Normalize data
-                    input_imspace = normalize(complex_tensor_to_complex_np(input_imspace))
-                    imspace = torch.from_numpy(input_imspace)
+                    input_imspace = complex_tensor_to_complex_np(input_imspace)
+                    imspace = torch.from_numpy(normalize(input_imspace))
                     # del input_imspace
                     print('input_imspace', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
 
                     if not skip_csm:
                         input_csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
+
+                        scale = np.max(input_csm) / np.max(input_imspace)
+                        input_csm /= scale
 
                         # Normalize data
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
@@ -71,16 +74,14 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         csm = normalize(input_csm)
                         # del input_csm
 
-                        scale = np.max(csm) / np.max(input_imspace)
-
                         import matplotlib.pyplot as plt
                         sense = np.sum((csm).conj(), -1)[100]
                         sense2 = np.sum((normalize_csm(input_csm)).conj(), -1)[100]
                         sense3 = np.sum((normalize_rss(input_csm)).conj(), -1)[100]
 
-                        print('sense', np.max(np.abs(sense / scale)), np.min(np.abs(sense)))
-                        print('sense2', np.max(np.abs(sense2 / scale)), np.min(np.abs(sense2)))
-                        print('sense3', np.max(np.abs(sense3 / scale)), np.min(np.abs(sense3)))
+                        print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
+                        print('sense2', np.max(np.abs(sense2)), np.min(np.abs(sense2)))
+                        print('sense3', np.max(np.abs(sense3)), np.min(np.abs(sense3)))
 
                         print('scale', scale)
 
