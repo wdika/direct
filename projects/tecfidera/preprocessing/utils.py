@@ -76,7 +76,7 @@ def slice_selection(data, start, end):
 
 
 def normalize(data):
-    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data).real))
+    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data)))
 
 
 def normalize_csm(data, coil_dim=-1):

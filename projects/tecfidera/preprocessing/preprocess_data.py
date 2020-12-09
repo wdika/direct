@@ -56,10 +56,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_imspace = complex_tensor_to_complex_np(preprocessing_ifft(slice_selection(input_kspace, start=start, end=end)))
 
                     normalize_input_imspace = normalize(input_imspace)
-                    normalize_rss_input_imspace = normalize_rss(input_imspace)
 
                     print('normalize_input_imspace', np.max(np.abs(normalize_input_imspace)), np.min(np.abs(normalize_input_imspace)))
-                    print('normalize_rss_input_imspace', np.max(np.abs(normalize_rss_input_imspace)), np.min(np.abs(normalize_rss_input_imspace)))
 
 
                     # Normalize data
