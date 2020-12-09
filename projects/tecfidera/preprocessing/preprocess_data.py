@@ -37,8 +37,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
         for acquisition in acquisitions:
             kspaces = glob.glob(acquisition + "*kspace.cfl")
 
-            for kspace in kspaces:
-                name = kspace.split('.')[0].split('/')[-1].split('_')[0]
+            for filename_kspace in kspaces:
+                name = filename_kspace.split('.')[0].split('/')[-1].split('_')[0]
 
                 if name != '501':  # exclude the sense ref scan
                     name = 'AXFLAIR' if name == '301' else 'AXT1_MPRAGE'
@@ -67,7 +67,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     imspace = slice_selection(imspace, start=start, end=end)
 
                     if not skip_csm:
-                        input_csm = readcfl(kspace.split('_')[0] + '_csm')
+                        input_csm = readcfl(filename_kspace.split('_')[0] + '_csm')
 
                         # Normalize data
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
