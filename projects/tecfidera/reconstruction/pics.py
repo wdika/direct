@@ -55,6 +55,10 @@ def pics_recon(data, device, reg=0.01):
         masked_kspace = data[i]['kspace']
         sensitivity_map = data[i]['sensitivity_map']
 
+        imspace = normalize(np.fft.ifftn(masked_kspace, axes=(1, 2)))
+        masked_kspace = np.fft.fftn(imspace, axes=(1, 2))
+
+        print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
         print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
 
         pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
@@ -66,8 +70,6 @@ def pics_recon(data, device, reg=0.01):
         plot = True
         if plot:
             import matplotlib.pyplot as plt
-            imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
-            print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
 
             rss_target = np.sqrt(np.sum(imspace ** 2, 0))
             target = np.sum(sensitivity_map.conj() * imspace, 0)
