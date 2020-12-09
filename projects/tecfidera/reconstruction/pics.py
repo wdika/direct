@@ -14,7 +14,7 @@ import h5py
 import numpy as np
 import torch
 
-from direct.data.mri_transforms import Compose, ToTensor, Normalize
+from direct.data.mri_transforms import build_mri_transforms
 from direct.data.transforms import ifftshift
 from projects.tecfidera.dataset import TECFIDERADataset
 
@@ -118,9 +118,7 @@ def pics_recon(data, device, reg=0.01):
 def main(args):
     start_time = time.perf_counter()
 
-    data = TECFIDERADataset(root=args.data_root,
-                            transform=Compose([ToTensor(), Normalize()]),
-                            sensitivity_maps=args.sensitivity_maps_root)
+    data = TECFIDERADataset(root=args.data_root, sensitivity_maps=args.sensitivity_maps_root)
 
     outputs = pics_recon(data=data, device=args.device)
     time_taken = time.perf_counter() - start_time
