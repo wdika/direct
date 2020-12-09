@@ -81,7 +81,7 @@ def normalize(data):
 
 def normalize_csm(data, coil_dim=-1):
     return np.where(data == 0, np.array([0.0], dtype=data.dtype),
-                    np.expand_dims(np.sqrt(np.sum(sense.conj() * sense, coil_dim).real), coil_dim))
+                    np.expand_dims(np.sqrt(np.sum(data.conj() * data, coil_dim).real), coil_dim))
 
 
 def preprocessing_ifft(kspace):
