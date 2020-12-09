@@ -87,7 +87,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         if not skip_csm:
                             # Save sense coil combined png images
                             Process(target=save_png_outputs, args=(
-                                complex_tensor_to_real_np(csm_sense_coil_combination(csm, dim=-1)),
+                                complex_tensor_to_real_np(csm_sense_coil_combination(torch.from_numpy(csm), dim=-1)),
                                 output_dir + '/csms/')).start()
 
                     elif export_type == 'h5':
@@ -97,8 +97,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         output_dir = output + '/kspaces/'
                         create_dir(output_dir)
                         Process(target=save_h5_outputs, args=(
-                        complex_tensor_to_complex_np(fftn(torch.from_numpy(imspace), dim=(1, 2), norm="ortho")),
-                        "kspace", output_dir + name)).start()
+                            complex_tensor_to_complex_np(fftn(torch.from_numpy(imspace), dim=(1, 2), norm="ortho")),
+                            "kspace", output_dir + name)).start()
                         del imspace
 
                         # Save mask
@@ -111,8 +111,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                             # Save csm
                             output_dir_csm = output + '/csms/'
                             create_dir(output_dir_csm)
-                            Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(csm), "sensitivity_map",
-                                                                  output_dir_csm + name)).start()
+                            Process(target=save_h5_outputs,
+                                    args=(csm, "sensitivity_map", output_dir_csm + name)).start()
                             del csm
 
 
