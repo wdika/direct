@@ -14,7 +14,6 @@ import h5py
 import numpy as np
 import torch
 
-from direct.data.mri_transforms import build_mri_transforms
 from direct.data.transforms import ifftshift
 from projects.tecfidera.dataset import TECFIDERADataset
 
@@ -45,23 +44,21 @@ def save_outputs(outputs, output_path):
             f["pics"] = pics_recon
 
 
-def pics_recon(data, device, reg=0.01):
+def pics_recon(kspace, sensitivity_map, device, reg=0.01):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
     """
 
-    for i in range(20, len(data)):
-        masked_kspace = data[i]['masked_kspace']
-        sensitivity_map = data[i]['sensitivity_map']
+    for i in range(20, kspace.shape[0]):
 
         from torch.fft import ifftn
         from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
-        imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(masked_kspace), dim=(1, 2)))
+        imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2)))
         print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
         print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
 
         pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
-                    complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0)),
+                    complex_tensor_to_complex_np(torch.from_numpy(kspace).permute(1, 2, 0).unsqueeze(0)),
                     complex_tensor_to_complex_np(
                         ifftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0), dim=(0, 1)).unsqueeze(0))
                     )[0]
@@ -117,10 +114,8 @@ def pics_recon(data, device, reg=0.01):
 
 def main(args):
     start_time = time.perf_counter()
-
     data = TECFIDERADataset(root=args.data_root, sensitivity_maps=args.sensitivity_maps_root)
-
-    outputs = pics_recon(data=data, device=args.device)
+    outputs = pics_recon(kspace=data['kspace'][()], sensitivity_map=data['sensitivity_map'][()], device=args.device)
     time_taken = time.perf_counter() - start_time
     logging.info(f"Run Time = {time_taken:}s")
     save_outputs(outputs, args.output_path)
