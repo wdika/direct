@@ -33,9 +33,10 @@ class DataTransform:
 
     def __call__(self, sample):
         masked_kspace = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
+            T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(-2))
+
         sensitivity_map = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
+            T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(-2))
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
@@ -131,19 +132,16 @@ def save_outputs(outputs, output_path):
 def pics_recon(idx):
     kspace, sensitivity_map, filename, slice_no = data[idx]
 
-    from torch.fft import ifftn
-    from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
+    # from torch.fft import ifftn
+    # from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
     # imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2)))
     # print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
     # print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
 
     print(kspace.shape, sensitivity_map.shape)
 
-    pred = bart(1, f'pics -g -i 200 -S -l1 -r 0.01',
-                complex_tensor_to_complex_np(torch.from_numpy(kspace)),
-                complex_tensor_to_complex_np(ifftshift(torch.from_numpy(sensitivity_map), dim=(1, 2))))[0]
-
-    print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
+    pred = bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]
+    print('pred', pred.shape, np.max(np.abs(pred)), np.min(np.abs(pred)))
 
     plot = True
     if plot:
