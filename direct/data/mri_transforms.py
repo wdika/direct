@@ -469,7 +469,6 @@ class Normalize(DirectClass):
                 sample[key] = sample[key] / scaling_factor
 
         sample["scaling_factor"] = scaling_factor
-        print('scaling_factor', scaling_factor)
         return sample
 
 
@@ -649,6 +648,8 @@ def build_mri_transforms(
                 mask_func, backward_operator=backward_operator, use_seed=use_seed
             )
         )
+
+    print('scaling_key', scaling_key)
 
     mri_transforms += [
         Normalize(
