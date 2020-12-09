@@ -67,7 +67,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
                         # csm = torch.from_numpy(normalize_csm(input_csm))
                         csm = normalize(input_csm)
-                        del input_csm
+                        # del input_csm
 
                         import matplotlib.pyplot as plt
                         sense = np.sum(csm.conj(), -1)[100]
