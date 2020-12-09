@@ -17,6 +17,7 @@ import torch
 
 from projects.tecfidera.dataset import TECFIDERADataset
 from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
+from direct.data.transforms import ifftshift
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
 sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
@@ -32,8 +33,9 @@ class DataTransform:
 
     def __call__(self, sample):
         masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
+
         sensitivity_map = complex_tensor_to_complex_np(
-            torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0))
+            ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
