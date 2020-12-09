@@ -143,8 +143,6 @@ def pics_recon(idx):
                 complex_tensor_to_complex_np(torch.from_numpy(kspace)),
                 complex_tensor_to_complex_np(ifftshift(torch.from_numpy(sensitivity_map), dim=(1, 2))))[0]
 
-    pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(pred), dim=(0, 1)))
-
     print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
 
     plot = True
