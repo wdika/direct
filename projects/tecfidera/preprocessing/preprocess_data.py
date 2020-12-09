@@ -53,12 +53,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-                    input_imspace = slice_selection(preprocessing_ifft(input_kspace), start=start, end=end)
+                    input_imspace = slice_selection(input_kspace, start=start, end=end)
+                    input_imspace = preprocessing_ifft(input_kspace), start=start, end=end
 
                     input_imspace = complex_tensor_to_complex_np(input_imspace)
                     print('input_imspace', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
                     input_imspace = normalize(input_imspace)
-                    print('input_imspace normalized', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
+                    print('input_imspace normalized', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
 
                     # Normalize data
                     # imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
