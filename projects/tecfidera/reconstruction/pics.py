@@ -53,24 +53,16 @@ def pics_recon(data, device, reg=0.01):
 
     for i in range(20, len(data)):
         masked_kspace = data[i]['kspace']
-        sensitivity_map = data[i]['sensitivity_map']
 
-        sensitivity_map = np.clip(normalize(sensitivity_map), 0.0, 1.0)
-        imspace = np.clip(normalize(np.fft.ifftn(masked_kspace, axes=(1, 2))), 0.0, 1.0)
-        masked_kspace = np.fft.fftn(imspace, axes=(1, 2))
-
-        print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
-        print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
-
-        pred = np.fft.fftshift(bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
+        pred =bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
                     complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0)),
-                    np.fft.fftshift(complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(0)), axes=(0, 1, 2))
-                    ), axes=(0, 1, 2))[0]
-        print(pred.shape)
+                    complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(0))
+                    )
 
-        plot = True
+        plot = False
         if plot:
             import matplotlib.pyplot as plt
+            imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
             rss_target = np.sqrt(np.sum(imspace ** 2, 0))
             target = np.sum(sensitivity_map.conj() * imspace, 0)
             sense = np.sqrt(np.sum(sensitivity_map ** 2, 0))

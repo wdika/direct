@@ -649,8 +649,6 @@ def build_mri_transforms(
             )
         )
 
-    print('scaling_key', scaling_key)
-
     mri_transforms += [
         Normalize(
             normalize_key=scaling_key,

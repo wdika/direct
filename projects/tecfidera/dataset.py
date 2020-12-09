@@ -53,4 +53,8 @@ class TECFIDERADataset(H5SliceData):
         if self.transform:
             sample = self.transform(sample)
 
+        imspace = np.fft.ifftn(sample["kspace"], axes=(1, 2))
+        print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
+        print('sensitivity_map', np.max(np.abs(sample["sensitivity_map"])), np.min(np.abs(sample["sensitivity_map"])))
+
         return sample
