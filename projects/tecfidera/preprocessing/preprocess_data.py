@@ -56,7 +56,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_imspace = slice_selection(preprocessing_ifft(input_kspace), start=start, end=end)
 
                     # Normalize data
-                    imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
+                    # imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
+                    imspace = torch.from_numpy(complex_tensor_to_complex_np(input_imspace))
                     del input_imspace
 
                     if not skip_csm:
