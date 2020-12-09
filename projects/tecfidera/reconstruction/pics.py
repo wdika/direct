@@ -28,6 +28,7 @@ class DataTransform:
 
     def __call__(self, sample):
         # masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
+        # TODO : Find out why normalization works here but not when saving to h5 using the preprocess_data script.
         masked_kspace = complex_tensor_to_complex_np(fftn(torch.from_numpy(normalize_rss(complex_tensor_to_complex_np(
             ifftn(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2))))), dim=(1, 2)))
 
@@ -56,75 +57,144 @@ def save_outputs(outputs, output_path):
             f["pics"] = pics_recon
 
 
-def pics_recon(idx):
-    if idx == 35:
-        kspace, sensitivity_map, filename, slice_no = data[idx]
+# def pics_recon(idx):
+#     if idx == 35:
+#         kspace, sensitivity_map, filename, slice_no = data[idx]
+#
+#         pred = normalize(complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
+#             bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
+#             dim=(0, 1))))
+#
+#         plot = True
+#         if plot:
+#             import matplotlib.pyplot as plt
+#             imspace = normalize(np.fft.ifft2(kspace, axes=(1, 2)))
+#             rss_target = normalize(np.sqrt(np.sum(imspace ** 2, -1)))[0]
+#
+#             sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
+#             target = normalize(np.sum(sensitivity_map.conj() * imspace, -1))[0]
+#             sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
+#
+#             print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
+#             print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
+#             print('target', np.max(np.abs(target)), np.min(np.abs(target)))
+#             print('rss_target', np.max(np.abs(rss_target)), np.min(np.abs(rss_target)))
+#             print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
+#             print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
+#
+#             plt.subplot(2, 4, 1)
+#             plt.imshow(np.abs(rss_target), cmap='gray')
+#             plt.title('rss_target')
+#             plt.colorbar()
+#             plt.subplot(2, 4, 2)
+#             plt.imshow(np.angle(rss_target), cmap='gray')
+#             plt.title('rss_target phase')
+#             plt.colorbar()
+#             plt.subplot(2, 4, 3)
+#             plt.imshow(np.abs(sense), cmap='gray')
+#             plt.title('sense')
+#             plt.colorbar()
+#             plt.subplot(2, 4, 4)
+#             plt.imshow(np.angle(sense), cmap='gray')
+#             plt.title('sense phase')
+#             plt.colorbar()
+#             plt.subplot(2, 4, 5)
+#             plt.imshow(np.abs(target), cmap='gray')
+#             plt.title('ifft(masked_kspace) * sense.conj()')
+#             plt.colorbar()
+#             plt.subplot(2, 4, 6)
+#             plt.imshow(np.angle(target), cmap='gray')
+#             plt.title('ifft(masked_kspace) * sense.conj() phase')
+#             plt.colorbar()
+#             plt.subplot(2, 4, 7)
+#             plt.imshow(np.abs(pred), cmap='gray')
+#             plt.title('pics')
+#             plt.colorbar()
+#             plt.subplot(2, 4, 8)
+#             plt.imshow(np.angle(pred), cmap='gray')
+#             plt.title('pics phase')
+#             plt.colorbar()
+#             plt.show()
+#
+#         return filename, slice_no, pred
 
-        pred = normalize(complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
-            bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
-            dim=(0, 1))))
 
-        plot = True
-        if plot:
-            import matplotlib.pyplot as plt
-            imspace = normalize(np.fft.ifft2(kspace, axes=(1, 2)))
-            rss_target = normalize(np.sqrt(np.sum(imspace ** 2, -1)))[0]
+def pics_recon(data):
+    kspace, sensitivity_map, filename, slice_no = data
 
-            sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
-            target = normalize(np.sum(sensitivity_map.conj() * imspace, -1))[0]
-            sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
+    pred = normalize(complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
+        bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
+        dim=(0, 1))))
 
-            print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
-            print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
-            print('target', np.max(np.abs(target)), np.min(np.abs(target)))
-            print('rss_target', np.max(np.abs(rss_target)), np.min(np.abs(rss_target)))
-            print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
-            print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
+    plot = True
+    if plot:
+        import matplotlib.pyplot as plt
+        imspace = normalize(np.fft.ifft2(kspace, axes=(1, 2)))
+        rss_target = normalize(np.sqrt(np.sum(imspace ** 2, -1)))[0]
 
-            plt.subplot(2, 4, 1)
-            plt.imshow(np.abs(rss_target), cmap='gray')
-            plt.title('rss_target')
-            plt.colorbar()
-            plt.subplot(2, 4, 2)
-            plt.imshow(np.angle(rss_target), cmap='gray')
-            plt.title('rss_target phase')
-            plt.colorbar()
-            plt.subplot(2, 4, 3)
-            plt.imshow(np.abs(sense), cmap='gray')
-            plt.title('sense')
-            plt.colorbar()
-            plt.subplot(2, 4, 4)
-            plt.imshow(np.angle(sense), cmap='gray')
-            plt.title('sense phase')
-            plt.colorbar()
-            plt.subplot(2, 4, 5)
-            plt.imshow(np.abs(target), cmap='gray')
-            plt.title('ifft(masked_kspace) * sense.conj()')
-            plt.colorbar()
-            plt.subplot(2, 4, 6)
-            plt.imshow(np.angle(target), cmap='gray')
-            plt.title('ifft(masked_kspace) * sense.conj() phase')
-            plt.colorbar()
-            plt.subplot(2, 4, 7)
-            plt.imshow(np.abs(pred), cmap='gray')
-            plt.title('pics')
-            plt.colorbar()
-            plt.subplot(2, 4, 8)
-            plt.imshow(np.angle(pred), cmap='gray')
-            plt.title('pics phase')
-            plt.colorbar()
-            plt.show()
+        sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
+        target = normalize(np.sum(sensitivity_map.conj() * imspace, -1))[0]
+        sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
 
-        return filename, slice_no, pred
+        print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
+        print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
+        print('target', np.max(np.abs(target)), np.min(np.abs(target)))
+        print('rss_target', np.max(np.abs(rss_target)), np.min(np.abs(rss_target)))
+        print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
+        print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
+
+        plt.subplot(2, 4, 1)
+        plt.imshow(np.abs(rss_target), cmap='gray')
+        plt.title('rss_target')
+        plt.colorbar()
+        plt.subplot(2, 4, 2)
+        plt.imshow(np.angle(rss_target), cmap='gray')
+        plt.title('rss_target phase')
+        plt.colorbar()
+        plt.subplot(2, 4, 3)
+        plt.imshow(np.abs(sense), cmap='gray')
+        plt.title('sense')
+        plt.colorbar()
+        plt.subplot(2, 4, 4)
+        plt.imshow(np.angle(sense), cmap='gray')
+        plt.title('sense phase')
+        plt.colorbar()
+        plt.subplot(2, 4, 5)
+        plt.imshow(np.abs(target), cmap='gray')
+        plt.title('ifft(masked_kspace) * sense.conj()')
+        plt.colorbar()
+        plt.subplot(2, 4, 6)
+        plt.imshow(np.angle(target), cmap='gray')
+        plt.title('ifft(masked_kspace) * sense.conj() phase')
+        plt.colorbar()
+        plt.subplot(2, 4, 7)
+        plt.imshow(np.abs(pred), cmap='gray')
+        plt.title('pics')
+        plt.colorbar()
+        plt.subplot(2, 4, 8)
+        plt.imshow(np.angle(pred), cmap='gray')
+        plt.title('pics phase')
+        plt.colorbar()
+        plt.show()
+
+    return filename, slice_no, pred
 
 
-def main(num_workers):
-    with multiprocessing.Pool(num_workers) as pool:
-        start_time = time.perf_counter()
-        outputs = pool.map(pics_recon, range(len(data)))
-        time_taken = time.perf_counter() - start_time
-        logging.info(f"Run Time = {time_taken:}s")
-        save_outputs(outputs, args.output_path)
+# def main(num_workers):
+    # with multiprocessing.Pool(num_workers) as pool:
+    #     start_time = time.perf_counter()
+    #     outputs = pool.map(pics_recon, range(len(data)))
+    #     time_taken = time.perf_counter() - start_time
+    #     logging.info(f"Run Time = {time_taken:}s")
+    #     save_outputs(outputs, args.output_path)
+
+def main(args):
+    start_time = time.perf_counter()
+    data = TECFIDERADataset(root=args.data_root, transform=DataTransform(), sensitivity_maps=args.sensitivity_maps_root)
+    outputs = pics_recon(data)
+    time_taken = time.perf_counter() - start_time
+    logging.info(f"Run Time = {time_taken:}s")
+    save_outputs(outputs, args.output_path)
 
 
 if __name__ == "__main__":
@@ -141,6 +211,6 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
-    data = TECFIDERADataset(root=args.data_root, transform=DataTransform(), sensitivity_maps=args.sensitivity_maps_root)
-
-    main(args.num_workers)
+    # data = TECFIDERADataset(root=args.data_root, transform=DataTransform(), sensitivity_maps=args.sensitivity_maps_root)
+    # main(args.num_workers)
+    main(args)
