@@ -33,10 +33,10 @@ class DataTransform:
 
     def __call__(self, sample):
         masked_kspace = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(-2))
+            T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(-3))
 
         sensitivity_map = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(-2))
+            T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(-3))
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
