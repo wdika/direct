@@ -70,12 +70,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         del input_csm
 
                         import matplotlib.pyplot as plt
+                        sense = np.sum(csm.conj(), -1)[100]
                         plt.subplot(1, 2, 1)
-                        plt.imshow(np.abs(np.sum(csm.conj(), -1)), cmap='gray')
+                        plt.imshow(np.abs(sense), cmap='gray')
                         plt.title('sense')
                         plt.colorbar()
                         plt.subplot(1, 2, 2)
-                        plt.imshow(np.angle(np.sum(csm.conj(), -1)), cmap='gray')
+                        plt.imshow(np.angle(sense), cmap='gray')
                         plt.title('sense phase')
                         plt.colorbar()
                         plt.show()
