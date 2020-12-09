@@ -55,13 +55,12 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    input_imspace = preprocessing_ifft(input_kspace)
+                    imspace = complex_tensor_to_complex_np(preprocessing_ifft(input_kspace))
                     del input_kspace
 
                     # Normalize data
                     # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported
-                    imspace = normalize(complex_tensor_to_complex_np(input_imspace))
-                    del input_imspace
+                    # imspace = normalize(imspace)
 
                     if not skip_csm:
                         csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
