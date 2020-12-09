@@ -60,7 +60,7 @@ def pics_recon(data, device, reg=0.01):
                     complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(0))
                     )
 
-        plot = False
+        plot = True
         if plot:
             import matplotlib.pyplot as plt
             imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
