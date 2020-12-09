@@ -57,7 +57,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     # Normalize data
                     input_imspace = normalize(complex_tensor_to_complex_np(input_imspace))
-                    imspace = torch.from_numpy(ninput_imspace)
+                    imspace = torch.from_numpy(input_imspace)
                     # del input_imspace
 
                     if not skip_csm:
