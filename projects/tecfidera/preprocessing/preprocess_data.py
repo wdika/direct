@@ -75,9 +75,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         create_dir(output_dir)
 
                         # Save target (SENSE reconstructed) png images
-                        Process(target=save_png_outputs, args=(
-                            complex_tensor_to_real_np(sense_reconstruction(imspace, torch.from_numpy(csm), dim=-1)),
-                            output_dir + '/targets/')).start()
+                        Process(target=save_png_outputs, args=(complex_tensor_to_real_np(
+                            sense_reconstruction(imspace, torch.from_numpy(csm).to(device), dim=-1)),
+                                                               output_dir + '/targets/')).start()
 
                         # Save mask
                         plt.imshow(mask, cmap='gray')
