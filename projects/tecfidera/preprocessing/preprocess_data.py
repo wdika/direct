@@ -55,7 +55,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
                     # input_imspace = complex_tensor_to_complex_np(preprocessing_ifft(input_kspace))
 
-                    input_imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(ifftn(fftn(preprocessing_ifft(input_kspace), dim=(1, 2), norm="ortho"), dim=(1, 2), norm="ortho")))
+                    input_imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(ifftn(fftn(preprocessing_ifft(input_kspace), dim=(1, 2), norm="ortho"), dim=(1, 2), norm="ortho"))))
 
                     kspace = complex_tensor_to_complex_np(fftn(input_imspace, dim=(1, 2), norm="ortho"))
                     imspace = complex_tensor_to_complex_np(input_imspace)
