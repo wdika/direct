@@ -69,7 +69,7 @@ def pics_recon(idx):
     plot = True
     if plot:
         import matplotlib.pyplot as plt
-        imspace = normalize(np.fft.ifft2(kspace, axes=(1, 2)))
+        imspace = np.fft.ifft2(kspace, axes=(1, 2))
         rss_target = np.sqrt(np.sum(imspace ** 2, -1))[0]
 
         sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
