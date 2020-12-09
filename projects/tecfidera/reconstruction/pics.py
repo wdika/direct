@@ -15,9 +15,8 @@ import h5py
 import numpy as np
 import torch
 
-import direct.data.transforms as T
-from direct.data.transforms import ifftshift
 from projects.tecfidera.dataset import TECFIDERADataset
+from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
 sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
@@ -32,11 +31,8 @@ class DataTransform:
         pass
 
     def __call__(self, sample):
-        masked_kspace = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
-
-        sensitivity_map = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
+        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
+        sensitivity_map = complex_tensor_to_complex_np(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0))
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
@@ -133,7 +129,7 @@ def pics_recon(idx):
     kspace, sensitivity_map, filename, slice_no = data[idx]
 
     # from torch.fft import ifftn
-    # from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
+    #
     # imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2)))
     # print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
     # print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
