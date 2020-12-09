@@ -75,10 +75,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Therefore normalizing the csm again will increase the scale.
 
                         csm1 = normalize(input_csm)
-                        csm2 = normalize_rss(input_csm)
                         csm3 = normalize_csm(input_csm)
                         print('csm1', np.max(np.abs(csm1)), np.min(np.abs(csm1)))
-                        print('csm2', np.max(np.abs(csm2)), np.min(np.abs(csm2)))
                         print('csm3', np.max(np.abs(csm3)), np.min(np.abs(csm3)))
 
 
