@@ -46,6 +46,7 @@ class TECFIDERADataset(H5SliceData):
         sample = super().__getitem__(idx)
 
         sample["kspace"] = np.ascontiguousarray(sample["kspace"].transpose(2, 0, 1))
+        sample["kspace"] = np.where(sample["kspace"] == 0, np.array([0.0], dtype=sample["kspace"].dtype), (sample["kspace"] / np.max(sample["kspace"])))
 
         if self.sensitivity_maps is not None:
             sample["sensitivity_map"] = np.ascontiguousarray(sample["sensitivity_map"].transpose(2, 0, 1))
