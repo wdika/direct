@@ -61,7 +61,7 @@ def pics_recon(idx):
     kspace, sensitivity_map, filename, slice_no = data[idx]
 
     pred = normalize(complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
-        bart(2, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
+        bart(f'pics -g -i 200 -S -l1 -r 0.01 {kspace} {sensitivity_map}')[0]),
         dim=(0, 1))))
 
     plot = True
