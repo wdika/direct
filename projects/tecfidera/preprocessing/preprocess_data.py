@@ -59,8 +59,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # input_imspace = preprocessing_ifft(input_kspace)
                     # input_imspace = complex_tensor_to_complex_np(input_imspace)
 
+                    print('input_kspace ', np.max(np.abs(input_kspace)), np.min(np.abs(input_kspace)))
                     input_imspace = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
-
                     print('input_imspace 1 ', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
                     input_imspace = normalize(input_imspace)
                     print('input_imspace normalized', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
