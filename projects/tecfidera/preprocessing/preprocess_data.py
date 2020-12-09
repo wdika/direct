@@ -60,14 +60,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # input_imspace = preprocessing_ifft(input_kspace)
                     # input_imspace = complex_tensor_to_complex_np(input_imspace)
 
-                    np_input_imspace = normalize(np.fft.ifftn(input_kspace, axes=(0, 1, 2)))
-                    print('input_imspace numpy normalized', np.max(np.abs(np_input_imspace)),
-                          np.min(np.abs(np_input_imspace)))
-
-                    torch_input_imspace = normalize(complex_tensor_to_complex_np(ifftn(torch.from_numpy(input_kspace),
-                                                                                       dim=(0, 1, 2))))
-                    print('input_imspace torch normalized', np.max(np.abs(torch_input_imspace)),
-                          np.min(np.abs(torch_input_imspace)))
+                    preprocessing_ifft_input_imspace = normalize(complex_tensor_to_complex_np(preprocessing_ifft(torch.from_numpy(input_kspace))))
+                    ifftshift_input_imspace = normalize(complex_tensor_to_complex_np(T.ifftshift(ifftn(torch.from_numpy(input_kspace),
+                                                                                       dim=(0, 1, 2)), dim=0)))
+                    print('preprocessing_ifft_input_imspace', np.max(np.abs(preprocessing_ifft_input_imspace)),
+                          np.min(np.abs(preprocessing_ifft_input_imspace)))
+                    print('ifftshift_input_imspace', np.max(np.abs(ifftshift_input_imspace)),
+                          np.min(np.abs(ifftshift_input_imspace)))
 
 
                     # Normalize data
