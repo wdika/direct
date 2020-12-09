@@ -55,28 +55,16 @@ def pics_recon(data, device, reg=0.01):
         masked_kspace = data[i]['kspace']
         sensitivity_map = data[i]['sensitivity_map']
 
-        print(masked_kspace.shape,sensitivity_map.shape)
-
-        # sensitivity_map = normalize(sensitivity_map)
-
-        imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
-        imspace = normalize(imspace)
-        masked_kspace = np.fft.fftn(imspace, axes=(1, 2))
-
-        kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0))
-        # sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map), dim=(1, 2)).permute(1, 2, 0).unsqueeze(0))
-        sense = complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(0))
-
-        pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}', kspace, sense)
-        # pred = complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(1, 2)))[0]
-        pred = complex_tensor_to_complex_np(torch.from_numpy(pred))[0]
-        # pred = normalize(pred)
+        pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
+                    complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0)),
+                    complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0))
+                    )[0]
 
         plot = True
         if plot:
             import matplotlib.pyplot as plt
+            imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
             rss_target = np.sqrt(np.sum(imspace ** 2, 0))
-
             target = np.sum(sensitivity_map.conj() * imspace, 0)
             sense = np.sum(sensitivity_map.conj(), 0)
 
