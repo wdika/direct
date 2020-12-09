@@ -74,13 +74,15 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         scale = np.max(np.abs(csm)) / np.max(np.abs(input_imspace))
 
                         import matplotlib.pyplot as plt
-                        sense = np.sum((csm / np.max(csm)).conj(), -1)[100]
-                        sense2 = np.sum((normalize_csm(input_csm) / np.max(normalize_csm(input_csm))).conj(), -1)[100]
-                        sense3 = np.sum((normalize_rss(input_csm) / np.max(normalize_rss(input_csm))).conj(), -1)[100]
+                        sense = np.sum((csm).conj(), -1)[100]
+                        sense2 = np.sum((normalize_csm(input_csm)).conj(), -1)[100]
+                        sense3 = np.sum((normalize_rss(input_csm)).conj(), -1)[100]
 
                         print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
                         print('sense2', np.max(np.abs(sense2)), np.min(np.abs(sense2)))
                         print('sense3', np.max(np.abs(sense3)), np.min(np.abs(sense3)))
+
+                        print('scale', scale)
 
                         plt.subplot(3, 2, 1)
                         plt.imshow(np.abs(sense), cmap='gray')

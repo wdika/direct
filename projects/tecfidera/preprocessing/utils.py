@@ -78,15 +78,15 @@ def slice_selection(data, start, end):
 
 
 def normalize(data):
-    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data)))
+    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data).real))
 
 
 def normalize_csm(data, coil_dim=-1):
-    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.expand_dims(np.sqrt(np.sum(data.conj() * data, coil_dim).real), coil_dim)))
+    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.expand_dims(np.sqrt(np.sum(data.conj() * data, coil_dim)).real, coil_dim)))
 
 
 def normalize_rss(data, coil_dim=-1):
-    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.expand_dims(np.sqrt(np.sum(data**2, coil_dim)), coil_dim)))
+    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.expand_dims(np.sqrt(np.sum(data**2, coil_dim)).real, coil_dim)))
 
 
 def preprocessing_ifft(kspace):
