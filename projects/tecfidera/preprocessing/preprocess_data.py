@@ -53,30 +53,36 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-                    input_imspace = complex_tensor_to_complex_np(preprocessing_ifft(slice_selection(input_kspace, start=start, end=end)))
 
-                    normalize_input_imspace = normalize(input_imspace)
-
-                    print('normalize_input_imspace', np.max(np.abs(normalize_input_imspace)), np.min(np.abs(normalize_input_imspace)))
-
+                    input_kspace = slice_selection(input_kspace, start=start, end=end)
+                    input_imspace = preprocessing_ifft(input_kspace)
+                    del input_kspace
 
                     # Normalize data
-                    # imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
-                    # imspace = torch.from_numpy(input_imspace)
-                    # del input_imspace
-                    #
-                    # if not skip_csm:
-                    #     input_csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
-                    #
-                    #     # Normalize data
-                    #     # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
-                    #     # input_csm = input_csm / np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
-                    #     #
-                    #     # TODO (kp) : make sure about the csm normalization. Here it seems the csm is normalized.
-                    #     # Therefore normalizing the csm again will increase the scale.
-                    #
-                    #     csm = torch.from_numpy(input_csm)
-                    #     del input_csm
+                    # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported
+                    imspace = normalize(complex_tensor_to_complex_np(input_imspace))
+                    del input_imspace
+
+                    if not skip_csm:
+                        input_csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
+                        print('input_csm', np.max(np.abs(input_csm)), np.min(np.abs(input_csm)))
+
+                        # Normalize data
+                        # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
+                        # input_csm = input_csm / np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
+                        #
+                        # TODO (kp) : make sure about the csm normalization. Here it seems the csm is normalized.
+                        # Therefore normalizing the csm again will increase the scale.
+
+                        csm1 = normalize(input_csm)
+                        csm2 = normalize_rss(input_csm)
+                        csm3 = normalize_csm(input_csm)
+                        print('csm1', np.max(np.abs(csm1)), np.min(np.abs(csm1)))
+                        print('csm2', np.max(np.abs(csm2)), np.min(np.abs(csm2)))
+                        print('csm3', np.max(np.abs(csm3)), np.min(np.abs(csm3)))
+
+
+                        del input_csm
                     #
                     # if export_type == 'png':
                     #     output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
