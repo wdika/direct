@@ -129,11 +129,11 @@ def main(num_workers):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("data_root", type=Path, default=None, help="Path to root")
-    parser.add_argument("sensitivity_maps_root", type=Path, default=None, help="Path to sensitivity_maps root")
-    parser.add_argument("output_path", type=Path, default=None, help="Path to save the sensitivity maps to", )
+    parser.add_argument("data_root", type=Path, default=None, help="Path to root.")
+    parser.add_argument("sensitivity_maps_root", type=Path, default=None, help="Path to sensitivity_maps root.")
+    parser.add_argument("output_path", type=Path, default=None, help="Path to save the pics recons.", )
     parser.add_argument("--seed", default=42, type=int, help="Seed for random number generators.")
-    parser.add_argument('--num_workers', type=int, default=4, help='Number of workers for data loading')
+    parser.add_argument('--num_workers', type=int, default=4, help='Number of workers for data loading.')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda', help='Enable GPU.')
     args = parser.parse_args()
 
@@ -142,5 +142,4 @@ if __name__ == "__main__":
     torch.manual_seed(args.seed)
 
     data = TECFIDERADataset(root=args.data_root, transform=DataTransform(), sensitivity_maps=args.sensitivity_maps_root)
-
     main(args.num_workers)
