@@ -15,7 +15,7 @@ import h5py
 import numpy as np
 import torch
 
-from direct.data.transforms import fftshift
+from direct.data.transforms import ifftshift
 from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np, normalize
 from projects.tecfidera.dataset import TECFIDERADataset
 
@@ -59,6 +59,8 @@ def pics_recon(data, device, reg=0.01):
                     complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0)),
                     complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(0))
                     )[0]
+
+        pred = ifftshift(pred, dim=(0, 1))
 
         plot = True
         if plot:
