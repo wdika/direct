@@ -32,10 +32,10 @@ class DataTransform:
         pass
 
     def __call__(self, sample):
-        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
+        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(-2))
 
         sensitivity_map = complex_tensor_to_complex_np(
-            ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
+            ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(-2), dim=(1, 2)))
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
@@ -59,91 +59,15 @@ def save_outputs(outputs, output_path):
             f["pics"] = pics_recon
 
 
-# def pics_recon(data, device, reg=0.01):
-#     """
-#     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
-#     """
-#     kspace, sensitivity_map, filename, slice_no = data
-#
-#     for i in range(20, kspace.shape[0]):
-#
-#         from torch.fft import ifftn
-#         from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
-#         imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2)))
-#         print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
-#         print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
-#
-#         pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
-#                     complex_tensor_to_complex_np(torch.from_numpy(kspace).permute(1, 2, 0).unsqueeze(0)),
-#                     complex_tensor_to_complex_np(
-#                         ifftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0), dim=(0, 1)).unsqueeze(0))
-#                     )[0]
-#
-#         pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(pred), dim=(0, 1)))
-#
-#         print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
-#
-#         plot = True
-#         if plot:
-#             import matplotlib.pyplot as plt
-#             # imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
-#             rss_target = np.sqrt(np.sum(imspace ** 2, 0))
-#             target = np.sum(sensitivity_map.conj() * imspace, 0)
-#             sense = np.sqrt(np.sum(sensitivity_map ** 2, 0))
-#
-#             plt.subplot(2, 4, 1)
-#             plt.imshow(np.abs(rss_target), cmap='gray')
-#             plt.title('rss_target')
-#             plt.colorbar()
-#             plt.subplot(2, 4, 2)
-#             plt.imshow(np.angle(rss_target), cmap='gray')
-#             plt.title('rss_target phase')
-#             plt.colorbar()
-#             plt.subplot(2, 4, 3)
-#             plt.imshow(np.abs(sense), cmap='gray')
-#             plt.title('sense')
-#             plt.colorbar()
-#             plt.subplot(2, 4, 4)
-#             plt.imshow(np.angle(sense), cmap='gray')
-#             plt.title('sense phase')
-#             plt.colorbar()
-#             plt.subplot(2, 4, 5)
-#             plt.imshow(np.abs(target), cmap='gray')
-#             plt.title('ifft(masked_kspace) * sense.conj()')
-#             plt.colorbar()
-#             plt.subplot(2, 4, 6)
-#             plt.imshow(np.angle(target), cmap='gray')
-#             plt.title('ifft(masked_kspace) * sense.conj() phase')
-#             plt.colorbar()
-#             plt.subplot(2, 4, 7)
-#             plt.imshow(np.abs(pred), cmap='gray')
-#             plt.title('pics')
-#             plt.colorbar()
-#             plt.subplot(2, 4, 8)
-#             plt.imshow(np.angle(pred), cmap='gray')
-#             plt.title('pics phase')
-#             plt.colorbar()
-#             plt.show()
-#
-#     return pred
-#
-
 def pics_recon(idx):
     if idx == 35:
         kspace, sensitivity_map, filename, slice_no = data[idx]
 
-        # from torch.fft import ifftn
-        #
-        # imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2)))
-        # print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
-        # print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
-
-        print(kspace.shape, sensitivity_map.shape)
-
         pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
-            bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
+            bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)),
             dim=(0, 1)))
-        print('pred', pred.shape, np.max(np.abs(pred)), np.min(np.abs(pred)))
+
+        print(pred.shape, kspace.shape, sensitivity_map.shape)
 
         plot = True
         if plot:
@@ -154,6 +78,8 @@ def pics_recon(idx):
             sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
             target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
             sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
+
+            print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
 
             plt.subplot(2, 4, 1)
             plt.imshow(np.abs(rss_target), cmap='gray')
