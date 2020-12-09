@@ -69,7 +69,6 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Normalize data
                         # TODO (kp) : make sure about the csm normalization. Here it seems the csm is normalized.
 
-
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
                             -2] + '/' + name
@@ -104,14 +103,14 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # TODO (dk) : find the correct transformation in pytorch,
                         #  so the norm doesn't change the scale of the data.
                         #  For now I will be using numpy, but that's inefficient.
-                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho"))
+                        kspace = complex_tensor_to_complex_np(fftn(torch.from_numpy(imspace), dim=(1, 2), norm="ortho"))
                         print('kspace torch', np.max(np.abs(kspace)), np.min(np.abs(kspace)))
-                        imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2), norm="ortho"))
-                        print('imspace torch', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
+                        torch_imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2), norm="ortho"))
+                        print('imspace torch', np.max(np.abs(torch_imspace)), np.min(np.abs(torch_imspace)))
 
-                        np_kspace = np.fft.fftn(complex_tensor_to_complex_np(imspace), axes=(1, 2))
+                        np_kspace = np.fft.fftn(imspace, axes=(1, 2))
                         print('kspace np', np.max(np.abs(np_kspace)), np.min(np.abs(np_kspace)))
-                        np_imspace = np.fft.ifftn(complex_tensor_to_complex_np(np_kspace), axes=(1, 2))
+                        np_imspace = np.fft.ifftn(np_kspace, axes=(1, 2))
                         print('imspace np', np.max(np.abs(np_imspace)), np.min(np.abs(np_imspace)))
 
                         Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
