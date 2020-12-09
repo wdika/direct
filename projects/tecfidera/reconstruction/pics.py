@@ -140,7 +140,9 @@ def pics_recon(idx):
 
         print(kspace.shape, sensitivity_map.shape)
 
-        pred = bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]
+        pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
+            bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
+            dim=(0, 1)))
         print('pred', pred.shape, np.max(np.abs(pred)), np.min(np.abs(pred)))
 
         plot = True
@@ -148,6 +150,8 @@ def pics_recon(idx):
             import matplotlib.pyplot as plt
             imspace = np.fft.ifft2(kspace, axes=(1, 2))
             rss_target = np.sqrt(np.sum(imspace ** 2, -1))[0]
+
+            sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
             target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
             sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
 
