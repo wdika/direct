@@ -70,10 +70,10 @@ def pics_recon(idx):
     if plot:
         import matplotlib.pyplot as plt
         imspace = normalize(np.fft.ifft2(kspace, axes=(1, 2)))
-        rss_target = normalize(np.sqrt(np.sum(imspace ** 2, -1)))[0]
+        rss_target = np.sqrt(np.sum(imspace ** 2, -1))[0]
 
         sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
-        target = normalize(np.sum(sensitivity_map.conj() * imspace, -1))[0]
+        target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
         sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
 
         print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
