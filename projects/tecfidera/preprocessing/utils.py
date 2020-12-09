@@ -76,12 +76,12 @@ def slice_selection(data, start, end):
 
 
 def normalize(data):
-    return np.clip(np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data))), 0., 1.)
+    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data)))
 
 
 def normalize_rss(data, coil_dim=-1):
-    return np.clip(np.where(data == 0, np.array([0.0], dtype=data.dtype),
-                            (data / np.max(np.sqrt(np.sum(data**2, coil_dim))))), 0., 1.)
+    return np.where(data == 0, np.array([0.0], dtype=data.dtype),
+                            (data / np.max(np.sqrt(np.sum(data**2, coil_dim)))))
 
 
 def preprocessing_ifft(kspace):
