@@ -51,13 +51,16 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    input_kspace = readcfl(filename_kspace.split('.')[0])
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
                     input_kspace = slice_selection(input_kspace, start=start, end=end)
 
-                    input_imspace = preprocessing_ifft(input_kspace)
-                    print('input_imspace 0 ', torch.max(torch.abs(input_imspace)), torch.min(torch.abs(input_imspace)))
-                    input_imspace = complex_tensor_to_complex_np(input_imspace)
+                    # input_imspace = preprocessing_ifft(input_kspace)
+                    # input_imspace = complex_tensor_to_complex_np(input_imspace)
+
+                    input_imspace = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
+
                     print('input_imspace 1 ', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
                     input_imspace = normalize(input_imspace)
                     print('input_imspace normalized', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
