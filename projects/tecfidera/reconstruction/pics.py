@@ -140,7 +140,7 @@ def pics_recon(idx):
 
     print(kspace.shape, sensitivity_map.shape)
 
-    pred = bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)
+    pred = bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]
     print('pred', pred.shape, np.max(np.abs(pred)), np.min(np.abs(pred)))
 
     plot = True
