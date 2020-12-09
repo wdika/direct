@@ -33,10 +33,10 @@ class DataTransform:
 
     def __call__(self, sample):
         masked_kspace = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(-3))
+            T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
 
         sensitivity_map = T.tensor_to_complex_numpy(
-            T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(-3))
+            T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
@@ -146,10 +146,10 @@ def pics_recon(idx):
     plot = True
     if plot:
         import matplotlib.pyplot as plt
-        imspace = np.fft.ifftn(kspace, axes=(0, 1))
-        rss_target = np.sqrt(np.sum(imspace ** 2, -1))[-1]
-        target = np.sum(sensitivity_map.conj() * imspace, -1)[-1]
-        sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[-1]
+        imspace = np.fft.ifftn(kspace, axes=(1, 2))
+        rss_target = np.sqrt(np.sum(imspace ** 2, -1))[0]
+        target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
+        sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
 
         plt.subplot(2, 4, 1)
         plt.imshow(np.abs(rss_target), cmap='gray')
