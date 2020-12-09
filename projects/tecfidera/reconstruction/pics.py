@@ -16,7 +16,7 @@ import numpy as np
 import torch
 
 from direct.data.transforms import fftshift
-from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np, normalize, rss_normalize
+from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np, normalize
 from projects.tecfidera.dataset import TECFIDERADataset
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
