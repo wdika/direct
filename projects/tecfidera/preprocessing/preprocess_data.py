@@ -55,7 +55,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    imspace = complex_tensor_to_complex_np(preprocessing_ifft(input_kspace))
+                    imspace = preprocessing_ifft(input_kspace)
                     del input_kspace
 
                     # Normalize data
@@ -76,7 +76,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         # Save target (SENSE reconstructed) png images
                         Process(target=save_png_outputs, args=(
-                            complex_tensor_to_real_np(sense_reconstruction(imspace, csm, dim=-1)),
+                            complex_tensor_to_real_np(sense_reconstruction(imspace, torch.from_numpy(csm), dim=-1)),
                             output_dir + '/targets/')).start()
 
                         # Save mask
@@ -97,7 +97,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         output_dir = output + '/kspaces/'
                         create_dir(output_dir)
                         Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(fftn(torch.from_numpy(imspace), dim=(1, 2), norm="ortho")),
+                            complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")),
                             "kspace", output_dir + name)).start()
                         del imspace
 
