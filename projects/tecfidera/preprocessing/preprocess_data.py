@@ -108,8 +108,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         #  so the norm doesn't change the scale of the data.
                         #  For now I will be using numpy, but that's inefficient.
 
-                        # kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho"))
-                        kspace = np.fft.fftn(complex_tensor_to_complex_np(imspace), axes=(1, 2))
+                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(0, 1, 2), norm="ortho"))
+                        # kspace = np.fft.fftn(complex_tensor_to_complex_np(imspace), axes=(1, 2))
                         Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
 
                         if not skip_csm:
