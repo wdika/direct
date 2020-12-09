@@ -55,11 +55,12 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
                     input_imspace = slice_selection(preprocessing_ifft(input_kspace), start=start, end=end)
 
+                    input_imspace = complex_tensor_to_complex_np(input_imspace)
                     print('input_imspace', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
 
                     # Normalize data
                     # imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
-                    imspace = torch.from_numpy(complex_tensor_to_complex_np(input_imspace))
+                    imspace = torch.from_numpy()
                     del input_imspace
 
                     print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
