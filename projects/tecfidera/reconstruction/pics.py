@@ -32,10 +32,10 @@ class DataTransform:
         pass
 
     def __call__(self, sample):
-        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(-2))
+        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
 
         sensitivity_map = complex_tensor_to_complex_np(
-            ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(-2), dim=(1, 2)))
+            ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
@@ -63,11 +63,9 @@ def pics_recon(idx):
     if idx == 35:
         kspace, sensitivity_map, filename, slice_no = data[idx]
 
-        pred = complex_tensor_to_complex_np(torch.from_numpy(
-            bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)),
-           )
-
-        print(pred.shape, kspace.shape, sensitivity_map.shape)
+        pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
+            bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
+            dim=(0, 1)))
 
         plot = True
         if plot:
@@ -79,7 +77,12 @@ def pics_recon(idx):
             target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
             sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
 
+            print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
             print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
+            print('target', np.max(np.abs(target)), np.min(np.abs(target)))
+            print('rss_target', np.max(np.abs(rss_target)), np.min(np.abs(rss_target)))
+            print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
+            print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
 
             plt.subplot(2, 4, 1)
             plt.imshow(np.abs(rss_target), cmap='gray')
