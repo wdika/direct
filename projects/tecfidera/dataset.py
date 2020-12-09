@@ -47,7 +47,7 @@ class TECFIDERADataset(H5SliceData):
 
         sample["kspace"] = np.ascontiguousarray(sample["kspace"].transpose(2, 0, 1))
         imspace = np.fft.ifftn(sample["kspace"], axes=(1, 2))
-        imspace = np.where(imspace == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace)))
+        imspace = np.clip(np.where(imspace == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace))), 0.0, 1.0)
         sample["kspace"] = np.fft.fftn(imspace, axes=(1, 2))
 
         if self.sensitivity_maps is not None:
