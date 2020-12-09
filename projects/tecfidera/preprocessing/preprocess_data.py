@@ -51,13 +51,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
-                    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-                    input_imspace = slice_selection(preprocessing_ifft(input_kspace), start=start, end=end)
-
-                    # Normalize data
-                    imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
-                    del input_imspace
+                    # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    # mask = complex_tensor_to_real_np(extract_mask(input_kspace))
+                    # input_imspace = slice_selection(preprocessing_ifft(input_kspace), start=start, end=end)
+                    #
+                    # # Normalize data
+                    # imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
+                    # del input_imspace
 
                     if not skip_csm:
                         input_csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
@@ -74,9 +74,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         sense2 = np.sum(normalize_csm(input_csm).conj(), -1)[100]
                         sense3 = np.sum(normalize_rss(input_csm).conj(), -1)[100]
 
-                        print('sense', np.max(sense), np.min(sense))
-                        print('sense2', np.max(sense2), np.min(sense2))
-                        print('sense3', np.max(sense3), np.min(sense3))
+                        print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
+                        print('sense2', np.max(np.abs(sense2)), np.min(np.abs(sense2)))
+                        print('sense3', np.max(np.abs(sense3)), np.min(np.abs(sense3)))
 
                         plt.subplot(3, 2, 1)
                         plt.imshow(np.abs(sense), cmap='gray')
