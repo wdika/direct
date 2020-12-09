@@ -60,6 +60,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     imspace = torch.from_numpy(normalize(input_imspace))
                     # del input_imspace
                     print('input_imspace', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
+                    print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
 
                     if not skip_csm:
                         input_csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
@@ -69,11 +70,11 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
                         # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
                         # csm = torch.from_numpy(normalize_csm(input_csm))
-                        csm = normalize(input_csm)
+                        # csm = normalize(input_csm)
                         # del input_csm
 
                         import matplotlib.pyplot as plt
-                        sense = np.sum((csm).conj(), -1)[100]
+                        sense = np.sum(input_csm.conj(), -1)[100]
                         sense2 = np.sum((normalize_csm(input_csm)).conj(), -1)[100]
                         sense3 = np.sum((normalize_rss(input_csm)).conj(), -1)[100]
 
