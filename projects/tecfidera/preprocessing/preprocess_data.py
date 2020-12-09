@@ -59,7 +59,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     del input_kspace
 
                     # Normalize data
-                    # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported
+                    # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported.
+                    #  It is still unclear why normalizing the data here doesn't work with the dataloaders.
                     # imspace = normalize(imspace)
 
                     if not skip_csm:
