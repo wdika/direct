@@ -55,7 +55,6 @@ def pics_recon(data, device, reg=0.01):
         masked_kspace = data[i]['kspace']
         sensitivity_map = data[i]['sensitivity_map']
 
-        print(masked_kspace.shape, sensitivity_map.shape)
         from torch.fft import ifftn
         from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
         imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(masked_kspace), dim=(1, 2)))
@@ -66,14 +65,15 @@ def pics_recon(data, device, reg=0.01):
                     complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0)),
                     complex_tensor_to_complex_np(ifftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0), dim=(0, 1)).unsqueeze(0))
                     )[0]
-        print(pred.shape)
 
-        pred = ifftshift(torch.from_numpy(pred), dim=(0, 1))
+        pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(pred), dim=(0, 1)))
+
+        print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
 
         plot = True
         if plot:
             import matplotlib.pyplot as plt
-            imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
+            # imspace = np.fft.ifftn(masked_kspace, axes=(1, 2))
             rss_target = np.sqrt(np.sum(imspace ** 2, 0))
             target = np.sum(sensitivity_map.conj() * imspace, 0)
             sense = np.sqrt(np.sum(sensitivity_map ** 2, 0))
