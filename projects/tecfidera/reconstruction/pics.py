@@ -55,22 +55,26 @@ def pics_recon(data, device, reg=0.01):
         masked_kspace = data[i]['kspace']
         sensitivity_map = data[i]['sensitivity_map']
 
+        sensitivity_map = normalize(sensitivity_map)
+
+        imspace = np.fft.ifft2(masked_kspace, axes=(1, 2))
+        imspace = normalize(imspace)
+        masked_kspace = np.fft.fft2(imspace, axes=(1, 2))
+
         kspace = complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0))
         sense = complex_tensor_to_complex_np(fftshift(torch.from_numpy(sensitivity_map), dim=(1, 2)).permute(1, 2, 0).unsqueeze(0))
 
         pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}', kspace, sense)
         pred = complex_tensor_to_complex_np(fftshift(torch.from_numpy(pred), dim=(1, 2)))[0]
-        pred = normalize(pred)
+        # pred = normalize(pred)
 
         plot = True
         if plot:
             import matplotlib.pyplot as plt
-            imspace = np.fft.ifft2(masked_kspace, axes=(1, 2))
+            rss_target = np.sqrt(np.sum(imspace ** 2, 0))
 
             target = np.sum(sensitivity_map.conj() * imspace, 0)
             sense = np.sum(sensitivity_map.conj(), 0)
-
-            rss_target = np.sqrt(np.sum(imspace ** 2, 0))
 
             plt.subplot(2, 4, 1)
             plt.imshow(np.abs(rss_target), cmap='gray')
