@@ -60,7 +60,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     imspace = torch.from_numpy(normalize(input_imspace))
                     # del input_imspace
                     print('input_imspace', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
-                    print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
+                    print('imspace', np.max(np.abs(normalize(input_imspace))), np.min(np.abs(normalize(input_imspace))))
+                    imspace2 = np.sum(normalize_rss(input_imspace).conj(), -1)
+                    print('imspace2', np.max(np.abs(imspace2)), np.min(np.abs(imspace2)))
 
                     if not skip_csm:
                         input_csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
@@ -73,42 +75,40 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # csm = normalize(input_csm)
                         # del input_csm
 
-                        import matplotlib.pyplot as plt
-                        sense = np.sum(input_csm.conj(), -1)[100]
-                        sense2 = np.sum((normalize_csm(input_csm)).conj(), -1)[100]
-                        sense3 = np.sum((normalize_rss(input_csm)).conj(), -1)[100]
+                        # import matplotlib.pyplot as plt
+                        sense = np.sum(input_csm.conj(), -1)
+                        sense2 = np.sum((normalize_csm(input_csm)).conj(), -1)
+                        sense3 = np.sum((normalize_rss(input_csm)).conj(), -1)
 
                         print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
                         print('sense2', np.max(np.abs(sense2)), np.min(np.abs(sense2)))
                         print('sense3', np.max(np.abs(sense3)), np.min(np.abs(sense3)))
 
-                        print('scale', scale)
-
-                        plt.subplot(3, 2, 1)
-                        plt.imshow(np.abs(sense), cmap='gray')
-                        plt.title('sense')
-                        plt.colorbar()
-                        plt.subplot(3, 2, 2)
-                        plt.imshow(np.angle(sense), cmap='gray')
-                        plt.title('sense phase')
-                        plt.colorbar()
-                        plt.subplot(3, 2, 3)
-                        plt.imshow(np.abs(sense2), cmap='gray')
-                        plt.title('sense2')
-                        plt.colorbar()
-                        plt.subplot(3, 2, 4)
-                        plt.imshow(np.angle(sense2), cmap='gray')
-                        plt.title('sense2 phase')
-                        plt.colorbar()
-                        plt.subplot(3, 2, 5)
-                        plt.imshow(np.abs(sense3), cmap='gray')
-                        plt.title('sense3')
-                        plt.colorbar()
-                        plt.subplot(3, 2, 6)
-                        plt.imshow(np.angle(sense3), cmap='gray')
-                        plt.title('sense3 phase')
-                        plt.colorbar()
-                        plt.show()
+                        # plt.subplot(3, 2, 1)
+                        # plt.imshow(np.abs(sense), cmap='gray')
+                        # plt.title('sense')
+                        # plt.colorbar()
+                        # plt.subplot(3, 2, 2)
+                        # plt.imshow(np.angle(sense), cmap='gray')
+                        # plt.title('sense phase')
+                        # plt.colorbar()
+                        # plt.subplot(3, 2, 3)
+                        # plt.imshow(np.abs(sense2), cmap='gray')
+                        # plt.title('sense2')
+                        # plt.colorbar()
+                        # plt.subplot(3, 2, 4)
+                        # plt.imshow(np.angle(sense2), cmap='gray')
+                        # plt.title('sense2 phase')
+                        # plt.colorbar()
+                        # plt.subplot(3, 2, 5)
+                        # plt.imshow(np.abs(sense3), cmap='gray')
+                        # plt.title('sense3')
+                        # plt.colorbar()
+                        # plt.subplot(3, 2, 6)
+                        # plt.imshow(np.angle(sense3), cmap='gray')
+                        # plt.title('sense3 phase')
+                        # plt.colorbar()
+                        # plt.show()
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
