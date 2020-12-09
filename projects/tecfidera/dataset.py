@@ -52,6 +52,8 @@ class TECFIDERADataset(H5SliceData):
 
         if self.sensitivity_maps is not None:
             sample["sensitivity_map"] = np.ascontiguousarray(sample["sensitivity_map"].transpose(2, 0, 1))
+            sample["sensitivity_map"] = np.clip(np.where(sample["sensitivity_map"] == 0, np.array([0.0], dtype=sample["sensitivity_map"].dtype),
+                                                         (sample["sensitivity_map"] / np.max(sample["sensitivity_map"]))), 0.0, 1.0)
 
         if self.transform:
             sample = self.transform(sample)
