@@ -9,15 +9,10 @@ import random
 import sys
 import time
 from collections import defaultdict
-from pathlib import Path
 
-import h5py
-import numpy as np
-import torch
-
-from projects.tecfidera.dataset import TECFIDERADataset
-from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
 from direct.data.transforms import ifftshift
+from projects.tecfidera.dataset import TECFIDERADataset
+from projects.tecfidera.preprocessing.utils import *
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
 sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
@@ -32,7 +27,9 @@ class DataTransform:
         pass
 
     def __call__(self, sample):
-        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
+        # masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
+        masked_kspace = fftn(normalize(complex_tensor_to_complex_np(
+            ifftn(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))), dim=(1, 2))
 
         sensitivity_map = complex_tensor_to_complex_np(
             ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
