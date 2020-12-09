@@ -60,7 +60,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     # Normalize data
                     # imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
-                    imspace = torch.from_numpy()
+                    imspace = torch.from_numpy(input_imspace)
                     del input_imspace
 
                     print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
