@@ -54,7 +54,9 @@ def complex_tensor_to_real_np(x):
 
 
 def complex_tensor_to_complex_np(x):
-    return x.detach().cpu().numpy().astype(np.complex64)
+    # return x.detach().cpu().numpy().astype(np.complex64)
+    x = x.detach().cpu().numpy().astype(np.complex64)
+    return np.stack((x.real, x.imag), axis=-1)
 
 
 def save_png_outputs(data, output_dir):
