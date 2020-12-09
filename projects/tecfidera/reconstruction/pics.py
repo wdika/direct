@@ -69,7 +69,7 @@ def pics_recon(data, device, reg=0.01):
                     )[0]
         print(pred.shape)
 
-        pred = ifftshift(pred, dim=(0, 1))
+        pred = ifftshift(torch.from_numpy(pred), dim=(0, 1))
 
         plot = True
         if plot:
