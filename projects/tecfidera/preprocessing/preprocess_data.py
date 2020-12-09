@@ -65,8 +65,20 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Normalize data
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
                         # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
-                        csm = torch.from_numpy(normalize_csm(input_csm))
+                        # csm = torch.from_numpy(normalize_csm(input_csm))
+                        csm = normalize_csm(input_csm)
                         del input_csm
+
+                        import matplotlib.pyplot as plt
+                        plt.subplot(1, 2, 1)
+                        plt.imshow(np.abs(np.sum(csm.conj(), -1)), cmap='gray')
+                        plt.title('sense')
+                        plt.colorbar()
+                        plt.subplot(1, 2, 2)
+                        plt.imshow(np.angle(np.sum(csm.conj(), -1)), cmap='gray')
+                        plt.title('sense phase')
+                        plt.colorbar()
+                        plt.show()
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
