@@ -71,9 +71,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # del input_csm
 
                         import matplotlib.pyplot as plt
-                        sense = np.sum(normalize(np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype), (input_csm / np.max(input_imspace)))).conj(), -1)[100]
-                        sense2 = np.sum(normalize_csm(np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype), (input_csm / np.max(input_imspace)))).conj(), -1)[100]
-                        sense3 = np.sum(normalize_rss(np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype), (input_csm / np.max(input_imspace)))).conj(), -1)[100]
+                        sense = normalize(input_csm)
+                        sense = np.sum(np.where(sense == 0, np.array([0.0], dtype=sense.dtype), (sense / np.max(input_imspace))).conj(), -1)[100]
+                        sense2 = normalize_csm(input_csm)
+                        sense2 = np.sum(np.where(sense2 == 0, np.array([0.0], dtype=sense2.dtype), (sense2 / np.max(input_imspace))).conj(), -1)[100]
+                        sense3 = normalize_rss(input_csm)
+                        sense3 = np.sum(np.where(sense3 == 0, np.array([0.0], dtype=sense3.dtype), (sense3 / np.max(input_imspace))).conj(), -1)[100]
+
 
                         print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
                         print('sense2', np.max(np.abs(sense2)), np.min(np.abs(sense2)))
