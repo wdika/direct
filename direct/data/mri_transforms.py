@@ -469,6 +469,7 @@ class Normalize(DirectClass):
                 sample[key] = sample[key] / scaling_factor
 
         sample["scaling_factor"] = scaling_factor
+        print('scaling_factor', scaling_factor)
         return sample
 
 
