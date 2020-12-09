@@ -56,7 +56,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_kspace = slice_selection(input_kspace, start=start, end=end)
 
                     input_imspace = preprocessing_ifft(input_kspace)
-                    print('input_imspace 0 ', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
+                    print('input_imspace 0 ', torch.max(torch.abs(input_imspace)), torch.min(torch.abs(input_imspace)))
                     input_imspace = complex_tensor_to_complex_np(input_imspace)
                     print('input_imspace 1 ', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
                     input_imspace = normalize(input_imspace)
