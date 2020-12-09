@@ -133,17 +133,15 @@ def pics_recon(idx):
 
     from torch.fft import ifftn
     from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
-    imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2)))
+    # imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2)))
     # print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
     # print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
 
-    print(imspace.shape, sensitivity_map.shape)
+    print(kspace.shape, sensitivity_map.shape)
 
     pred = bart(1, f'pics -g -i 200 -S -l1 -r 0.01',
-                complex_tensor_to_complex_np(torch.from_numpy(kspace).permute(1, 2, 0).unsqueeze(0)),
-                complex_tensor_to_complex_np(
-                    ifftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0), dim=(0, 1)).unsqueeze(0))
-                )[0]
+                complex_tensor_to_complex_np(torch.from_numpy(kspace)),
+                complex_tensor_to_complex_np(ifftshift(torch.from_numpy(sensitivity_map), dim=(0, 1))))[0]
 
     pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(pred), dim=(0, 1)))
 
