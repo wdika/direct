@@ -70,9 +70,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # del input_csm
 
                         import matplotlib.pyplot as plt
-                        sense = np.sum(normalize(normalize(input_csm)).conj(), -1)[100]
-                        sense2 = np.sum(normalize(normalize_csm(input_csm).conj()), -1)[100]
-                        sense3 = np.sum(normalize(normalize_rss(input_csm).conj()), -1)[100]
+                        sense = np.sum(normalize_rss(normalize(input_csm)).conj(), -1)[100]
+                        sense2 = np.sum(normalize_rss(normalize_csm(input_csm).conj()), -1)[100]
+                        sense3 = np.sum(normalize_rss(normalize_rss(input_csm).conj()), -1)[100]
 
                         print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
                         print('sense2', np.max(np.abs(sense2)), np.min(np.abs(sense2)))
