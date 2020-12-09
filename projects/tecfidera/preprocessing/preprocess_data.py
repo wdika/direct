@@ -68,7 +68,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
                         # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
 
-                        csm = torch.from_numpy(normalize(input_csm))
+                        # csm = torch.from_numpy(normalize(input_csm))
+                        csm = torch.from_numpy(normalize_csm(input_csm))
                         csm = slice_selection(csm, start=start, end=end)
                         del input_csm
 
