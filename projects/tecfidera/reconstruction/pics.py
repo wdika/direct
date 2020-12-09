@@ -3,7 +3,6 @@ __author__ = 'Dimitrios Karkalousos'
 
 import argparse
 import logging
-import multiprocessing
 import os
 import random
 import sys
@@ -15,8 +14,8 @@ import h5py
 import numpy as np
 import torch
 
+from direct.data.mri_transforms import Compose, ToTensor, Normalize
 from direct.data.transforms import ifftshift
-from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np, normalize
 from projects.tecfidera.dataset import TECFIDERADataset
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
@@ -63,7 +62,8 @@ def pics_recon(data, device, reg=0.01):
 
         pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
                     complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0)),
-                    complex_tensor_to_complex_np(ifftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0), dim=(0, 1)).unsqueeze(0))
+                    complex_tensor_to_complex_np(
+                        ifftshift(torch.from_numpy(sensitivity_map).permute(1, 2, 0), dim=(0, 1)).unsqueeze(0))
                     )[0]
 
         pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(pred), dim=(0, 1)))
@@ -117,9 +117,12 @@ def pics_recon(data, device, reg=0.01):
 
 def main(args):
     start_time = time.perf_counter()
-    data = TECFIDERADataset(root=args.data_root, sensitivity_maps=args.sensitivity_maps_root)
 
-    pics_recon(data=data, device=args.device)
+    data = TECFIDERADataset(root=args.data_root,
+                            transform=Compose([ToTensor(), Normalize()]),
+                            sensitivity_maps=args.sensitivity_maps_root)
+
+    outputs = pics_recon(data=data, device=args.device)
     time_taken = time.perf_counter() - start_time
     logging.info(f"Run Time = {time_taken:}s")
     save_outputs(outputs, args.output_path)
