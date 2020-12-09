@@ -61,61 +61,60 @@ def pics_recon(idx):
     kspace, sensitivity_map, filename, slice_no = data[idx]
     print(kspace.shape)
 
+    # TODO (dk) : pics per slice appears to not working properly
     pred = normalize(complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
         # bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
         bart(1, f'pics -i 20 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
         dim=(0, 1))))
 
-    plot = True
-    if plot:
-        import matplotlib.pyplot as plt
-        imspace = np.fft.ifft2(kspace, axes=(1, 2))
-        rss_target = np.sqrt(np.sum(imspace ** 2, -1))[0]
-
-        sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
-        target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
-        sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
-
-        print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
-        print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
-        print('target', np.max(np.abs(target)), np.min(np.abs(target)))
-        print('rss_target', np.max(np.abs(rss_target)), np.min(np.abs(rss_target)))
-        print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
-        print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
-
-        plt.subplot(2, 4, 1)
-        plt.imshow(np.abs(rss_target), cmap='gray')
-        plt.title('rss_target')
-        plt.colorbar()
-        plt.subplot(2, 4, 2)
-        plt.imshow(np.angle(rss_target), cmap='gray')
-        plt.title('rss_target phase')
-        plt.colorbar()
-        plt.subplot(2, 4, 3)
-        plt.imshow(np.abs(sense), cmap='gray')
-        plt.title('sense')
-        plt.colorbar()
-        plt.subplot(2, 4, 4)
-        plt.imshow(np.angle(sense), cmap='gray')
-        plt.title('sense phase')
-        plt.colorbar()
-        plt.subplot(2, 4, 5)
-        plt.imshow(np.abs(target), cmap='gray')
-        plt.title('ifft(masked_kspace) * sense.conj()')
-        plt.colorbar()
-        plt.subplot(2, 4, 6)
-        plt.imshow(np.angle(target), cmap='gray')
-        plt.title('ifft(masked_kspace) * sense.conj() phase')
-        plt.colorbar()
-        plt.subplot(2, 4, 7)
-        plt.imshow(np.abs(pred), cmap='gray')
-        plt.title('pics')
-        plt.colorbar()
-        plt.subplot(2, 4, 8)
-        plt.imshow(np.angle(pred), cmap='gray')
-        plt.title('pics phase')
-        plt.colorbar()
-        plt.show()
+    # import matplotlib.pyplot as plt
+    # imspace = np.fft.ifft2(kspace, axes=(1, 2))
+    # rss_target = np.sqrt(np.sum(imspace ** 2, -1))[0]
+    #
+    # sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
+    # target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
+    # sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
+    #
+    # print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
+    # print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
+    # print('target', np.max(np.abs(target)), np.min(np.abs(target)))
+    # print('rss_target', np.max(np.abs(rss_target)), np.min(np.abs(rss_target)))
+    # print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
+    # print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
+    #
+    # plt.subplot(2, 4, 1)
+    # plt.imshow(np.abs(rss_target), cmap='gray')
+    # plt.title('rss_target')
+    # plt.colorbar()
+    # plt.subplot(2, 4, 2)
+    # plt.imshow(np.angle(rss_target), cmap='gray')
+    # plt.title('rss_target phase')
+    # plt.colorbar()
+    # plt.subplot(2, 4, 3)
+    # plt.imshow(np.abs(sense), cmap='gray')
+    # plt.title('sense')
+    # plt.colorbar()
+    # plt.subplot(2, 4, 4)
+    # plt.imshow(np.angle(sense), cmap='gray')
+    # plt.title('sense phase')
+    # plt.colorbar()
+    # plt.subplot(2, 4, 5)
+    # plt.imshow(np.abs(target), cmap='gray')
+    # plt.title('ifft(masked_kspace) * sense.conj()')
+    # plt.colorbar()
+    # plt.subplot(2, 4, 6)
+    # plt.imshow(np.angle(target), cmap='gray')
+    # plt.title('ifft(masked_kspace) * sense.conj() phase')
+    # plt.colorbar()
+    # plt.subplot(2, 4, 7)
+    # plt.imshow(np.abs(pred), cmap='gray')
+    # plt.title('pics')
+    # plt.colorbar()
+    # plt.subplot(2, 4, 8)
+    # plt.imshow(np.angle(pred), cmap='gray')
+    # plt.title('pics phase')
+    # plt.colorbar()
+    # plt.show()
 
     return filename, slice_no, pred
 
