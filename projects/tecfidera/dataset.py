@@ -46,7 +46,9 @@ class TECFIDERADataset(H5SliceData):
         sample = super().__getitem__(idx)
 
         sample["kspace"] = np.ascontiguousarray(sample["kspace"].transpose(2, 0, 1))
-        sample["kspace"] = np.where(sample["kspace"] == 0, np.array([0.0], dtype=sample["kspace"].dtype), (sample["kspace"] / np.max(sample["kspace"])))
+        imspace = np.fft.ifftn(sample["kspace"], axes=(1, 2))
+        imspace = np.where(imspace == 0, np.array([0.0], dtype=imspace.dtype), (imspace / np.max(imspace)))
+        sample["kspace"] = np.fft.fftn(imspace, axes=(1, 2))
 
         if self.sensitivity_maps is not None:
             sample["sensitivity_map"] = np.ascontiguousarray(sample["sensitivity_map"].transpose(2, 0, 1))
@@ -54,7 +56,6 @@ class TECFIDERADataset(H5SliceData):
         if self.transform:
             sample = self.transform(sample)
 
-        imspace = np.fft.ifftn(sample["kspace"], axes=(1, 2))
         print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
         print('sensitivity_map', np.max(np.abs(sample["sensitivity_map"])), np.min(np.abs(sample["sensitivity_map"])))
 
