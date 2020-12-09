@@ -102,7 +102,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # TODO (dk) : find the correct transformation in pytorch,
                         #  so the norm doesn't change the scale of the data.
                         #  For now I will be using numpy, but that's inefficient.
-                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(0, 1, 2), norm="ortho"))
+                        kspace = complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho"))
                         Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
 
                         if not skip_csm:
