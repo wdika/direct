@@ -59,6 +59,7 @@ def save_outputs(outputs, output_path):
 
 def pics_recon(idx):
     kspace, sensitivity_map, filename, slice_no = data[idx]
+    print(kspace.shape)
 
     pred = normalize(complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
         # bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
