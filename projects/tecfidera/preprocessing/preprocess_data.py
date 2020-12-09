@@ -51,12 +51,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
-                    # mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-                    # input_imspace = slice_selection(preprocessing_ifft(input_kspace), start=start, end=end)
-                    #
-                    # # Normalize data
-                    # imspace = torch.from_numpy(normalize(complex_tensor_to_complex_np(input_imspace)))
+                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
+                    input_imspace = slice_selection(preprocessing_ifft(input_kspace), start=start, end=end)
+
+                    # Normalize data
+                    input_imspace = normalize(complex_tensor_to_complex_np(input_imspace))
+                    imspace = torch.from_numpy(ninput_imspace)
                     # del input_imspace
 
                     if not skip_csm:
@@ -66,13 +67,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
                         # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
                         # csm = torch.from_numpy(normalize_csm(input_csm))
-                        csm = normalize(input_csm)
+                        # csm = normalize(input_csm)
                         # del input_csm
 
                         import matplotlib.pyplot as plt
-                        sense = np.sum(normalize_rss(normalize(input_csm)).conj(), -1)[100]
-                        sense2 = np.sum(normalize_rss(normalize_csm(input_csm).conj()), -1)[100]
-                        sense3 = np.sum(normalize_rss(normalize_rss(input_csm).conj()), -1)[100]
+                        sense = np.sum(normalize(np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype), (input_csm / np.max(input_imspace)))).conj(), -1)[100]
+                        sense2 = np.sum(normalize_csm(np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype), (input_csm / np.max(input_imspace)))).conj(), -1)[100]
+                        sense3 = np.sum(normalize_rss(np.where(input_csm == 0, np.array([0.0], dtype=input_csm.dtype), (input_csm / np.max(input_imspace)))).conj(), -1)[100]
 
                         print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
                         print('sense2', np.max(np.abs(sense2)), np.min(np.abs(sense2)))
