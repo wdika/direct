@@ -59,6 +59,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_imspace = normalize(complex_tensor_to_complex_np(input_imspace))
                     imspace = torch.from_numpy(input_imspace)
                     # del input_imspace
+                    print('input_imspace', np.max(np.abs(input_imspace)), np.min(np.abs(input_imspace)))
 
                     if not skip_csm:
                         input_csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
