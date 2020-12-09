@@ -68,14 +68,15 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
                         # input_csm = input_csm * np.expand_dims(np.sqrt(np.sum(input_csm.conj() * input_csm, -1)), -1)
                         # csm = torch.from_numpy(normalize_csm(input_csm))
-                        # csm = normalize(input_csm)
+                        csm = normalize(input_csm)
                         # del input_csm
 
-                        import matplotlib.pyplot as plt
-                        sense = np.sum(normalize(normalize(input_csm)).conj(), -1)[100]
-                        sense2 = np.sum(normalize_csm(normalize_csm(input_csm)).conj(), -1)[100]
-                        sense3 = np.sum(normalize_rss(normalize_rss(input_csm)).conj(), -1)[100]
+                        scale = np.max(np.abs(csm)) / np.max(np.abs(input_imspace))
 
+                        import matplotlib.pyplot as plt
+                        sense = np.sum((csm / scale).conj(), -1)[100]
+                        sense2 = np.sum((normalize_csm(input_csm) / scale).conj(), -1)[100]
+                        sense3 = np.sum((normalize_rss(input_csm) / scale).conj(), -1)[100]
 
                         print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
                         print('sense2', np.max(np.abs(sense2)), np.min(np.abs(sense2)))
