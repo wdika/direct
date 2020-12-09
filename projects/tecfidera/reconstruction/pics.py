@@ -14,6 +14,7 @@ import h5py
 import numpy as np
 import torch
 
+import direct.data.transforms as T
 from direct.data.transforms import ifftshift
 from projects.tecfidera.dataset import TECFIDERADataset
 
@@ -23,6 +24,17 @@ from bart import bart
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class DataTransform:
+    def __init__(self):
+        pass
+
+    def __call__(self, sample):
+        masked_kspace = T.tensor_to_complex_numpy(T.to_tensor(sample["kspace"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
+        sensitivity_map = T.tensor_to_complex_numpy(T.to_tensor(sample["sensitivity_map"]).rename(None).permute(1, 2, 0, 3).unsqueeze(0))
+
+        return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
 
 def save_outputs(outputs, output_path):
@@ -44,10 +56,11 @@ def save_outputs(outputs, output_path):
             f["pics"] = pics_recon
 
 
-def pics_recon(kspace, sensitivity_map, device, reg=0.01):
+def pics_recon(data, device, reg=0.01):
     """
     Run Parallel Imaging Compressed Sensing algorithm using the BART toolkit.
     """
+    kspace, sensitivity_map, filename, slice_no = data
 
     for i in range(20, kspace.shape[0]):
 
@@ -114,8 +127,10 @@ def pics_recon(kspace, sensitivity_map, device, reg=0.01):
 
 def main(args):
     start_time = time.perf_counter()
-    data = TECFIDERADataset(root=args.data_root, sensitivity_maps=args.sensitivity_maps_root)
-    outputs = pics_recon(kspace=data['kspace'][()], sensitivity_map=data['sensitivity_map'][()], device=args.device)
+    data = TECFIDERADataset(root=args.data_root, transform=DataTransform(), sensitivity_maps=args.sensitivity_maps_root)
+
+    outputs = pics_recon(data=data, device=args.device)
+
     time_taken = time.perf_counter() - start_time
     logging.info(f"Run Time = {time_taken:}s")
     save_outputs(outputs, args.output_path)
