@@ -51,22 +51,15 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
-                    # mask = complex_tensor_to_real_np(extract_mask(input_kspace))
+                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
+                    input_imspace = complex_tensor_to_complex_np(preprocessing_ifft(slice_selection(input_kspace, start=start, end=end)))
 
-                    input_kspace = readcfl(filename_kspace.split('.')[0])
-                    input_kspace = slice_selection(input_kspace, start=start, end=end)
+                    normalize_input_imspace = normalize(input_imspace)
+                    normalize_rss_input_imspace = normalize_rss(input_imspace)
 
-                    # input_imspace = preprocessing_ifft(input_kspace)
-                    # input_imspace = complex_tensor_to_complex_np(input_imspace)
-
-                    preprocessing_ifft_input_imspace = normalize(complex_tensor_to_complex_np(preprocessing_ifft(torch.from_numpy(input_kspace))))
-                    ifftshift_input_imspace = normalize(complex_tensor_to_complex_np(T.ifftshift(ifftn(torch.from_numpy(input_kspace),
-                                                                                       dim=(0, 1, 2)), dim=0)))
-                    print('preprocessing_ifft_input_imspace', np.max(np.abs(preprocessing_ifft_input_imspace)),
-                          np.min(np.abs(preprocessing_ifft_input_imspace)))
-                    print('ifftshift_input_imspace', np.max(np.abs(ifftshift_input_imspace)),
-                          np.min(np.abs(ifftshift_input_imspace)))
+                    print('normalize_input_imspace', np.max(np.abs(normalize_input_imspace)), np.min(np.abs(normalize_input_imspace)))
+                    print('normalize_rss_input_imspace', np.max(np.abs(normalize_rss_input_imspace)), np.min(np.abs(normalize_rss_input_imspace)))
 
 
                     # Normalize data
