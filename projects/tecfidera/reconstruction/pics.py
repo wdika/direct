@@ -51,7 +51,7 @@ def pics_recon(data, device, reg=0.01):
     """
 
     for i in range(20, len(data)):
-        masked_kspace = data[i]['kspace']
+        masked_kspace = data[i]['masked_kspace']
         sensitivity_map = data[i]['sensitivity_map']
 
         from torch.fft import ifftn
