@@ -56,7 +56,8 @@ class TECFIDERADataset(H5SliceData):
         print(sample["kspace"].shape, sample["sensitivity_map"].shape)
         import torch
         from torch.fft import ifftn
-        imspace = ifftn(torch.from_numpy(sample["kspace"]), dim=(1, 2))
+        from projects.tecfidera.preprocessing.utils import complex_tensor_to_complex_np
+        imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(sample["kspace"]), dim=(1, 2)))
         print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
         print('sensitivity_map', np.max(np.abs(sample["sensitivity_map"])), np.min(np.abs(sample["sensitivity_map"])))
 
