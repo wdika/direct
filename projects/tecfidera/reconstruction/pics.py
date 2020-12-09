@@ -55,7 +55,7 @@ def pics_recon(data, device, reg=0.01):
         masked_kspace = data[i]['kspace']
         sensitivity_map = data[i]['sensitivity_map']
 
-        pred =bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
+        pred = bart(1, f'pics -g -i 200 -S -l1 -r {reg}',
                     complex_tensor_to_complex_np(torch.from_numpy(masked_kspace).permute(1, 2, 0).unsqueeze(0)),
                     complex_tensor_to_complex_np(torch.from_numpy(sensitivity_map).permute(1, 2, 0).unsqueeze(0))
                     )[0]
