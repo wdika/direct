@@ -63,9 +63,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     if not skip_csm:
                         input_csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
-
-                        scale = np.max(input_csm) / np.max(input_imspace)
-                        input_csm /= scale
+                        print('input_csm', np.max(np.abs(input_csm)), np.min(np.abs(input_csm)))
 
                         # Normalize data
                         # TODO (dk, kp) : remove this normalization when saving to .cfl, then this line should go.
