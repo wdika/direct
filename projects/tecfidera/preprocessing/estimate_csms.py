@@ -76,9 +76,9 @@ def estimate_csms(root, output, calibration_region_size, export_type, device):
 
                 # Save csm
                 Process(target=save_h5_outputs,
-                        #args=(complex_tensor_to_complex_np(AXFLAIR_csm), "sensitivity_map",
+                        # args=(complex_tensor_to_complex_np(AXFLAIR_csm), "sensitivity_map",
                         args=(AXFLAIR_csm, "sensitivity_map",
-                        output_dir + subject.split('/')[-2] + '_' + time_point.split('/')[
+                              output_dir + subject.split('/')[-2] + '_' + time_point.split('/')[
                                   -2] + '_AXFLAIR')).start()
 
                 # Process(target=save_h5_outputs,

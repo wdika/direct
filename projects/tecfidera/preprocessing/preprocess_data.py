@@ -67,7 +67,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
 
                         # Normalize data
-                        # TODO (kp) : make sure about the csm normalization. Here it seems the csm is normalized.
+                        # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
@@ -79,52 +79,41 @@ def preprocessing(root, output, skip_csm, export_type, device):
                             complex_tensor_to_real_np(sense_reconstruction(imspace, csm, dim=-1)),
                             output_dir + '/targets/')).start()
 
+                        # Save mask
+                        plt.imshow(mask, cmap='gray')
+                        plt.savefig(output_dir + '/mask.png')
+                        plt.close()
+
                         if not skip_csm:
                             # Save sense coil combined png images
                             Process(target=save_png_outputs, args=(
                                 complex_tensor_to_real_np(csm_sense_coil_combination(csm, dim=-1)),
                                 output_dir + '/csms/')).start()
 
-                        # Save mask
-                        plt.imshow(mask, cmap='gray')
-                        plt.savefig(output_dir + '/mask.png')
-                        plt.close()
-
                     elif export_type == 'h5':
-                        output_dir = output + '/kspaces/'
-                        create_dir(output_dir)
-
-                        output_dir_mask = output + '/masks/'
-                        create_dir(output_dir_mask)
-
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                         # Save kspace
-                        # TODO (dk) : find the correct transformation in pytorch,
-                        #  so the norm doesn't change the scale of the data.
-                        #  For now I will be using numpy, but that's inefficient.
-                        kspace = complex_tensor_to_complex_np(fftn(torch.from_numpy(imspace), dim=(1, 2), norm="ortho"))
-                        print('kspace torch', np.max(np.abs(kspace)), np.min(np.abs(kspace)))
-                        torch_imspace = complex_tensor_to_complex_np(ifftn(torch.from_numpy(kspace), dim=(1, 2), norm="ortho"))
-                        print('imspace torch', np.max(np.abs(torch_imspace)), np.min(np.abs(torch_imspace)))
-
-                        np_kspace = np.fft.fftn(imspace, axes=(1, 2))
-                        print('kspace np', np.max(np.abs(np_kspace)), np.min(np.abs(np_kspace)))
-                        np_imspace = np.fft.ifftn(np_kspace, axes=(1, 2))
-                        print('imspace np', np.max(np.abs(np_imspace)), np.min(np.abs(np_imspace)))
-
-                        Process(target=save_h5_outputs, args=(kspace, "kspace", output_dir + name)).start()
-
-                        if not skip_csm:
-                            output_dir_csm = output + '/csms/'
-                            create_dir(output_dir_csm)
-
-                            # Save csm
-                            Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(csm), "sensitivity_map",
-                                                                  output_dir_csm + name)).start()
+                        output_dir = output + '/kspaces/'
+                        create_dir(output_dir)
+                        Process(target=save_h5_outputs, args=(
+                        complex_tensor_to_complex_np(fftn(torch.from_numpy(imspace), dim=(1, 2), norm="ortho")),
+                        "kspace", output_dir + name)).start()
+                        del imspace
 
                         # Save mask
+                        output_dir_mask = output + '/masks/'
+                        create_dir(output_dir_mask)
                         np.save(output_dir_mask + name + ".npy", mask)
+                        del mask
+
+                        if not skip_csm:
+                            # Save csm
+                            output_dir_csm = output + '/csms/'
+                            create_dir(output_dir_csm)
+                            Process(target=save_h5_outputs, args=(complex_tensor_to_complex_np(csm), "sensitivity_map",
+                                                                  output_dir_csm + name)).start()
+                            del csm
 
 
 def main(args):
