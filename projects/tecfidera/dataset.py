@@ -12,7 +12,7 @@ from direct.types import PathOrString
 import logging
 
 logger = logging.getLogger(__name__)
-ds
+
 
 class TECFIDERADataset(H5SliceData):
     def __init__(
