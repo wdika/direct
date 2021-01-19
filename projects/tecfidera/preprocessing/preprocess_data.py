@@ -68,7 +68,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         csm = readcfl(filename_kspace.split('_')[0] + '_csm')
 
                         from direct.data import transforms as T
-                        csm = T.fftshift(csm, dim=0)
+                        csm = T.fftshift(csm, dim=(1, 2))
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
