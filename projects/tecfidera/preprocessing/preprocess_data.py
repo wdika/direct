@@ -54,33 +54,20 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
                     # mask = complex_tensor_to_real_np(extract_mask(input_kspace))
                     #
-                    # input_kspace = T.fftshift(ifftn(input_kspace, dim=0, norm="ortho"), dim=0)
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
                     # # imspace = preprocessing_ifft(input_kspace)
-                    # imspace = ifftn(input_kspace, dim=(1, 2), norm="ortho")
                     # del input_kspace
 
                     # Normalize data
                     # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported.
                     #  It is still unclear why normalizing the data here doesn't work with the dataloaders.
-                    # imspace = complex_tensor_to_complex_np(imspace)
-                    # imspace = imspace / np.max(np.abs(imspace))
-                    # imspace = torch.from_numpy(imspace).to(device)
 
                     input_kspace = readcfl(filename_kspace.split('.')[0])
                     mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
 
-                    imspace = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
-                    imspace = imspace / np.max(np.abs(imspace))
-                    input_kspace = np.fft.fftn(imspace, axes=(1, 2))
-
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
                         csm = readcfl(filename_kspace.split('_')[0] + '_csm')
-
-                        print('imspace', np.min(np.abs(imspace)), np.max(np.abs(imspace)))
-                        print('input_kspace', np.min(np.abs(input_kspace)), np.max(np.abs(input_kspace)))
-                        print('csm', np.min(np.abs(csm)), np.max(np.abs(csm)))
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
