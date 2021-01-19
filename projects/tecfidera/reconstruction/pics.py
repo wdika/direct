@@ -60,7 +60,7 @@ def pics_recon(idx):
     kspace, sensitivity_map, filename, slice_no = data[idx]
 
     # TODO (dk) : pics per slice appears to not working properly
-    pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', np.expand_dims(np.transpose(sample["kspace"], (1, 2, 0)), 0), sensitivity_map)[0], axes=(0, 1))
+    pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0], axes=(0, 1))
 
     import matplotlib.pyplot as plt
     imspace = np.fft.ifft2(kspace, axes=(1, 2))
