@@ -39,7 +39,7 @@ def create_dir(path):
     Path(path).mkdir(parents=True, exist_ok=True)
 
 
-def save_pickle_outputs(data, key, filename):
+def save_pickle_outputs(data, filename):
     for slice in range(data.shape[0]):
         with open(filename + '_' + str(slice), 'wb') as f:
             pickle.dump(data[slice], f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -83,13 +83,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_kspace = readcfl(filename_kspace.split('.')[0])
                     mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
 
-                    # Normalize data
-                    # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported.
-                    #  It is still unclear why normalizing the data here doesn't work with the dataloaders.
-
-                    if not skip_csm:
-                        # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
-                        csm = readcfl(filename_kspace.split('_')[0] + '_csm')
+                    imspace = np.fft.ifft2(input_kspace, axes=(1, 2))
+                    csm = readcfl(filename_kspace.split('_')[0] + '_csm')
+                    data = np.stack((imspace, csm), 1)
 
                     # Normalize data
                     # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
@@ -98,12 +94,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                         # Save kspace
-                        output_dir = output + '/kspaces/'
+                        output_dir = output + '/data/'
                         create_dir(output_dir)
-                        # Process(target=save_h5_outputs, args=(
-                        #     complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")),
-                        #     "kspace", output_dir + name)).start()
-                        Process(target=save_pickle_outputs, args=(input_kspace, "kspace", output_dir + name)).start()
+                        Process(target=save_pickle_outputs, args=(data, output_dir + name)).start()
                         # del imspace
 
                         # Save mask
@@ -112,14 +105,6 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         with open(output_dir_mask + '/mask0', 'wb') as f:
                             pickle.dump(mask, f)
                         del mask
-
-                        if not skip_csm:
-                            # Save csm
-                            output_dir_csm = output + '/csms/'
-                            create_dir(output_dir_csm)
-                            Process(target=save_pickle_outputs,
-                                    args=(csm, "sensitivity_map", output_dir_csm + name)).start()
-                            del csm
 
 
 def main(args):
