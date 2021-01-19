@@ -55,7 +55,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    # input_kspace = complex_tensor_to_complex_np(fftn(ifftn(input_kspace, dim=(0, 1, 2), norm=None), dim=(0, 1, 2), norm=None))
+                    input_kspace = ifftn(input_kspace, dim=(0, 1, 2), norm=None)
+                    input_kspace = input_kspace / torch.max(torch.abs(input_kspace))
+                    input_kspace = complex_tensor_to_complex_np(fftn(input_kspace, dim=(0, 1, 2), norm=None))
                     # del input_kspace
 
                     # Normalize data
