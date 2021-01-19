@@ -64,6 +64,8 @@ def pics_recon(idx):
     pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0], axes=(0, 1))
     pred = np.stack((pred.real, pred.imag), -1)
     pred = np.abs(pred[..., 0] + 1j * pred[..., 1]).astype(np.float32)
+    pred = np.clip(pred / np.max(pred), 0, 1)
+
 
     import matplotlib.pyplot as plt
     imspace = np.fft.ifft2(kspace, axes=(1, 2))
