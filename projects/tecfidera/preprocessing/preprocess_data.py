@@ -59,7 +59,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     imspace = ifftn(input_kspace, dim=(1, 2), norm="ortho")
                     del input_kspace
 
-                    imspace = imspace / torch.max(imspace)
+                    imspace = imspace / torch.max(torch.abs(imspace))
 
                     print(np.min(complex_tensor_to_real_np(imspace)), np.max(complex_tensor_to_real_np(imspace)))
 
