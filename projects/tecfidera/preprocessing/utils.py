@@ -7,7 +7,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.fft import ifftn, fftn
+from torch.fft import ifftn
 
 from direct.data import transforms as T
 
@@ -96,7 +96,7 @@ def preprocessing_ifft(kspace):
     kspace tensor of the axial plane transformed with the correct/fixed preprocessing steps to estimate sense maps
     """
     # return T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=0)
-    return ifftn(ifftn(kspace, dim=0, norm="ortho"), dim=(1, 2), norm="ortho")
+    return ifftn(kspace, dim=(1, 2), norm="ortho")
 
 
 def extract_mask(kspace):
