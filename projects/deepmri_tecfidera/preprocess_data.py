@@ -94,7 +94,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # Normalize data
                     # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
 
-                    if export_type == 'h5':
+                    if export_type == 'pickle':
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                         # Save kspace
@@ -107,7 +107,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # del imspace
 
                         # Save mask
-                        output_dir_mask = output + '/masks/'
+                        output_dir_mask = output + 'masks/'
                         create_dir(output_dir_mask)
                         with open(output_dir_mask, 'wb') as f:
                             pickle.dump(mask, f)
@@ -138,7 +138,7 @@ def create_arg_parser():
     parser.add_argument('--skip-csm', action="store_true",
                         help='In case you have precomputed the sense maps in another way, '
                              'then toggle this option to skip saving sense maps.')
-    parser.add_argument('--export-type', choices=['h5', 'png'], default='png', help='Choose output format.')
+    parser.add_argument('--export-type', choices=['pickle', 'png'], default='png', help='Choose output format.')
     parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda', help='Enable GPU.')
 
     return parser
