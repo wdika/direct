@@ -69,8 +69,6 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     input_kspace = readcfl(filename_kspace.split('.')[0])
                     mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
-                    imspace = np.fft.ifft(input_kspace)
-                    input_kspace = np.fft.fft(imspace)
 
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
@@ -78,7 +76,6 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
-                        csm = csm / np.max(np.abs(csm))
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
@@ -110,8 +107,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Process(target=save_h5_outputs, args=(
                         #     complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")),
                         #     "kspace", output_dir + name)).start()
-                        Process(target=save_h5_outputs, args=(input_kspace, "kspace",
-                                                              output_dir + name)).start()
+                        Process(target=save_h5_outputs, args=(input_kspace, "kspace", output_dir + name)).start()
                         # del imspace
 
                         # Save mask
@@ -124,8 +120,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                             # Save csm
                             output_dir_csm = output + '/csms/'
                             create_dir(output_dir_csm)
-                            Process(target=save_h5_outputs,
-                                    args=(csm, "sensitivity_map", output_dir_csm + name)).start()
+                            Process(target=save_h5_outputs, args=(csm, "sensitivity_map", output_dir_csm + name)).start()
                             del csm
 
 

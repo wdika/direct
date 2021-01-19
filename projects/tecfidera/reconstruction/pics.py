@@ -27,9 +27,12 @@ class DataTransform:
         pass
 
     def __call__(self, sample):
-        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
-        sensitivity_map = complex_tensor_to_complex_np(
-            ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
+        # masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
+        # sensitivity_map = complex_tensor_to_complex_np(
+        #     ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
+
+        masked_kspace = sample["kspace"]
+        sensitivity_map = np.fft.fftshift(sample["sensitivity_map"], axes=(1, 2))
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
