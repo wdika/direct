@@ -59,7 +59,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     imspace = ifftn(input_kspace, dim=(1, 2), norm="ortho")
                     del input_kspace
 
-                    imspace = imspace / torch.max(torch.abs(imspace))
+                    imspace = torch.clip(imspace / torch.max(torch.abs(imspace)), 0, 1)
 
                     print(np.min(complex_tensor_to_real_np(imspace)), np.max(complex_tensor_to_real_np(imspace)))
 
@@ -70,6 +70,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     if not skip_csm:
                         csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
+                        csm = torch.clip(csm / torch.max(torch.abs(csm)), 0, 1)
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
