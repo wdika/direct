@@ -108,9 +108,11 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Save kspace
                         output_dir = output + '/kspaces/'
                         create_dir(output_dir)
-                        Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")),
-                            "kspace", output_dir + name)).start()
+                        # Process(target=save_h5_outputs, args=(
+                        #     complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")),
+                        #     "kspace", output_dir + name)).start()
+                        Process(target=save_h5_outputs, args=(np.fft.fft2(imspace, axes=(1, 2)), "kspace",
+                                                              output_dir + name)).start()
                         del imspace
 
                         # Save mask
