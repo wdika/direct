@@ -67,6 +67,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
                         csm = readcfl(filename_kspace.split('_')[0] + '_csm')
 
+                        csm = T.fftshift(csm, dim=0)
+
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
 
