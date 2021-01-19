@@ -72,13 +72,14 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     imspace = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
                     imspace = imspace / np.max(np.abs(imspace))
-                    imspace = imspace / np.mean(np.abs(imspace))
+                    imspace = imspace / np.min(np.abs(imspace))
                     input_kspace = np.fft.fftn(imspace, axes=(1, 2))
 
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
                         csm = readcfl(filename_kspace.split('_')[0] + '_csm')
-                        csm = csm / np.mean(np.abs(csm))
+                        csm = csm / np.max(np.abs(csm))
+                        csm = csm / np.min(np.abs(csm))
 
                         print('imspace', np.min(np.abs(imspace)), np.max(np.abs(imspace)))
                         print('input_kspace', np.min(np.abs(input_kspace)), np.max(np.abs(input_kspace)))
