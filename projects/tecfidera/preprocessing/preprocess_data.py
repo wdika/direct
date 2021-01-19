@@ -67,8 +67,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # imspace = normalize(imspace)
 
                     if not skip_csm:
-                        # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
-                        csm = slice_selection(complex_tensor_to_real_np(T.fftshift(torch.from_numpy(readcfl(filename_kspace.split('_')[0] + '_csm')), dim=0)), start=start, end=end)
+                        csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
@@ -79,9 +78,11 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         create_dir(output_dir)
 
                         # Save target (SENSE reconstructed) png images
-                        Process(target=save_png_outputs, args=(complex_tensor_to_real_np(
-                            sense_reconstruction(imspace, torch.from_numpy(csm).to(device), dim=-1)),
-                                                               output_dir + '/targets/')).start()
+                        # Process(target=save_png_outputs, args=(complex_tensor_to_real_np(
+                        #     sense_reconstruction(imspace, torch.from_numpy(csm).to(device), dim=-1)),
+                        #                                        output_dir + '/targets/')).start()
+                        Process(target=save_png_outputs, args=(complex_tensor_to_real_np(rss_reconstruction(imspace,
+                                                                    dim=-1)), output_dir + '/targets/')).start()
 
                         # Save mask
                         plt.imshow(mask, cmap='gray')

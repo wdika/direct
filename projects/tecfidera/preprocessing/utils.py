@@ -113,6 +113,21 @@ def extract_mask(kspace):
     return torch.where(torch.sum(torch.sum(torch.abs(kspace), 0), -1) > 0, 1, 0)
 
 
+def rss_reconstruction(imspace, dim=-1):
+    """
+
+    Parameters
+    ----------
+    imspace : torch.Tensor
+    dim : coil dimension
+
+    Returns
+    -------
+    reconstructed RSS image
+    """
+    return torch.sqrt(torch.sum(imspace**2, dim=dim))
+
+
 def sense_reconstruction(imspace, csm, dim=-1):
     """
 
