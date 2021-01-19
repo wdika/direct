@@ -54,7 +54,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
-                    input_kspace = slice_selection(input_kspace, start=start, end=end)
+                    # input_kspace = slice_selection(input_kspace, start=start, end=end)
                     imspace = preprocessing_ifft(input_kspace)
                     del input_kspace
 
@@ -64,7 +64,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # imspace = normalize(imspace)
 
                     if not skip_csm:
-                        csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
+                        # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
+                        csm = readcfl(filename_kspace.split('_')[0] + '_csm')
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
