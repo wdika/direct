@@ -9,9 +9,9 @@ import numpy as np
 import torch
 import torch.utils.data
 
-from plot import ModelLog
-from rim import Rim
-from visualize import plot_reconstructions
+from projects.deepmri_tecfidera.plot import ModelLog
+from projects.deepmri_tecfidera.rim import Rim
+from projects.deepmri_tecfidera.visualize import plot_reconstructions
 
 models = {'rim': Rim}
 

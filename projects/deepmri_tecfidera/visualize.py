@@ -12,7 +12,7 @@ from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from skimage.metrics import structural_similarity as compare_ssim
 from skimage.morphology import convex_hull_image
 
-from data import MRIData
+from projects.deepmri_tecfidera.data import MRIData
 
 _mode = {
     'absolute': lambda x: np.clip(np.absolute(x).astype(float), 0, 1),

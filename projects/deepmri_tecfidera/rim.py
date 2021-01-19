@@ -3,7 +3,7 @@ from itertools import chain
 import torch
 from torch.nn import Module, Parameter, Sequential, ModuleList
 
-from utils import act_fns, loss_fns, recurrencies, convs
+from projects.deepmri_tecfidera.utils import act_fns, loss_fns, recurrencies, convs
 
 
 def multi_gll(eta, y, mask, sense, sigma=1.):

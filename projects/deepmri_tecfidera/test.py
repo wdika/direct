@@ -8,8 +8,8 @@ import pickle5 as pickle
 import torch
 from skimage.metrics import structural_similarity, mean_squared_error, normalized_root_mse, peak_signal_noise_ratio
 
-from data import MRIData
-from plot import ModelLog
+from projects.deepmri_tecfidera.data import MRIData
+from projects.deepmri_tecfidera.plot import ModelLog
 
 
 class Test(object):
