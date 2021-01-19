@@ -54,10 +54,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
-                    from torch.fft import ifftn
-                    input_kspace = slice_selection(T.fftshift(ifftn(input_kspace, dim=0, norm="ortho"), dim=0), start=start, end=end)
-
-                    # input_kspace = slice_selection(input_kspace, start=start, end=end)
+                    input_kspace = slice_selection(input_kspace, start=start, end=end)
                     imspace = preprocessing_ifft(input_kspace)
                     del input_kspace
 
