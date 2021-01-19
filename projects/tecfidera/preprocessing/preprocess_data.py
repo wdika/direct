@@ -70,15 +70,17 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     input_kspace = readcfl(filename_kspace.split('.')[0])
                     mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
 
-                    input_kspace = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
-                    input_kspace = input_kspace / np.max(np.abs(input_kspace))
-                    input_kspace = np.fft.fftn(input_kspace, axes=(1, 2))
+                    imspace = np.fft.ifftn(input_kspace, axes=(0, 1, 2))
+                    imspace = imspace / np.max(np.abs(imspace))
+                    input_kspace = np.fft.fftn(imspace, axes=(1, 2))
 
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
                         csm = readcfl(filename_kspace.split('_')[0] + '_csm')
-                        csm = np.fft.ifftn(np.fft.fftn(csm, axes=(0, 1, 2)), axes=(0, 1, 2))
-                        csm = csm / np.max(np.abs(csm))
+
+                        print('imspace', np.min(np.abs(imspace)), np.max(np.abs(imspace)))
+                        print('input_kspace', np.min(np.abs(input_kspace)), np.max(np.abs(input_kspace)))
+                        print('csm', np.min(np.abs(csm)), np.max(np.abs(csm)))
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
