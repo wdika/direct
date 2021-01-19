@@ -57,15 +57,14 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     print(mask.size / mask.sum())
 
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    input_kspace = ifftn(input_kspace, dim=(0, 1, 2), norm="ortho")
+                    input_kspace = ifftn(input_kspace[50], dim=(0, 1), norm="ortho")
                     input_kspace = input_kspace / torch.max(torch.abs(input_kspace))
-                    input_kspace = complex_tensor_to_complex_np(fftn(input_kspace[50], dim=(0, 1), norm="ortho").unsqueeze(0))
+                    input_kspace = complex_tensor_to_complex_np(fftn(input_kspace, dim=(0, 1), norm="ortho").unsqueeze(0))
                     # del input_kspace
 
                     # Normalize data
                     # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported.
                     #  It is still unclear why normalizing the data here doesn't work with the dataloaders.
-
 
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
