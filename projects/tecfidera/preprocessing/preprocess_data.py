@@ -51,7 +51,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0]))#.to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
