@@ -62,16 +62,16 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # Normalize data
                     # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported.
                     #  It is still unclear why normalizing the data here doesn't work with the dataloaders.
-                    imspace = complex_tensor_to_complex_np(imspace)
-                    imspace = imspace / np.max(np.abs(imspace))
-                    imspace = torch.from_numpy(imspace).to(device)
+                    # imspace = complex_tensor_to_complex_np(imspace)
+                    # imspace = imspace / np.max(np.abs(imspace))
+                    # imspace = torch.from_numpy(imspace).to(device)
 
                     if not skip_csm:
                         csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
-                        csm = csm / np.max(np.abs(csm))
+                        # csm = csm / np.max(np.abs(csm))
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
