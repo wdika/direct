@@ -55,7 +55,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    imspace = preprocessing_ifft(input_kspace)
+                    imspace = ifftn(input_kspace, dim=(0, 1, 2), norm="ortho")
                     # del input_kspace
 
                     # Normalize data
