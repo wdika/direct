@@ -107,9 +107,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # del imspace
 
                         # Save mask
-                        output_dir_mask = output + 'masks/'
+                        output_dir_mask = output + '/masks'
                         create_dir(output_dir_mask)
-                        with open(output_dir_mask, 'wb') as f:
+                        with open(output_dir_mask + '/mask0', 'wb') as f:
                             pickle.dump(mask, f)
                         del mask
 
