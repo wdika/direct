@@ -66,6 +66,7 @@ def pics_recon(idx):
 
     sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
     target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
+    target = target / np.max(np.abs(target))
     sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
 
     print('imspace', np.min(np.abs(imspace)), np.max(np.abs(imspace)))
@@ -88,7 +89,7 @@ def pics_recon(idx):
     plt.colorbar()
     plt.subplot(2, 4, 3)
     plt.imshow(np.abs(sense), cmap='gray')
-    plt.title('sense' + str(structural_similarity(np.abs(target), np.abs(sense), data_range=np.max(np.abs(target)))))
+    plt.title('sense')
     plt.colorbar()
     plt.subplot(2, 4, 4)
     plt.imshow(np.angle(sense), cmap='gray')
@@ -96,15 +97,15 @@ def pics_recon(idx):
     plt.colorbar()
     plt.subplot(2, 4, 5)
     plt.imshow(np.abs(target), cmap='gray')
-    plt.title('ifft(masked_kspace) * sense.conj()')
+    plt.title('target ' + str(np.round(structural_similarity(np.abs(target), np.abs(sense), data_range=np.max(np.abs(target))), 4)))
     plt.colorbar()
     plt.subplot(2, 4, 6)
     plt.imshow(np.angle(target), cmap='gray')
-    plt.title('ifft(masked_kspace) * sense.conj() phase')
+    plt.title('target phase')
     plt.colorbar()
     plt.subplot(2, 4, 7)
     plt.imshow(np.abs(pred), cmap='gray')
-    plt.title('pics' + str(structural_similarity(np.abs(target), np.abs(pred), data_range=np.max(np.abs(target)))))
+    plt.title('pics ' + str(np.round(structural_similarity(np.abs(target), np.abs(pred), data_range=np.max(np.abs(target))), 4)))
     plt.colorbar()
     plt.subplot(2, 4, 8)
     plt.imshow(np.angle(pred), cmap='gray')
