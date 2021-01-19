@@ -97,7 +97,7 @@ def pics_recon(idx):
     plt.colorbar()
     plt.subplot(2, 4, 5)
     plt.imshow(np.abs(target), cmap='gray')
-    plt.title('target ' + str(np.round(structural_similarity(np.abs(target), np.abs(sense), data_range=np.max(np.abs(target))), 4)))
+    plt.title('target')
     plt.colorbar()
     plt.subplot(2, 4, 6)
     plt.imshow(np.angle(target), cmap='gray')
