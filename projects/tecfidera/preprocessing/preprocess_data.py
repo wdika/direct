@@ -67,8 +67,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
                         csm = readcfl(filename_kspace.split('_')[0] + '_csm')
 
-                        from direct.data import transforms as T
-                        csm = complex_tensor_to_complex_np(T.fftshift(torch.from_numpy(csm), dim=(1, 2)))
+                        # csm = complex_tensor_to_complex_np(T.fftshift(torch.from_numpy(csm), dim=(1, 2)))
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
