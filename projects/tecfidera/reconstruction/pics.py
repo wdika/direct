@@ -31,7 +31,10 @@ class DataTransform:
         # sensitivity_map = complex_tensor_to_complex_np(
         #     ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
 
-        masked_kspace = np.expand_dims(np.transpose(sample["kspace"], (1, 2, 0)), 0) * 0.8
+        masked_kspace = np.expand_dims(np.transpose(sample["kspace"], (1, 2, 0)), 0)
+        imspace = np.fft.ifft2(masked_kspace, axes=(0, 1))
+        masked_kspace = np.fft.fft2((imspace / np.max(imspace)), axes=(0, 1))
+
         sensitivity_map = np.expand_dims(np.transpose(np.fft.fftshift(sample["sensitivity_map"], axes=(1, 2)), (1, 2, 0)), 0)
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
@@ -62,9 +65,9 @@ def pics_recon(idx):
 
     # TODO (dk) : pics per slice appears to not working properly
     pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0], axes=(0, 1))
-    pred = np.stack((pred.real, pred.imag), -1)
-    pred = np.abs(pred[..., 0] + 1j * pred[..., 1]).astype(np.float32)
-    pred = np.clip(pred / np.max(pred), 0, 1)
+    # pred = np.stack((pred.real, pred.imag), -1)
+    # pred = np.abs(pred[..., 0] + 1j * pred[..., 1]).astype(np.float32)
+    # pred = np.clip(pred / np.max(pred), 0, 1)
 
 
     import matplotlib.pyplot as plt
@@ -75,12 +78,12 @@ def pics_recon(idx):
     target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
     sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
 
-    print('imspace', np.max(np.abs(imspace)), np.min(np.abs(imspace)))
-    print('sensitivity_map', np.max(np.abs(sensitivity_map)), np.min(np.abs(sensitivity_map)))
-    print('target', np.max(np.abs(target)), np.min(np.abs(target)))
-    print('rss_target', np.max(np.abs(rss_target)), np.min(np.abs(rss_target)))
-    print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
-    print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
+    print('imspace', np.min(np.abs(imspace)), np.max(np.abs(imspace)))
+    print('sensitivity_map', np.min(np.abs(sensitivity_map)), np.max(np.abs(sensitivity_map)))
+    print('target', np.min(np.abs(target)), np.max(np.abs(target)))
+    print('rss_target', np.min(np.abs(rss_target)), np.max(np.abs(rss_target)))
+    print('sense', np.min(np.abs(sense)), np.max(np.abs(sense)))
+    print('pred', np.min(np.abs(pred)), np.max(np.abs(pred)))
     print('\n')
 
     plt.subplot(2, 4, 1)
