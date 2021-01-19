@@ -35,7 +35,7 @@ class DataTransform:
         imspace = np.fft.ifft2(masked_kspace, axes=(0, 1))
 
         sensitivity_map = np.expand_dims(np.transpose(np.fft.fftshift(sample["sensitivity_map"], axes=(1, 2)), (1, 2, 0)), 0)
-        sensitivity_map = sensitivity_map / np.max(imspace)
+        sensitivity_map = sensitivity_map * np.max(imspace)
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
