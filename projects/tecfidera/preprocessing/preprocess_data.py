@@ -69,8 +69,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     input_kspace = readcfl(filename_kspace.split('.')[0])
                     mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
-                    imspace = np.fft.ifft2(input_kspace, axes=(1, 2))
-                    imspace = imspace / np.max(np.abs(imspace))
+                    # imspace = np.fft.ifft2(input_kspace, axes=(1, 2))
+                    # imspace = imspace / np.max(np.abs(imspace))
 
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
@@ -110,9 +110,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Process(target=save_h5_outputs, args=(
                         #     complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")),
                         #     "kspace", output_dir + name)).start()
-                        Process(target=save_h5_outputs, args=(np.fft.fft2(imspace, axes=(1, 2)), "kspace",
+                        Process(target=save_h5_outputs, args=(input_kspace, "kspace",
                                                               output_dir + name)).start()
-                        del imspace
+                        # del imspace
 
                         # Save mask
                         output_dir_mask = output + '/masks/'
