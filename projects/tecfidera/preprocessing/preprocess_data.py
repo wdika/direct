@@ -51,9 +51,9 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
-                    # mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-                    #
+                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
+
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
                     # # imspace = preprocessing_ifft(input_kspace)
                     # del input_kspace
@@ -62,8 +62,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported.
                     #  It is still unclear why normalizing the data here doesn't work with the dataloaders.
 
-                    input_kspace = readcfl(filename_kspace.split('.')[0])
-                    mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
+                    # input_kspace = readcfl(filename_kspace.split('.')[0])
+                    # mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
 
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)

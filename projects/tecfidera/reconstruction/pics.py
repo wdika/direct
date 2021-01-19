@@ -31,9 +31,6 @@ class DataTransform:
         sensitivity_map = complex_tensor_to_complex_np(
             ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
 
-        # masked_kspace = np.expand_dims(np.transpose(sample["kspace"], (1, 2, 0)), 0)
-        # sensitivity_map = np.expand_dims(np.transpose(np.fft.fftshift(sample["sensitivity_map"], axes=(1, 2)), (1, 2, 0)), 0)
-
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
 
