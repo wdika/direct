@@ -58,6 +58,7 @@ def pics_recon(idx):
 
     # TODO (dk) : pics per slice appears to not working properly
     pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0], axes=(0, 1))
+    pred = pred / np.max(np.abs(pred))
 
     import matplotlib.pyplot as plt
     imspace = np.fft.ifft2(kspace, axes=(1, 2))
@@ -75,6 +76,8 @@ def pics_recon(idx):
     print('pred', np.min(np.abs(pred)), np.max(np.abs(pred)))
     print('\n')
 
+    from skimage.metrics import structural_similarity
+
     plt.subplot(2, 4, 1)
     plt.imshow(np.abs(rss_target), cmap='gray')
     plt.title('rss_target')
@@ -85,7 +88,7 @@ def pics_recon(idx):
     plt.colorbar()
     plt.subplot(2, 4, 3)
     plt.imshow(np.abs(sense), cmap='gray')
-    plt.title('sense')
+    plt.title('sense' + str(structural_similarity(np.abs(target), np.abs(sense), data_range=np.max(np.abs(target)))))
     plt.colorbar()
     plt.subplot(2, 4, 4)
     plt.imshow(np.angle(sense), cmap='gray')
@@ -101,7 +104,7 @@ def pics_recon(idx):
     plt.colorbar()
     plt.subplot(2, 4, 7)
     plt.imshow(np.abs(pred), cmap='gray')
-    plt.title('pics')
+    plt.title('pics' + str(structural_similarity(np.abs(target), np.abs(pred), data_range=np.max(np.abs(target)))))
     plt.colorbar()
     plt.subplot(2, 4, 8)
     plt.imshow(np.angle(pred), cmap='gray')
