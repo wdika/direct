@@ -69,7 +69,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     input_kspace = readcfl(filename_kspace.split('.')[0])
                     mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
-                    # imspace = np.fft.ifft2(input_kspace, axes=(1, 2))
+                    imspace = np.fft.ifft(input_kspace, axes=0)
                     # imspace = imspace / np.max(np.abs(imspace))
 
                     if not skip_csm:
