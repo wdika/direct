@@ -7,7 +7,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.fft import ifftn
+from torch.fft import ifftn, fftn
 
 from direct.data import transforms as T
 
