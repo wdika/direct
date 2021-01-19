@@ -403,7 +403,7 @@ def fftshift(
 
     if isinstance(dim, int):
         dim = [dim]
-    print(dim, data.size())
+
     shift = [data.size(curr_dim) // 2 for curr_dim in dim]
     return roll(data, shift, dim)
 
