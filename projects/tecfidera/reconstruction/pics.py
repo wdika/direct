@@ -61,10 +61,9 @@ def pics_recon(idx):
     print(kspace.shape)
 
     # TODO (dk) : pics per slice appears to not working properly
-    pred = complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
-        # bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
-        bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0]),
-        dim=(0, 1)))
+    pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0], axes=(0, 1))
+    pred = np.stack((pred.real, pred.imag), -1)
+    pred = np.abs(pred[..., 0] + 1j * pred[..., 1]).astype(np.float32)
 
     import matplotlib.pyplot as plt
     imspace = np.fft.ifft2(kspace, axes=(1, 2))
@@ -80,6 +79,7 @@ def pics_recon(idx):
     print('rss_target', np.max(np.abs(rss_target)), np.min(np.abs(rss_target)))
     print('sense', np.max(np.abs(sense)), np.min(np.abs(sense)))
     print('pred', np.max(np.abs(pred)), np.min(np.abs(pred)))
+    print('\n')
 
     plt.subplot(2, 4, 1)
     plt.imshow(np.abs(rss_target), cmap='gray')
