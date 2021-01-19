@@ -32,10 +32,7 @@ class DataTransform:
         #     ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
 
         masked_kspace = np.expand_dims(np.transpose(sample["kspace"], (1, 2, 0)), 0)
-        imspace = np.fft.ifft2(masked_kspace, axes=(0, 1))
-
         sensitivity_map = np.expand_dims(np.transpose(np.fft.fftshift(sample["sensitivity_map"], axes=(1, 2)), (1, 2, 0)), 0)
-        sensitivity_map = sensitivity_map * np.max(imspace)
 
         return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
 
@@ -61,14 +58,9 @@ def save_outputs(outputs, output_path):
 
 def pics_recon(idx):
     kspace, sensitivity_map, filename, slice_no = data[idx]
-    print(kspace.shape)
 
     # TODO (dk) : pics per slice appears to not working properly
-    pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0], axes=(0, 1))
-    # pred = np.stack((pred.real, pred.imag), -1)
-    # pred = np.abs(pred[..., 0] + 1j * pred[..., 1]).astype(np.float32)
-    # pred = np.clip(pred / np.max(pred), 0, 1)
-
+    pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', np.expand_dims(np.transpose(sample["kspace"], (1, 2, 0)), 0), sensitivity_map)[0], axes=(0, 1))
 
     import matplotlib.pyplot as plt
     imspace = np.fft.ifft2(kspace, axes=(1, 2))
