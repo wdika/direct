@@ -67,7 +67,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # imspace = imspace / np.max(np.abs(imspace))
                     # imspace = torch.from_numpy(imspace).to(device)
 
-                    input_kspace = readcfl(filename_kspace.split('.')[0]).to(device)
+                    input_kspace = readcfl(filename_kspace.split('.')[0])
                     mask = extract_mask(input_kspace)
 
                     input_kspace = slice_selection(np.fft.fftshift(input_kspace, axes=0), start=start, end=end)
