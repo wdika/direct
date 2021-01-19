@@ -51,14 +51,14 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
-                    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-
-                    input_kspace = T.fftshift(ifftn(input_kspace, dim=0, norm="ortho"), dim=0)
-                    input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    # imspace = preprocessing_ifft(input_kspace)
-                    imspace = ifftn(input_kspace, dim=(1, 2), norm="ortho")
-                    del input_kspace
+                    # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    # mask = complex_tensor_to_real_np(extract_mask(input_kspace))
+                    #
+                    # input_kspace = T.fftshift(ifftn(input_kspace, dim=0, norm="ortho"), dim=0)
+                    # input_kspace = slice_selection(input_kspace, start=start, end=end)
+                    # # imspace = preprocessing_ifft(input_kspace)
+                    # imspace = ifftn(input_kspace, dim=(1, 2), norm="ortho")
+                    # del input_kspace
 
                     # Normalize data
                     # TODO (dk) : change np normalization to pytorch normalization, once complex tensors are supported.
@@ -67,12 +67,19 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     # imspace = imspace / np.max(np.abs(imspace))
                     # imspace = torch.from_numpy(imspace).to(device)
 
+                    input_kspace = readcfl(filename_kspace.split('.')[0]).to(device)
+                    mask = extract_mask(input_kspace)
+
+                    input_kspace = slice_selection(np.fft.fftshift(input_kspace, axes=0), start=start, end=end)
+                    imspace = np.fft.ifft2(input_kspace, axes=(1, 2))
+                    imspace = imspace / np.max(np.abs(imspace))
+
                     if not skip_csm:
                         csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
-                        # csm = csm / np.max(np.abs(csm))
+                        csm = csm / np.max(np.abs(csm))
 
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
