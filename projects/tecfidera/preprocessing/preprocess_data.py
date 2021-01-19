@@ -55,7 +55,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    input_kspace = ifftn(input_kspace[0], dim=(0, 1), norm="ortho")
+                    input_kspace = ifftn(input_kspace[50], dim=(0, 1), norm="ortho")
                     input_kspace = input_kspace / torch.max(torch.abs(input_kspace))
                     input_kspace = complex_tensor_to_complex_np(fftn(input_kspace, dim=(0, 1), norm="ortho").unsqueeze(0))
                     # del input_kspace
@@ -68,7 +68,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
                         csm = readcfl(filename_kspace.split('_')[0] + '_csm')
-                        csm = np.expand_dims(csm[0], 0)
+                        csm = np.expand_dims(csm[50], 0)
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
