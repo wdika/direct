@@ -70,7 +70,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
 
                     if not skip_csm:
                         csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
-                        csm = np.clip(csm / np.max(np.abs(csm)), 0, 1)
+                        csm = torch.from_numpy(csm)
+                        csm = complex_tensor_to_complex_np(torch.clip(csm / torch.max(torch.abs(csm)), 0, 1))
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
