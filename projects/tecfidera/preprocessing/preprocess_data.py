@@ -51,15 +51,15 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
                         f" | acquisition: {name}")
 
-                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
+                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0]))#.to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-
-                    print(mask.size / mask.sum())
+                    input_kspace = complex_tensor_to_complex_np(input_kspace)
 
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    input_kspace = ifftn(input_kspace[50], dim=(0, 1), norm="ortho")
-                    input_kspace = input_kspace / torch.max(torch.abs(input_kspace))
-                    input_kspace = complex_tensor_to_complex_np(fftn(input_kspace, dim=(0, 1), norm="ortho").unsqueeze(0))
+                    # input_kspace = ifftn(input_kspace, dim=(0), norm="ortho")
+                    # # input_kspace = input_kspace / torch.max(torch.abs(input_kspace))
+                    # input_kspace = complex_tensor_to_complex_np(fftn(input_kspace, dim=(0, 1), norm="ortho").unsqueeze(0))
                     # del input_kspace
 
                     # Normalize data
@@ -69,7 +69,6 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     if not skip_csm:
                         # csm = slice_selection(readcfl(filename_kspace.split('_')[0] + '_csm'), start=start, end=end)
                         csm = readcfl(filename_kspace.split('_')[0] + '_csm')
-                        csm = np.expand_dims(csm[50], 0)
 
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
