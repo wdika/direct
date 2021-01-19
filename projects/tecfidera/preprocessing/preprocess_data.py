@@ -70,8 +70,6 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Normalize data
                         # TODO (dk, kp) : make sure about the csm normalization. Here it seems the csm is normalized.
 
-                        csm = np.transpose(csm, (2, 0, 1, 3))
-
                     if export_type == 'png':
                         output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
                             -2] + '/' + name
