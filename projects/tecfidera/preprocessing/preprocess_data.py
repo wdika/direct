@@ -55,7 +55,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
 
                     # input_kspace = slice_selection(input_kspace, start=start, end=end)
-                    imspace = ifftn(input_kspace, dim=(1, 2), norm="ortho")
+                    input_kspace = ifftn(input_kspace, dim=(0), norm="ortho")
                     # del input_kspace
 
                     # Normalize data
@@ -97,10 +97,10 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         # Save kspace
                         output_dir = output + '/kspaces/'
                         create_dir(output_dir)
-                        Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")),
-                            "kspace", output_dir + name)).start()
-                        # Process(target=save_h5_outputs, args=(input_kspace, "kspace", output_dir + name)).start()
+                        # Process(target=save_h5_outputs, args=(
+                        #     complex_tensor_to_complex_np(fftn(imspace, dim=(1, 2), norm="ortho")),
+                        #     "kspace", output_dir + name)).start()
+                        Process(target=save_h5_outputs, args=(input_kspace, "kspace", output_dir + name)).start()
                         # del imspace
 
                         # Save mask
