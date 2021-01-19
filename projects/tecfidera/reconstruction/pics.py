@@ -63,7 +63,7 @@ def pics_recon(idx):
     # TODO (dk) : pics per slice appears to not working properly
     pred = normalize(complex_tensor_to_complex_np(ifftshift(torch.from_numpy(
         # bart(1, f'pics -g -i 200 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
-        bart(1, f'pics -i 20 -S -l1 -r 0.01', kspace, sensitivity_map)[0]),
+        bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0]),
         dim=(0, 1))))
 
     import matplotlib.pyplot as plt
