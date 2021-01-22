@@ -49,7 +49,7 @@ def default_collate(batch):
             out = batch[0].new(storage)
         return torch.stack(batch, 0, out=out)
     elif elem_type.__module__ == 'numpy' and elem_type.__name__ != 'str_' \
-            and elem_type.__name__ != 'string_':
+        and elem_type.__name__ != 'string_':
         elem = batch[0]
         if elem_type.__name__ == 'ndarray':
             # array of string classes and object
@@ -101,14 +101,14 @@ class MRIData(DataLoader):
     """
 
     def __init__(
-            self, batch_size=1, data_path=None, mask_path=None, train=False,
-            num_workers=4, sampling_dist='gaussian', accsampler=None, inputscale=1.,
-            acceleration=None, fwhms=(.7, .7), ellipse_scale=.08,
-            drop_last=False, crop=True, shift=True, permute=True, superres=False,
-            minmaxcrop=(190, 190), superresscale=None, superresprob=1 / 3,
-            complex_dim=-1, prospective=False,
-            multiple_datasets_dir=None, n_coil=1,
-            sampler_type=None, sampler_weights=1):
+        self, batch_size=1, data_path=None, mask_path=None, train=False,
+        num_workers=4, sampling_dist='gaussian', accsampler=None, inputscale=1.,
+        acceleration=None, fwhms=(.7, .7), ellipse_scale=.08,
+        drop_last=False, crop=True, shift=True, permute=True, superres=False,
+        minmaxcrop=(190, 190), superresscale=None, superresprob=1 / 3,
+        complex_dim=-1, prospective=False,
+        multiple_datasets_dir=None, n_coil=1,
+        sampler_type=None, sampler_weights=1):
         # sampler should be list of indices to pick images, otherwise it's
         # random uniform when training, sequential when not.
         self.n_coil = n_coil
@@ -267,7 +267,7 @@ class RandomPhaseShift(object):
     def __call__(self, target):
         shiftangle = np.random.uniform(-np.pi, np.pi)
         return np.absolute(target).real * (
-                np.cos(shiftangle) + 1j * np.sin(shiftangle))
+            np.cos(shiftangle) + 1j * np.sin(shiftangle))
 
 
 class RandomCrop(object):
@@ -319,8 +319,8 @@ class RandomPermute(object):
 
 class Brains(Dataset):
     def __init__(
-            self, data_path, train, masker, transform,
-            complex_dim, scale, prospective, step, n_coil):
+        self, data_path, train, masker, transform,
+        complex_dim, scale, prospective, step, n_coil):
         super(Brains, self).__init__()
         self.n_coil = n_coil
         self.scale = scale

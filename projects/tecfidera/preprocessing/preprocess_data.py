@@ -52,7 +52,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f" | acquisition: {name}")
 
                     # input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0])).to(device)
-                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0]))#.to(device)
+                    input_kspace = torch.from_numpy(readcfl(filename_kspace.split('.')[0]))  # .to(device)
                     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
                     input_kspace = complex_tensor_to_complex_np(input_kspace)
 
@@ -116,7 +116,8 @@ def preprocessing(root, output, skip_csm, export_type, device):
                             # Save csm
                             output_dir_csm = output + '/csms/'
                             create_dir(output_dir_csm)
-                            Process(target=save_h5_outputs, args=(csm, "sensitivity_map", output_dir_csm + name)).start()
+                            Process(target=save_h5_outputs,
+                                    args=(csm, "sensitivity_map", output_dir_csm + name)).start()
                             del csm
 
 

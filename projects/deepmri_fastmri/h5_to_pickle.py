@@ -40,7 +40,7 @@ def save_outputs(outputs, output_path):
         data[filename].append((slice_data, pred))
 
     data = {filename: np.stack([pred for _, pred in sorted(slice_preds)]) for filename, slice_preds in
-                        data.items()}
+            data.items()}
 
     for filename in data:
         output_filename = str(output_path / filename.split('.')[0])
@@ -48,7 +48,8 @@ def save_outputs(outputs, output_path):
 
         volume = data[filename]
         volume = np.stack((volume[:, 0, :, :, :] / np.amax(np.abs(np.sum(volume[:, 0, :, :, :] * \
-                                      volume[:, 1, :, :, :].conj(), 1)).real.flatten()), volume[:, 1, :, :, :]), 1)
+                                                                         volume[:, 1, :, :, :].conj(),
+                                                                         1)).real.flatten()), volume[:, 1, :, :, :]), 1)
 
         for slice in range(volume.shape[0]):
             with open(output_filename + '_' + str(slice), 'wb') as f:
@@ -71,7 +72,8 @@ def create_data_loader(data_root, filenames_filter):
 def compute_sensitivity_maps(kspace):
     imspace = T.complex_center_crop(T.ifft2(kspace.refine_names("coil", "height", "width", "complex")), (300, 300))
     sens_maps = np.transpose(bart.bart(1, f"ecalib -d0 -m1 -S", T.tensor_to_complex_numpy(T.fft2(imspace).rename(None
-                                                                    ).permute(1, 2, 0, 3).unsqueeze(0)))[0], (2, 0, 1))
+                                                                                                                 ).permute(
+        1, 2, 0, 3).unsqueeze(0)))[0], (2, 0, 1))
 
     plot = False
     if plot:

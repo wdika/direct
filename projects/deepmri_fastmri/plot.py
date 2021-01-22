@@ -83,7 +83,7 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
 
 class LogPlotter(object):
     def __init__(
-            self, log, name, train):
+        self, log, name, train):
         # self.log = log.assign(name=pd.Series(name, copy=True, index=log.index).values)
         self.log = log  # pandas df of loss values per time-step with training step as index
         self.name = name
@@ -115,7 +115,7 @@ class LogPlotter(object):
 
     def extend(self, df, checkpoint_freq):
         if np.all(df.iloc[0, :] == range(
-                df.shape[1])) or df.iloc[0, -1] == 'Avg.':
+            df.shape[1])) or df.iloc[0, -1] == 'Avg.':
             df = df.iloc[1:, :]
         start = checkpoint_freq
         if len(self.x_steps) != 0:

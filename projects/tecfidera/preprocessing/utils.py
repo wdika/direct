@@ -7,7 +7,7 @@ import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.fft import ifftn, fftn
+from torch.fft import ifftn
 
 from direct.data import transforms as T
 
@@ -81,7 +81,7 @@ def normalize(data):
 
 def normalize_rss(data, coil_dim=-1):
     return np.where(data == 0, np.array([0.0], dtype=data.dtype),
-                            (data / np.max(np.sqrt(np.sum(data**2, coil_dim)))))
+                    (data / np.max(np.sqrt(np.sum(data ** 2, coil_dim)))))
 
 
 def preprocessing_ifft(kspace):
@@ -124,7 +124,7 @@ def rss_reconstruction(imspace, dim=-1):
     -------
     reconstructed RSS image
     """
-    return torch.sqrt(torch.sum(imspace**2, dim=dim))
+    return torch.sqrt(torch.sum(imspace ** 2, dim=dim))
 
 
 def sense_reconstruction(imspace, csm, dim=-1):

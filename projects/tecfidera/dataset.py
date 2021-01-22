@@ -1,15 +1,14 @@
 # coding=utf-8
 __author__ = 'Dimitrios Karkalousos'
 
-import numpy as np
+import logging
 import pathlib
-
 from typing import Callable, Dict, Optional, Any, List
+
+import numpy as np
 
 from direct.data.h5_data import H5SliceData
 from direct.types import PathOrString
-
-import logging
 
 logger = logging.getLogger(__name__)
 

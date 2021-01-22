@@ -1,64 +1,64 @@
 model:
-  model_name: rim.rim.RIM
-  hidden_channels: 128
-  length: 16
-  depth: 2
-  steps: 1
-  no_parameter_sharing: false
-  instance_norm: false
-  dense_connect: false
-  replication_padding: true
-  image_initialization: sense
-  scale_loglikelihood: null
-  learned_initializer: false
-  initializer_channels:
-  - 32
-  - 32
-  - 64
-  - 64
-  initializer_dilations:
-  - 1
-  - 1
-  - 2
-  - 4
-  initializer_multiscale: 1
+    model_name: rim.rim.RIM
+    hidden_channels: 128
+    length: 16
+    depth: 2
+    steps: 1
+    no_parameter_sharing: false
+    instance_norm: false
+    dense_connect: false
+    replication_padding: true
+    image_initialization: sense
+    scale_loglikelihood: null
+    learned_initializer: false
+    initializer_channels:
+        - 32
+        - 32
+        - 64
+        - 64
+    initializer_dilations:
+        - 1
+        - 1
+        - 2
+        - 4
+    initializer_multiscale: 1
 additional_models:
-  sensitivity_model:
-    model_name: unet.unet_2d.UnetModel2d
-    in_channels: 2
-    out_channels: 2
-    num_filters: 8
-    num_pool_layers: 4
-    dropout_probability: 0.0
+    sensitivity_model:
+        model_name: unet.unet_2d.UnetModel2d
+        in_channels: 2
+        out_channels: 2
+        num_filters: 8
+        num_pool_layers: 4
+        dropout_probability: 0.0
 physics:
-  forward_operator: fft2(centered=False)
-  backward_operator: ifft2(centered=False)
-  use_noise_matrix: false
-  noise_matrix_scaling: 1.0
+    forward_operator: fft2(centered=False)
+    backward_operator: ifft2(centered=False)
+    use_noise_matrix: false
+    noise_matrix_scaling: 1.0
 validation:
-  datasets:
-    - name: TECFIDERA
-  crop: null
+    datasets:
+        -   name: TECFIDERA
+    crop: null
 inference:
-  dataset:
-    name: TECFIDERA
-    lists: []
-    transforms:
-      crop: null
-      crop_type: uniform
-      estimate_sensitivity_maps: false
-      estimate_body_coil_image: false
-      sensitivity_maps_gaussian: 1.0
-      image_center_crop: false
-      pad_coils: null
-      scaling_key: masked_kspace
-    text_description: inference
-    input_kspace_key: null
-    input_image_key: null
-    kspace_context: 0
-    pass_mask: true
-  batch_size: 8
+    dataset:
+        name: TECFIDERA
+        lists: [ ]
+        transforms:
+            crop: null
+            crop_type: uniform
+            estimate_sensitivity_maps: false
+            estimate_body_coil_image: false
+            sensitivity_maps_gaussian: 1.0
+            image_center_crop: false
+            pad_coils: null
+            scaling_key: masked_kspace
+        text_description: inference
+        input_kspace_key: null
+        input_image_key: null
+        kspace_context: 0
+        pass_mask: true
+    batch_size: 8
 logging:
-  log_as_image: null
-  tensorboard:
-    num_images: 4
+    log_as_image: null
+    tensorboard:
+        num_images: 4

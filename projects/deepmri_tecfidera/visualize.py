@@ -6,11 +6,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib import gridspec
-from skimage import filters
 from skimage.measure import compare_mse, compare_nrmse
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from skimage.metrics import structural_similarity as compare_ssim
-from skimage.morphology import convex_hull_image
 
 from projects.deepmri_tecfidera.data import MRIData
 
@@ -196,8 +194,10 @@ def plot_reconstructions(loader, models, data_kwargs, mode='absolute', t_max=Non
             eta_mode = np.abs(eta_mode[..., 0] + 1j * eta_mode[..., 1])
             eta_mode = np.clip(eta_mode / np.max(eta_mode), 0, 1)
 
-            plotdicts[0].update({gs[etaloc // grid[1], etaloc % grid[1]]: (eta_mode, '' if notitles else '{}x'.format(int(acc)),
-                (fsc_ax, '', next(colorpalette)), cmaps[etaloc], min_clims[etaloc], max_clims[etaloc])})
+            plotdicts[0].update(
+                {gs[etaloc // grid[1], etaloc % grid[1]]: (eta_mode, '' if notitles else '{}x'.format(int(acc)),
+                                                           (fsc_ax, '', next(colorpalette)), cmaps[etaloc],
+                                                           min_clims[etaloc], max_clims[etaloc])})
 
         pics_mode = np.abs(batch['pics'].squeeze().numpy())
         pics_mode = np.clip(pics_mode / np.max(pics_mode), 0, 1)
@@ -240,7 +240,8 @@ def plot_reconstructions(loader, models, data_kwargs, mode='absolute', t_max=Non
                 im_mode = np.clip(im_mode / np.max(im_mode), 0, 1)
 
                 pdict.update({gs[gl // grid[1], gl % grid[1]]: (im_mode, '' if notitles else '{}'.format(model.name),
-                    (fsc_ax, '', next(colorpalette)), cmaps[gl], min_clims[gl], max_clims[gl])})
+                                                                (fsc_ax, '', next(colorpalette)), cmaps[gl],
+                                                                min_clims[gl], max_clims[gl])})
 
     fig = plt.figure(figsize=figsize)
     fig.patch.set_facecolor('black')

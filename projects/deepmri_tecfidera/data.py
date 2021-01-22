@@ -313,7 +313,7 @@ class RandomPermute(object):
 
 
 class Brains(Dataset):
-    def __init__( self, data_path, train, masker, transform, complex_dim, scale, prospective, step, n_coil):
+    def __init__(self, data_path, train, masker, transform, complex_dim, scale, prospective, step, n_coil):
         super(Brains, self).__init__()
         self.n_coil = n_coil
         self.scale = scale
@@ -388,7 +388,9 @@ class Brains(Dataset):
 
             pics = np.fft.fftshift(bart.bart(1, 'pics -d0 -S -R W:7:0:0.005 -i 60', np.expand_dims(np.transpose(
                 np.fft.ifftshift(np.fft.fft2(imspace) * self.masker(imspace.shape), axes=(-2, -1)), (1, 2, 0)), 0),
-                np.expand_dims(np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0], axes=(-2, -1))
+                                             np.expand_dims(
+                                                 np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0],
+                                   axes=(-2, -1))
 
             # TECFIDERA data necessary(?) block of code
             imspace = imspace / np.max(np.abs(imspace))
@@ -403,10 +405,6 @@ class Brains(Dataset):
             mask = self.masker(kspace.shape[-2:])
             y = kspace * mask
             eta = np.sum(np.fft.ifft2(y) * sense.conj(), 0)
-
-            print('imspace', np.min(np.abs(imspace)), np.max(np.abs(imspace)))
-            print('sense', np.min(np.abs(sense)), np.max(np.abs(sense)))
-            print('eta', np.min(np.abs(eta)), np.max(np.abs(eta)))
 
             eta = np.stack((eta.real, eta.imag), self.complex_dim)
             y = np.stack((y.real, y.imag), self.complex_dim)

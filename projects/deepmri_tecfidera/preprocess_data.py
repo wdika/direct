@@ -4,6 +4,7 @@ __author__ = 'Dimitrios Karkalousos'
 import argparse
 import glob
 import logging
+import os
 import pickle
 import sys
 import time
@@ -12,12 +13,9 @@ from pathlib import Path
 
 import numpy as np
 from tqdm import tqdm
-import torch
 
-import os
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
 sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
-from bart import bart
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
