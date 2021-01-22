@@ -12,6 +12,12 @@ from pathlib import Path
 
 import numpy as np
 from tqdm import tqdm
+import torch
+
+import os
+os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
+sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
+from bart import bart
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -45,7 +51,19 @@ def save_pickle_outputs(data, filename):
             pickle.dump(data[slice], f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def preprocessing(root, output, skip_csm, export_type, device):
+def center_crop(data, shape):
+    if not (0 < shape[0] <= data.shape[1]) or not (0 < shape[1] <= data.shape[2]):
+        raise ValueError(f"Crop shape should be smaller than data. Requested {shape}, got {data.shape}.")
+
+    width_lower = (data.shape[1] - shape[0]) // 2
+    width_upper = width_lower + shape[0]
+    height_lower = (data.shape[2] - shape[1]) // 2
+    height_upper = height_lower + shape[1]
+
+    return data[:, width_lower:width_upper, height_lower:height_upper, :]
+
+
+def preprocessing(root, output, export_type, scale):
     """
     Parses all subjects, acquisitions, and scans. Performs all the necessary preprocessing steps for the TECFIDERA data.
 
@@ -81,10 +99,27 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         f" | acquisition: {name}")
 
                     input_kspace = readcfl(filename_kspace.split('.')[0])
-                    mask = np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0)
+                    mask = np.expand_dims(np.where(np.sum(np.sum(np.abs(input_kspace), 0), -1) > 0, 1, 0), 0)
+
+                    acceleration = np.round(mask.size / mask.sum())
+                    if acceleration < 4:
+                        acceleration = 4.0
+                    elif acceleration > 4 and acceleration < 6:
+                        acceleration = 6.0
+                    elif acceleration > 6 and acceleration < 8:
+                        acceleration = 8.0
+                    elif acceleration > 8 and acceleration < 10:
+                        acceleration = 10.0
 
                     imspace = np.fft.ifft2(input_kspace, axes=(1, 2))
                     csm = readcfl(filename_kspace.split('_')[0] + '_csm')
+
+                    # TODO (kp, dk): Find out if scaling and this normalization is necessary here or in the dataloader.
+                    imspace = imspace * scale
+                    csm = csm * scale
+
+                    imspace = imspace / np.amax(np.abs(np.sum(imspace * csm.conj(), 2)).real.flatten())
+
                     data = np.stack((imspace, csm), 1)
 
                     # Normalize data
@@ -94,13 +129,13 @@ def preprocessing(root, output, skip_csm, export_type, device):
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
                         # Save kspace
-                        output_dir = output + '/data/'
+                        output_dir = output + '/test/'
                         create_dir(output_dir)
                         Process(target=save_pickle_outputs, args=(data, output_dir + name)).start()
                         # del imspace
 
                         # Save mask
-                        output_dir_mask = output + '/masks'
+                        output_dir_mask = output + '/masks_' + subject.split('/')[-2] + '/acc' + str(acceleration)
                         create_dir(output_dir_mask)
                         with open(output_dir_mask + '/mask0', 'wb') as f:
                             pickle.dump(mask, f)
@@ -110,7 +145,7 @@ def preprocessing(root, output, skip_csm, export_type, device):
 def main(args):
     start_time = time.perf_counter()
     logger.info("Saving data. This might take some time, please wait...")
-    preprocessing(args.root, args.output, args.skip_csm, args.export_type, args.device)
+    preprocessing(args.root, args.output, args.export_type, args.scale)
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
 
@@ -120,11 +155,8 @@ def create_arg_parser():
 
     parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
     parser.add_argument('output', type=str, help='Output dir to save files.')
-    parser.add_argument('--skip-csm', action="store_true",
-                        help='In case you have precomputed the sense maps in another way, '
-                             'then toggle this option to skip saving sense maps.')
-    parser.add_argument('--export-type', choices=['pickle', 'png'], default='png', help='Choose output format.')
-    parser.add_argument('--device', choices=['cpu', 'cuda'], default='cuda', help='Enable GPU.')
+    parser.add_argument('--export-type', choices=['pickle', 'png'], default='pickle', help='Choose output format.')
+    parser.add_argument('--scale', type=float, default=1.0, help='Set scaling of the data.')
 
     return parser
 

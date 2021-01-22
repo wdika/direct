@@ -1,5 +1,5 @@
 import argparse
-import pickle5 as pickle
+import pickle
 import re
 from os import makedirs, listdir
 from os.path import join, exists, split
@@ -9,9 +9,9 @@ import numpy as np
 import torch
 import torch.utils.data
 
-from projects.deepmri_tecfidera.plot import ModelLog
-from projects.deepmri_tecfidera.rim import Rim
-from projects.deepmri_tecfidera.visualize import plot_reconstructions
+from projects.deepmri_fastmri.plot import ModelLog
+from projects.deepmri_fastmri.rim import Rim
+from projects.deepmri_fastmri.visualize import plot_reconstructions
 
 models = {'rim': Rim}
 
@@ -32,7 +32,7 @@ def get_network(model, loaded=False, device='cuda'):
 
     if loaded:
         savedmodel = join(model.runfolder, 'models', model.to_reconstruct)
-        while savedmodel != None and savedmodel != 'None':
+        while savedmodel is not None and savedmodel is not 'None':
             try:
                 load = torch.load(savedmodel, map_location=lambda storage, loc: storage.cpu())
                 break

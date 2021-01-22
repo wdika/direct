@@ -49,7 +49,7 @@ def default_collate(batch):
             out = batch[0].new(storage)
         return torch.stack(batch, 0, out=out)
     elif elem_type.__module__ == 'numpy' and elem_type.__name__ != 'str_' \
-        and elem_type.__name__ != 'string_':
+            and elem_type.__name__ != 'string_':
         elem = batch[0]
         if elem_type.__name__ == 'ndarray':
             # array of string classes and object
@@ -101,14 +101,14 @@ class MRIData(DataLoader):
     """
 
     def __init__(
-        self, batch_size=1, data_path=None, mask_path=None, train=False,
-        num_workers=4, sampling_dist='gaussian', accsampler=None, inputscale=1.,
-        acceleration=None, fwhms=(.7, .7), ellipse_scale=.08,
-        drop_last=False, crop=True, shift=True, permute=True, superres=False,
-        minmaxcrop=(190, 190), superresscale=None, superresprob=1 / 3,
-        complex_dim=-1, prospective=False,
-        multiple_datasets_dir=None, n_coil=1,
-        sampler_type=None, sampler_weights=1):
+            self, batch_size=1, data_path=None, mask_path=None, train=False,
+            num_workers=4, sampling_dist='gaussian', accsampler=None, inputscale=1.,
+            acceleration=None, fwhms=(.7, .7), ellipse_scale=.08,
+            drop_last=False, crop=True, shift=True, permute=True, superres=False,
+            minmaxcrop=(190, 190), superresscale=None, superresprob=1 / 3,
+            complex_dim=-1, prospective=False,
+            multiple_datasets_dir=None, n_coil=1,
+            sampler_type=None, sampler_weights=1):
         # sampler should be list of indices to pick images, otherwise it's
         # random uniform when training, sequential when not.
         self.n_coil = n_coil
@@ -221,6 +221,14 @@ class MRIData(DataLoader):
         with open(mask_path, 'rb') as f:
             self.mask = pickle.load(f)
 
+    def get_loaded_target(self):
+        assert isfile(self.data_path)
+        with open(self.data_path, 'rb') as f:
+            target = pickle.load(f, encoding='latin1')
+        if target.ndim == 4 or target.ndim == 5:
+            target = np.sum(target[0] * target[1].conj(), 0)
+        return self.dataset.scale * target
+
         super(MRIData, self).__init__(
             dataset, batch_size=self.batch_size, shuffle=train, sampler=sampler,
             collate_fn=collate, drop_last=drop_last, num_workers=num_workers)
@@ -231,13 +239,10 @@ class MRIData(DataLoader):
 
     def get_loaded_target(self):
         assert isfile(self.data_path)
-
         with open(self.data_path, 'rb') as f:
             target = pickle.load(f, encoding='latin1')
-
         if target.ndim == 4 or target.ndim == 5:
-            target = np.sum(target[0] * target[1].conj(), -1)
-
+            target = np.sum(target[0] * target[1].conj(), 0)
         return self.dataset.scale * target
 
 
@@ -262,7 +267,7 @@ class RandomPhaseShift(object):
     def __call__(self, target):
         shiftangle = np.random.uniform(-np.pi, np.pi)
         return np.absolute(target).real * (
-            np.cos(shiftangle) + 1j * np.sin(shiftangle))
+                np.cos(shiftangle) + 1j * np.sin(shiftangle))
 
 
 class RandomCrop(object):
@@ -313,7 +318,9 @@ class RandomPermute(object):
 
 
 class Brains(Dataset):
-    def __init__( self, data_path, train, masker, transform, complex_dim, scale, prospective, step, n_coil):
+    def __init__(
+            self, data_path, train, masker, transform,
+            complex_dim, scale, prospective, step, n_coil):
         super(Brains, self).__init__()
         self.n_coil = n_coil
         self.scale = scale
@@ -323,7 +330,6 @@ class Brains(Dataset):
         self.complex_dim = complex_dim
         self.prospective = prospective
         self.data_path = data_path
-
         if prospective:
             with open(self.data_path, 'rb') as f:
                 y, sense = pickle.load(f)
@@ -352,7 +358,6 @@ class Brains(Dataset):
                     self.data_path = join(data_path, 'train')
                 else:
                     self.data_path = join(data_path, 'test')
-
                 self.subdirs = listdir(self.data_path)
                 if isdir(join(self.data_path, self.subdirs[0])):
                     self.fnames = [listdir(join(
@@ -383,27 +388,22 @@ class Brains(Dataset):
                 data = pickle.load(f, encoding='latin1')
             data = self.transform(data)
             imspace, sense = data[0], data[1]
-            imspace = np.transpose(imspace, (2, 0, 1))
-            sense = np.transpose(sense, (2, 0, 1))
 
             pics = np.fft.fftshift(bart.bart(1, 'pics -d0 -S -R W:7:0:0.005 -i 60', np.expand_dims(np.transpose(
                 np.fft.ifftshift(np.fft.fft2(imspace) * self.masker(imspace.shape), axes=(-2, -1)), (1, 2, 0)), 0),
-                np.expand_dims(np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0], axes=(-2, -1))
+                                             np.expand_dims(
+                                                 np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0],
+                                   axes=(-2, -1))
+            pics = np.stack((pics.real, pics.imag), self.complex_dim)
+            pics = np.abs(pics[..., 0] + 1j * pics[..., 1]).astype(np.float32)
 
-            # TECFIDERA data necessary(?) block of code
-            imspace = imspace / np.max(np.abs(imspace))
-            imspace = imspace * self.scale
-            sense = sense * self.scale
-            sense = sense / np.max(np.abs(sense))
-            # TODO (kp, dk): Find out if scaling and this normalization is necessary here or when data are preprocessed
-            #  and saved from cfl to h5.
-
-            target = np.sum(imspace * sense.conj(), 0)
             kspace = np.fft.fft2(imspace)
+            target = np.sum(imspace * sense.conj(), 0)
             mask = self.masker(kspace.shape[-2:])
             y = kspace * mask
             eta = np.sum(np.fft.ifft2(y) * sense.conj(), 0)
 
+            print('target', np.min(np.abs(target)), np.max(np.abs(target)))
             print('imspace', np.min(np.abs(imspace)), np.max(np.abs(imspace)))
             print('sense', np.min(np.abs(sense)), np.max(np.abs(sense)))
             print('eta', np.min(np.abs(eta)), np.max(np.abs(eta)))
