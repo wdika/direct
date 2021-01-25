@@ -89,7 +89,7 @@ def load_kspace(path):
     return kspace
 
 
-def get_kspace_from_listdata(fdir, noise=None, remove_oversampling=False, remove_freq_oversampling=False, take_signal_avg=False):
+def get_kspace_from_listdata(fdir):
     """
 
     Parameters
@@ -105,3 +105,34 @@ def get_kspace_from_listdata(fdir, noise=None, remove_oversampling=False, remove
 
     """
     kspace = load_kspace(fdir)
+
+    channels = kspace['kspace_properties']['number_of_coil_channels'][0]
+    mixes = kspace['kspace_properties']['number_of_mixes'][0]
+    dynamic = kspace['kspace_properties']['number_of_dynamic_scans'][0]
+    kxmin, kxmax = kspace['kspace_properties']['kx_range']
+    kymin, kymax = np.amin(kspace['ky']), np.amax(kspace['ky'])
+    signalavg = kspace['kspace_properties']['number_of_signal_averages'][0]
+
+    kzflag = 'kz' if kspace['kspace_properties']['number_of_encoding_dimensions'][0] == 3 else 'loca'
+    kzmin, kzmax = np.amin(kspace[kzflag]), np.amax(kspace[kzflag])
+    sx = len(kspace['complexdata'][-1])
+    tmp = np.array([elem for elem, ktyp in zip(kspace['complexdata'], kspace['typ']) if ktyp == b'STD']).T
+    tmp = tmp.reshape((sx, channels, -1), order='A')
+
+    startidx = kspace['typ'].index(b'STD')
+
+    yy = kspace['ky'][startidx::channels] - kymin
+    zz = kspace[kzflag][startidx::channels] - kzmin
+    tt = kspace['dyn'][startidx::channels]
+    mm = kspace['mix'][startidx::channels]
+    aa = kspace['aver'][startidx::channels]
+
+    kshape = (kxmax - kxmin + 1, kymax - kymin + 1, kzmax - kzmin + 1, channels, mixes, dynamic, signalavg)
+    kspace_filled = np.zeros(kshape, dtype=np.complex64)
+
+    for n, (y, z, m, t, a) in enumerate(zip(yy, zz, mm, tt, aa)):
+        kspace_filled[:, y, z, :, m, t, a] = tmp[:, :, n]
+        if np.fmod(n, np.around(len(yy) / 100)) == 0:
+            print('Progress: {}%'.format(np.around((n / len(yy)) * 100)), end='\r')
+
+    return kspace_filled, None
