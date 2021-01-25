@@ -89,7 +89,7 @@ def load_kspace(path):
     return kspace
 
 
-def get_kspace_from_listdata(fdir, noise, remove_oversampling, remove_freq_oversampling, take_signal_avg):
+def get_kspace_from_listdata(fdir, noise=None, remove_oversampling=False, remove_freq_oversampling=False, take_signal_avg=False):
     """
 
     Parameters
