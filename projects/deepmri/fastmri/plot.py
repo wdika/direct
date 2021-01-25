@@ -292,7 +292,7 @@ class ModelLog(object):
             self.checkpoints.append(checkpoint)
             try:
                 if self.multiple_datasets:
-                    model = join('./', model, self.multi_runfolder)
+                    model = join('/', model, self.multi_runfolder)
                 f = open(join(model, 'args_txt'), 'r')
             except FileNotFoundError:
                 model = join(self.train_path, split(model)[1])

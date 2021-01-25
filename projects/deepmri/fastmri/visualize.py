@@ -6,11 +6,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from matplotlib import gridspec
+from skimage import filters
 from skimage.measure import compare_mse, compare_nrmse
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from skimage.metrics import structural_similarity as compare_ssim
+from skimage.morphology import convex_hull_image
 
-from projects.deepmri_tecfidera.data import MRIData
+from projects.deepmri.fastmri.data import MRIData
 
 _mode = {
     'absolute': lambda x: np.clip(np.absolute(x).astype(float), 0, 1),
@@ -165,7 +167,11 @@ def plot_reconstructions(loader, models, data_kwargs, mode='absolute', t_max=Non
             target = mode[tloc](target_np)
 
         target = np.abs(target).astype(np.float32)
+        target_mask_background = convex_hull_image(np.where(target > filters.threshold_otsu(target), 1, 0))
+        target = np.where(target_mask_background == 1, target, 0)
         target = np.clip(target / np.max(target), 0, 1)
+
+        target = np.rot90(np.rot90(target))
 
         if tloc >= 0:
             for pdict in plotdicts:
@@ -191,18 +197,31 @@ def plot_reconstructions(loader, models, data_kwargs, mode='absolute', t_max=Non
 
         if etaloc != -1:
             eta_mode = batch['eta'].squeeze().numpy()
-            eta_mode = np.abs(eta_mode[..., 0] + 1j * eta_mode[..., 1])
+            eta_mode = np.where(target_mask_background == 1,
+                                np.abs(mode[etaloc](eta_mode[..., 0] + 1j * eta_mode[..., 1])).astype(np.float32), 0)
             eta_mode = np.clip(eta_mode / np.max(eta_mode), 0, 1)
 
-            plotdicts[0].update(
-                {gs[etaloc // grid[1], etaloc % grid[1]]: (eta_mode, '' if notitles else '{}x'.format(int(acc)),
-                                                           (fsc_ax, '', next(colorpalette)), cmaps[etaloc],
-                                                           min_clims[etaloc], max_clims[etaloc])})
+            eta_mode = np.rot90(np.rot90(eta_mode))
 
-        pics_mode = np.abs(batch['pics'].squeeze().numpy())
+            eta_mode_ssim = ' - SSIM:' + str(
+                np.round(compare_ssim(target, eta_mode, data_range=target.max() - target.min()), 3)) + \
+                            ' PSNR:' + str(np.round(compare_psnr(target, eta_mode), 1))
+
+            plotdicts[0].update({gs[etaloc // grid[1], etaloc % grid[1]]: (
+                eta_mode, '' if notitles else '{}x'.format(int(acc)) + eta_mode_ssim,
+                (fsc_ax, '', next(colorpalette)), cmaps[etaloc], min_clims[etaloc], max_clims[etaloc])})
+
+        pics_mode = np.where(target_mask_background == 1, batch['pics'].squeeze().numpy(), 0)
         pics_mode = np.clip(pics_mode / np.max(pics_mode), 0, 1)
 
-        plotdicts[0].update({gs[(etaloc + 1) // grid[1], (etaloc + 1) % grid[1]]: (pics_mode, 'CS', (
+        pics_mode = np.rot90(np.rot90(pics_mode))
+
+        pics_mode_ssim = ' - SSIM:' + str(
+            np.round(compare_ssim(target, pics_mode, data_range=target.max() - target.min()), 3)) + \
+                         ' PSNR:' + str(
+            np.round(compare_psnr(target, pics_mode), 1))
+
+        plotdicts[0].update({gs[(etaloc + 1) // grid[1], (etaloc + 1) % grid[1]]: (pics_mode, 'CS' + pics_mode_ssim, (
             fsc_ax, '', next(colorpalette)), cmaps[etaloc], min_clims[etaloc], max_clims[etaloc])})
 
         for model in models:
@@ -237,11 +256,18 @@ def plot_reconstructions(loader, models, data_kwargs, mode='absolute', t_max=Non
                 img_np = img_np[..., 0] + 1j * img_np[..., 1]
 
                 im_mode = np.abs(mode[gl](img_np)).astype(np.float32)
+                im_mode = np.where(target_mask_background == 1, im_mode, 0)
                 im_mode = np.clip(im_mode / np.max(im_mode), 0, 1)
 
-                pdict.update({gs[gl // grid[1], gl % grid[1]]: (im_mode, '' if notitles else '{}'.format(model.name),
-                                                                (fsc_ax, '', next(colorpalette)), cmaps[gl],
-                                                                min_clims[gl], max_clims[gl])})
+                im_mode = np.rot90(np.rot90(im_mode))
+
+                im_mode_ssim = ' - SSIM:' + str(
+                    np.round(compare_ssim(target, im_mode, data_range=target.max() - target.min()), 3)) + \
+                               ' PSNR:' + str(np.round(compare_psnr(target, im_mode), 1))
+
+                pdict.update({gs[gl // grid[1], gl % grid[1]]: (
+                    im_mode, '' if notitles else '{}'.format(model.name) + im_mode_ssim,
+                    (fsc_ax, '', next(colorpalette)), cmaps[gl], min_clims[gl], max_clims[gl])})
 
     fig = plt.figure(figsize=figsize)
     fig.patch.set_facecolor('black')

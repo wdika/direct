@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import torch
 
-from projects.deepmri_tecfidera.utils import mse
+from projects.deepmri.tecfidera.utils import mse
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
 sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')

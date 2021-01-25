@@ -9,9 +9,9 @@ import pickle5 as pickle
 import torch
 import torch.utils.data
 
-from projects.deepmri_tecfidera.plot import ModelLog
-from projects.deepmri_tecfidera.rim import Rim
-from projects.deepmri_tecfidera.visualize import plot_reconstructions
+from projects.deepmri.tecfidera.plot import ModelLog
+from projects.deepmri.tecfidera.rim import Rim
+from projects.deepmri.tecfidera.visualize import plot_reconstructions
 
 models = {'rim': Rim}
 
