@@ -8,8 +8,6 @@ import sys
 import time
 
 import numpy as np
-import torch
-from torch.nn.functional import pad
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
 sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
@@ -168,9 +166,16 @@ def get_kspace_from_listdata(fdir):
     return kspace_filled
 
 
+def resize_sensitivity_map(sensmap, newSize):
+    [xNew, yNew, zNew, _] = newSize
+    sensEstResize = bart(1, 'fft -i 7', bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew),
+                                                                                            bart(1, 'fft 7', sensmap)))
+    return sensEstResize * (np.max(np.abs(sensmap)) / (np.max(np.abs(sensEstResize))))
+
+
 def main(args):
     start_time = time.perf_counter()
-    logger.info("Saving data. This might take some time, please wait...")
+    logger.info("Converting data. This might take some time, please wait...")
     kspace = get_kspace_from_listdata(args.root)
     sense = get_kspace_from_listdata('/'.join(args.root.split('/')[:-1]) + '/raw_501')
 
@@ -187,10 +192,10 @@ def main(args):
     print('imspace', np.abs(np.min(imspace)), np.abs(np.max(imspace)))
     print('sense', np.abs(np.min(sense)), np.abs(np.max(sense)))
 
-    #sense = np.transpose(np.fft.ifftn(pad(input=torch.from_numpy(np.fft.fftn(np.transpose(sense, (3, 0, 1, 2)),
-        #axes=(-2, -1))), pad=((imspace.shape[-2]-sense.shape[-2])//2, (imspace.shape[-2]-sense.shape[-2])//2,
-        #(imspace.shape[-3]-sense.shape[-3])//2, (imspace.shape[-3]-sense.shape[-3])//2), mode='constant',
-        #value=0).numpy(), axes=(-2, -1)), (1, 2, 3, 0))
+    # sense = np.transpose(np.fft.ifftn(pad(input=torch.from_numpy(np.fft.fftn(np.transpose(sense, (3, 0, 1, 2)),
+    # axes=(-2, -1))), pad=((imspace.shape[-2]-sense.shape[-2])//2, (imspace.shape[-2]-sense.shape[-2])//2,
+    # (imspace.shape[-3]-sense.shape[-3])//2, (imspace.shape[-3]-sense.shape[-3])//2), mode='constant',
+    # value=0).numpy(), axes=(-2, -1)), (1, 2, 3, 0))
 
     # if imspace.shape[1] > sense.shape[1] and imspace.shape[2] > sense.shape[2]:
     # cropped_imspace = center_crop(imspace, (sense.shape[1], sense.shape[2]))
@@ -215,7 +220,7 @@ def main(args):
 
 def create_arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('root', type=str, help='Root dir containing folders with cfl files.')
+    parser.add_argument('root', type=str, help='Root dir containing folders with raw files.')
     return parser
 
 
