@@ -3,13 +3,31 @@ __author__ = 'Dimitrios Karkalousos'
 
 import argparse
 import logging
+import os
 import sys
 import time
 
 import numpy as np
+import torch
+from torch.nn.functional import pad
+
+os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
+sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
+from bart import bart
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def center_crop(data, shape):
+    assert 0 < shape[0] <= data.shape[-3]
+    assert 0 < shape[1] <= data.shape[-2]
+
+    w_from = (data.shape[-3] - shape[0]) // 2
+    h_from = (data.shape[-2] - shape[1]) // 2
+    w_to = w_from + shape[0]
+    h_to = h_from + shape[1]
+    return data[:, w_from:w_to, h_from:h_to, :]
 
 
 def load_kprops(list_file):
@@ -153,7 +171,44 @@ def get_kspace_from_listdata(fdir):
 def main(args):
     start_time = time.perf_counter()
     logger.info("Saving data. This might take some time, please wait...")
-    get_kspace_from_listdata(args.root)
+    kspace = get_kspace_from_listdata(args.root)
+    sense = get_kspace_from_listdata('/'.join(args.root.split('/')[:-1]) + '/raw_501')
+
+    imspace = np.fft.ifftn(np.squeeze(kspace), axes=(0, 1, 2))
+    if imspace.shape[-1] == 2:
+        imspace = imspace[..., 0] + 1j * imspace[..., 1]
+
+    if sense.shape[-1] == 2:
+        sense = sense[..., 0] + 1j * sense[..., 1]
+    sense = np.fft.ifftshift(bart(1, f"caldir 50", sense), axes=(0, 1, 2))
+    imspace = imspace / np.abs(np.max(imspace))
+    sense = sense / np.abs(np.max(sense))
+
+    print('imspace', np.abs(np.min(imspace)), np.abs(np.max(imspace)))
+    print('sense', np.abs(np.min(sense)), np.abs(np.max(sense)))
+
+    #sense = np.transpose(np.fft.ifftn(pad(input=torch.from_numpy(np.fft.fftn(np.transpose(sense, (3, 0, 1, 2)),
+        #axes=(-2, -1))), pad=((imspace.shape[-2]-sense.shape[-2])//2, (imspace.shape[-2]-sense.shape[-2])//2,
+        #(imspace.shape[-3]-sense.shape[-3])//2, (imspace.shape[-3]-sense.shape[-3])//2), mode='constant',
+        #value=0).numpy(), axes=(-2, -1)), (1, 2, 3, 0))
+
+    # if imspace.shape[1] > sense.shape[1] and imspace.shape[2] > sense.shape[2]:
+    # cropped_imspace = center_crop(imspace, (sense.shape[1], sense.shape[2]))
+
+    target = np.sum(center_crop(imspace, (sense.shape[1], sense.shape[2]))[0] * sense[0].conj(), -1)
+    rss_target = np.sqrt(np.sum(imspace ** 2, -1))
+    sense = np.sqrt(np.sum(sense ** 2, -1))
+
+    import matplotlib.pyplot as plt
+    # for i in range(rss_target.shape[0]):
+    plt.subplot(1, 3, 1)
+    plt.imshow(np.abs(target), cmap='gray')
+    plt.subplot(1, 3, 2)
+    plt.imshow(np.abs(rss_target)[0], cmap='gray')
+    plt.subplot(1, 3, 3)
+    plt.imshow(np.abs(sense)[0], cmap='gray')
+    plt.show()
+
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
 
