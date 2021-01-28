@@ -185,11 +185,11 @@ def resize_sensitivity_map(sensmap, newSize):
 
     import matplotlib.pyplot as plt
     plt.subplot(1, 3, 1)
-    plt.imshow(np.abs(np.sqrt(np.sum(sensmap**2, -1)))[0],          cmap='gray')
+    plt.imshow(np.abs(np.sqrt(np.sum(sensmap ** 2, -1)))[0], cmap='gray')
     plt.subplot(1, 3, 2)
-    plt.imshow(np.abs(np.sqrt(np.sum(sensEstResize**2, -1)))[0],    cmap='gray')
+    plt.imshow(np.abs(np.sqrt(np.sum(sensEstResize ** 2, -1)))[0], cmap='gray')
     plt.subplot(1, 3, 3)
-    plt.imshow(np.abs(np.sqrt(np.sum(sensEstResize_np**2, -1)))[0], cmap='gray')
+    plt.imshow(np.abs(np.sqrt(np.sum(sensEstResize_np ** 2, -1)))[0], cmap='gray')
     plt.show()
 
     return sensEstResize
@@ -221,23 +221,26 @@ def preprocessing(root, output):
                     kspace = np.squeeze(get_kspace_from_listdata(filename.split('.')[0]))
                     mask = np.expand_dims(np.where(np.sum(np.sum(np.abs(kspace), 0), -1) > 0, 1, 0), 0)
 
-                    #imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
-                    #if imspace.shape[-1] == 2:
-                        #imspace = imspace[..., 0] + 1j * imspace[..., 1]
+                    # imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
+                    # if imspace.shape[-1] == 2:
+                    # imspace = imspace[..., 0] + 1j * imspace[..., 1]
 
                     sense = resize_sensitivity_map(np.fft.ifftshift(bart(1, f"caldir 20",
-                            get_kspace_from_listdata('/'.join(filename.split('.')[0].split('/')[:-1]) + '/raw_501')),
-                                                                                        axes=(0, 1, 2)), kspace.shape)
+                                                                         get_kspace_from_listdata('/'.join(
+                                                                             filename.split('.')[0].split('/')[
+                                                                             :-1]) + '/raw_501')),
+                                                                    axes=(0, 1, 2)), kspace.shape)
 
-                    #imspace = imspace / np.abs(np.max(np.sum(imspace * sense.conj(), -1)))
-                    #imspace = imspace / np.abs(np.max(imspace))
-                    #sense = sense / np.abs(np.max(sense))
+                    # imspace = imspace / np.abs(np.max(np.sum(imspace * sense.conj(), -1)))
+                    # imspace = imspace / np.abs(np.max(imspace))
+                    # sense = sense / np.abs(np.max(sense))
 
                     # Save data
                     output_dir = output + '/test/'
                     create_dir(output_dir)
                     Process(target=save_pickle_outputs, args=(np.stack((imspace, sense), 1), output_dir + \
-                                      subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name)).start()
+                                                              subject.split('/')[-2] + '_' + acquisition.split('/')[
+                                                                  -2] + '_' + name)).start()
 
                     # Save mask
                     acceleration = np.round(mask.size / mask.sum())

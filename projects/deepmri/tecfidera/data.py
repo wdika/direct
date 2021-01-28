@@ -392,7 +392,9 @@ class Brains(Dataset):
 
             pics = np.fft.fftshift(bart.bart(1, 'pics -d0 -S -R W:7:0:0.005 -i 60', np.expand_dims(np.transpose(
                 np.fft.ifftshift(np.fft.fft2(imspace) * mask, axes=(-2, -1)), (1, 2, 0)), 0),
-                np.expand_dims(np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0], axes=(-2, -1))
+                                             np.expand_dims(
+                                                 np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0],
+                                   axes=(-2, -1))
 
             target = np.sum(imspace * sense.conj(), 0)
             y = np.fft.fft2(imspace) * mask
