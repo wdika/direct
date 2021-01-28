@@ -1,48 +1,160 @@
 # coding=utf-8
 __author__ = 'Dimitrios Karkalousos'
 
+import os
+import sys
 from pathlib import Path
 
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+import pickle5 as pickle
 import torch
 from torch.fft import ifftn
 
 from direct.data import transforms as T
 
-
-def readcfl(cfl):
-    h = open(cfl + ".hdr", "r")
-    h.readline()  # skip
-    line = h.readline()
-    h.close()
-    dims = [int(i) for i in line.split()]
-
-    # remove singleton dimensions from the end
-    n = int(np.prod(dims))
-    dims_prod = np.cumprod(dims)
-    dims = dims[:np.searchsorted(dims_prod, n) + 1]
-
-    # load data and reshape into dims
-    d = open(cfl + ".cfl", "r")
-    a = np.fromfile(d, dtype=np.complex64, count=n)
-    d.close()
-    a = a.reshape(dims, order='F')  # column-major
-
-    return a
+os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
+sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
+from bart import bart
 
 
-def writecfl(name, array):
-    h = open(name + ".hdr", "w")
-    h.write('# Dimensions\n')
-    for i in (array.shape):
-        h.write("%d " % i)
-    h.write('\n')
-    h.close()
-    d = open(name + ".cfl", "w")
-    array.T.astype(np.complex64).tofile(d)  # tranpose for column-major order
-    d.close()
+def load_kprops(list_file):
+    """
+
+    Parameters
+    ----------
+    list_file :
+
+    Returns
+    -------
+
+    """
+    kprops = {}
+    with open(list_file, 'r') as fid:
+        for prop in (r.split()[1:] for r in fid if r[0] == '.'):
+            if len(prop) in [8, 9]:
+                fieldname = '_'.join(prop[3:-2])
+            else:
+                fieldname = '_'.join(prop[3].split('-'))
+
+            if prop[-2] == ':':
+                try:
+                    val = [int(prop[-1])]
+                except ValueError:
+                    val = [float(prop[-1])]
+            else:
+                val = list(map(int, prop[-2:]))
+            kprops[fieldname] = val
+
+        kprops['coil_channel_combination'] = list(map(int, prop[-1]))
+
+    return kprops
+
+
+def get_acquisition_meta_data(list_file):
+    """
+
+    Parameters
+    ----------
+    list_file :
+
+    Returns
+    -------
+
+    """
+    converters = {b'STD': 0, b'REJ': 1, b'PHX': 2, b'FRX': 3, b'NOI': 4, b'NAV': 5, b'DNA': 6}
+
+    with open(list_file, 'r') as fid:
+        llist = zip(*np.genfromtxt((r for r in fid if r[0] not in ('#', '.')), dtype=int,
+                                   converters={0: lambda x: converters[x]}))
+
+    converters = {v: k for k, v in converters.items()}
+    kspace = {'typ': tuple(map(lambda x: converters[x], next(llist)))}
+
+    headers = ['mix', 'dyn', 'card', 'echo', 'loca', 'chan', 'extr1', 'extr2', 'ky', 'kz', 'n.a.', 'aver', 'sign', 'rf',
+               'grad', 'enc', 'rtop', 'rr', 'size', 'offset']
+
+    for header, vals in zip(headers, llist):
+        kspace[header] = vals
+
+    kspace['kspace_properties'] = load_kprops(list_file)
+
+    return kspace
+
+
+def load_kspace(path):
+    """
+    Parameters
+    ----------
+    path : path to the list data
+
+    Returns
+    -------
+    numpy array
+    """
+    with open(path + '.data', 'rb') as f:
+        complexdata = np.fromfile(f, dtype='<f4')
+
+    complexdata = complexdata[::2] + 1.0j * complexdata[1::2]
+
+    kspace = get_acquisition_meta_data(path + '.list')
+    kspace['complexdata'] = np.split(complexdata, np.array(kspace['offset'][1:]) // 8)
+
+    if len(kspace['complexdata'][-1]) != len(kspace['complexdata'][-2]):
+        kspace['complexdata'][-1] = kspace['complexdata'][-1][:len(kspace['complexdata'][-2])]
+
+    return kspace
+
+
+def get_kspace_from_listdata(fdir):
+    """
+
+    Parameters
+    ----------
+    fdir :
+    noise :
+    remove_oversampling :
+    remove_freq_oversampling :
+    take_signal_avg :
+
+    Returns
+    -------
+
+    """
+    kspace = load_kspace(fdir)
+
+    channels = kspace['kspace_properties']['number_of_coil_channels'][0]
+    mixes = kspace['kspace_properties']['number_of_mixes'][0]
+    dynamic = kspace['kspace_properties']['number_of_dynamic_scans'][0]
+    kxmin, kxmax = kspace['kspace_properties']['kx_range']
+    kymin, kymax = np.amin(kspace['ky']), np.amax(kspace['ky'])
+    signalavg = kspace['kspace_properties']['number_of_signal_averages'][0]
+
+    kzflag = 'kz' if kspace['kspace_properties']['number_of_encoding_dimensions'][0] == 3 else 'loca'
+    kzmin, kzmax = np.amin(kspace[kzflag]), np.amax(kspace[kzflag])
+    sx = len(kspace['complexdata'][-1])
+    tmp = np.array([elem for elem, ktyp in zip(kspace['complexdata'], kspace['typ']) if ktyp == b'STD']).T
+    tmp = tmp.reshape((sx, channels, -1), order='A')
+
+    startidx = kspace['typ'].index(b'STD')
+
+    yy = kspace['ky'][startidx::channels] - kymin
+    zz = kspace[kzflag][startidx::channels] - kzmin
+    tt = kspace['dyn'][startidx::channels]
+    mm = kspace['mix'][startidx::channels]
+    aa = kspace['aver'][startidx::channels]
+
+    kshape = (kxmax - kxmin + 1, kymax - kymin + 1, kzmax - kzmin + 1, channels, mixes, dynamic, signalavg)
+    kspace_filled = np.zeros(kshape, dtype=np.complex64)
+
+    for n, (y, z, m, t, a) in enumerate(zip(yy, zz, mm, tt, aa)):
+        kspace_filled[:, y, z, :, m, t, a] = tmp[:, :, n]
+
+        if np.fmod(n, np.around(len(yy) / 100)) == 0:
+            print('Progress: {}%'.format(np.around((n / len(yy)) * 100)), end='\r')
+
+    return kspace_filled
 
 
 def create_dir(path):
@@ -71,31 +183,33 @@ def save_h5_outputs(data, key, filename):
         f[key] = data
 
 
+def save_pickle_outputs(data, filename):
+    for slice in range(data.shape[0]):
+        with open(filename + '_' + str(slice), 'wb') as f:
+            pickle.dump(data[slice], f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def save_pickle_mask(mask, filename):
+    with open(filename, 'wb') as f:
+        pickle.dump(mask, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 def slice_selection(data, start, end):
     return data[start:end]
 
 
+def preprocess_volume(kspace, sense, device='cuda'):
+    input_kspace = torch.from_numpy(kspace).squeeze().to(device)
+    mask = complex_tensor_to_real_np(extract_mask(input_kspace))
+    imspace = normalize(ifftn(input_kspace, dim=(0, 1, 2), norm="ortho"))
+    sensitivity_map = normalize(estimate_csm(sense, calibration_region_size=20, resize_csm_shape=imspace.shape))
+    return input_kspace, mask, imspace, sensitivity_map
+
+
 def normalize(data):
+    if data.shape[-1] == 2:
+        data = data[..., 0] + 1j * data[..., 1]
     return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data)))
-
-
-def normalize_rss(data, coil_dim=-1):
-    return np.where(data == 0, np.array([0.0], dtype=data.dtype),
-                    (data / np.max(np.sqrt(np.sum(data ** 2, coil_dim)))))
-
-
-def preprocessing_ifft(kspace):
-    """
-
-    Parameters
-    ----------
-    kspace : torch.Tensor
-
-    Returns
-    -------
-    kspace tensor of the axial plane transformed with the correct/fixed preprocessing steps to estimate sense maps
-    """
-    return T.fftshift(ifftn(kspace, dim=(0, 1, 2), norm="ortho"), dim=0)
 
 
 def extract_mask(kspace):
@@ -110,6 +224,25 @@ def extract_mask(kspace):
     extracts the mask from the subsampled kspace, after summing the slice and the coil dimensions
     """
     return torch.where(torch.sum(torch.sum(torch.abs(kspace), 0), -1) > 0, 1, 0)
+
+
+def resize_sensitivity_map(sensitivity_map, shape):
+    [slices, readout, phase_enc, coils] = shape
+    return np.fft.ifftn(np.pad(np.fft.fftshift(np.fft.fftn(sensitivity_map, axes=(0, 1, 2)), axes=(0, 1, 2)), (
+        ((slices - sensitivity_map.shape[0]) // 2, (slices - sensitivity_map.shape[0]) // 2),
+        ((readout - sensitivity_map.shape[1]) // 2, (readout - sensitivity_map.shape[1]) // 2),
+        ((phase_enc - sensitivity_map.shape[2]) // 2, (phase_enc - sensitivity_map.shape[2]) // 2),
+        ((coils - sensitivity_map.shape[3]) // 2, (coils - sensitivity_map.shape[3]) // 2))), axes=(0, 1, 2))
+
+
+def estimate_csm(kspace, calibration_region_size, resize_csm_shape=None):
+    sensitivity_map = T.ifftshift(bart(1, f"caldir {calibration_region_size}", kspace), dim=(0, 1, 2))
+    if sensitivity_map.shape[-1] == 2:
+        sensitivity_map = sensitivity_map[..., 0] + 1j * sensitivity_map[..., 1]
+    if resize_csm_shape is not None:
+        return resize_sensitivity_map(sensitivity_map, resize_csm_shape)
+    else:
+        return sensitivity_map
 
 
 def rss_reconstruction(imspace, dim=-1):
@@ -141,62 +274,3 @@ def sense_reconstruction(imspace, csm, dim=-1):
     reconstructed complex-valued image using SENSE
     """
     return torch.sum(imspace * torch.conj(csm), dim=dim)
-
-
-def csm_sense_coil_combination(csm, dim=-1):
-    """
-
-    Parameters
-    ----------
-    csm : torch.Tensor
-    dim : coil dimension
-
-    Returns
-    -------
-    coil combined image
-    """
-    return torch.sum(torch.conj(csm), dim=dim)
-
-
-def make_csm_from_sense_ref_scan(kspace_shape, input_csm):
-    """
-
-    Parameters
-    ----------
-    kspace_shape :
-    input_csm :
-
-    Returns
-    -------
-
-    """
-    pad = ((kspace_shape[2] - input_csm.shape[2]) // 2, (kspace_shape[2] - input_csm.shape[2]) // 2,
-           (kspace_shape[1] - input_csm.shape[1]) // 2, (kspace_shape[1] - input_csm.shape[1]) // 2)
-
-    slices = []
-    for slice in range(input_csm.shape[0]):
-        coils = []
-        for coil in range(input_csm.shape[-1]):
-            coils.append(torch.nn.functional.pad(input_csm[slice, :, :, coil], pad, mode='constant', value=0))
-        slices.append(torch.stack(coils, -1))
-    padded_input_csm = torch.stack(slices, 0)
-
-    slices_ratio = kspace_shape[0] // input_csm.shape[0]
-    remaining_ratio = np.abs((kspace_shape[0] / input_csm.shape[0]) - slices_ratio)
-    add_one_more_slice = remaining_ratio
-
-    csm = []
-    for slice in range(padded_input_csm.shape[0]):
-        count = 0
-        while count < slices_ratio:
-            csm.append(padded_input_csm[slice - count])
-            count = count + 1
-
-        if add_one_more_slice >= 1:
-            csm.append(padded_input_csm[slice - count])
-            add_one_more_slice = remaining_ratio
-        else:
-            add_one_more_slice = add_one_more_slice + remaining_ratio
-    csm.append(padded_input_csm[-1])
-
-    return complex_tensor_to_complex_np(torch.stack(csm, 0).permute(1, 2, 0, 3))
