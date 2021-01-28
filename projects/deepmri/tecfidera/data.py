@@ -386,32 +386,23 @@ class Brains(Dataset):
             imspace = np.transpose(imspace, (2, 0, 1))
             sense = np.transpose(sense, (2, 0, 1))
 
-            pics = np.fft.fftshift(bart.bart(1, 'pics -d0 -S -R W:7:0:0.005 -i 60', np.expand_dims(np.transpose(
-                np.fft.ifftshift(np.fft.fft2(imspace) * self.masker(imspace.shape), axes=(-2, -1)), (1, 2, 0)), 0),
-                                             np.expand_dims(
-                                                 np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0],
-                                   axes=(-2, -1))
+            mask = self.masker(imspace.shape[-2:])
+            if mask.ndim > 3:
+                mask = mask[..., 0]
 
-            # TECFIDERA data necessary(?) block of code
-            imspace = imspace / np.max(np.abs(imspace))
-            imspace = imspace * self.scale
-            sense = sense * self.scale
-            sense = sense / np.max(np.abs(sense))
-            # TODO (kp, dk): Find out if scaling and this normalization is necessary here or when data are preprocessed
-            #  and saved from cfl to h5.
+            pics = np.fft.fftshift(bart.bart(1, 'pics -d0 -S -R W:7:0:0.005 -i 60', np.expand_dims(np.transpose(
+                np.fft.ifftshift(np.fft.fft2(imspace) * mask, axes=(-2, -1)), (1, 2, 0)), 0),
+                np.expand_dims(np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0], axes=(-2, -1))
 
             target = np.sum(imspace * sense.conj(), 0)
-            kspace = np.fft.fft2(imspace)
-            mask = self.masker(kspace.shape[-2:])
-            y = kspace * mask
+            y = np.fft.fft2(imspace) * mask
             eta = np.sum(np.fft.ifft2(y) * sense.conj(), 0)
 
-            eta = np.stack((eta.real, eta.imag), self.complex_dim)
-            y = np.stack((y.real, y.imag), self.complex_dim)
-            target = np.stack((target.real, target.imag), self.complex_dim)
-            sense = np.stack((sense.real, sense.imag), self.complex_dim)
-
-            data_dict = {'eta': eta, 'y': y, 'target': target, 'sense': sense, 'pics': pics}
+            data_dict = {'eta': np.stack((eta.real, eta.imag), self.complex_dim),
+                         'y': np.stack((y.real, y.imag), self.complex_dim),
+                         'target': np.stack((target.real, target.imag), self.complex_dim),
+                         'sense': np.stack((sense.real, sense.imag), self.complex_dim),
+                         'pics': pics}
 
             if self.train:
                 data_dict['mask'] = mask

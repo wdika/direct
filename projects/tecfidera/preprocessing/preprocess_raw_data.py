@@ -2,12 +2,17 @@
 __author__ = 'Dimitrios Karkalousos'
 
 import argparse
+import glob
 import logging
 import os
 import sys
 import time
+from multiprocessing import Process
+from pathlib import Path
 
 import numpy as np
+import pickle5 as pickle
+from tqdm import tqdm
 
 os.environ['TOOLBOX_PATH'] = "/home/dkarkalousos/bart-0.6.00/"
 sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
@@ -17,15 +22,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def center_crop(data, shape):
-    assert 0 < shape[0] <= data.shape[-3]
-    assert 0 < shape[1] <= data.shape[-2]
+def create_dir(path):
+    Path(path).mkdir(parents=True, exist_ok=True)
 
-    w_from = (data.shape[-3] - shape[0]) // 2
-    h_from = (data.shape[-2] - shape[1]) // 2
-    w_to = w_from + shape[0]
-    h_to = h_from + shape[1]
-    return data[:, w_from:w_to, h_from:h_to, :]
+
+def save_pickle_outputs(data, filename):
+    for slice in range(data.shape[0]):
+        with open(filename + '_' + str(slice), 'wb') as f:
+            pickle.dump(data[slice], f, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def load_kprops(list_file):
@@ -168,52 +172,96 @@ def get_kspace_from_listdata(fdir):
 
 def resize_sensitivity_map(sensmap, newSize):
     [xNew, yNew, zNew, _] = newSize
-    sensEstResize = bart(1, 'fft -i 7', bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew),
-                                                                                            bart(1, 'fft 7', sensmap)))
-    return sensEstResize * (np.max(np.abs(sensmap)) / (np.max(np.abs(sensEstResize))))
+
+    sensmap = np.expand_dims(sensmap[0], 0)
+
+    sensEstResize = bart(1, 'fft 7', sensmap)
+    sensEstResize = bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew), sensEstResize)
+    sensEstResize = bart(1, 'fft -i 7', sensEstResize)
+
+    sensEstResize_np = np.fft.fftn(sensmap, axes=(0, 1, 2))
+    sensEstResize_np = bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew), sensEstResize_np)
+    sensEstResize_np = np.fft.ifftn(sensEstResize_np, axes=(0, 1, 2))
+
+    import matplotlib.pyplot as plt
+    plt.subplot(1, 3, 1)
+    plt.imshow(np.abs(np.sqrt(np.sum(sensmap**2, -1)))[0],          cmap='gray')
+    plt.subplot(1, 3, 2)
+    plt.imshow(np.abs(np.sqrt(np.sum(sensEstResize**2, -1)))[0],    cmap='gray')
+    plt.subplot(1, 3, 3)
+    plt.imshow(np.abs(np.sqrt(np.sum(sensEstResize_np**2, -1)))[0], cmap='gray')
+    plt.show()
+
+    return sensEstResize
+
+
+def preprocessing(root, output):
+    """
+    Parses all subjects, acquisitions, and scans. Performs all the necessary preprocessing steps for the TECFIDERA data.
+
+    Parameters
+    ----------
+    root :   root directory of containing cfl data
+    output : output directory to save data
+    """
+    subjects = glob.glob(root + "/*/")
+    for subject in tqdm(subjects):
+        acquisitions = glob.glob(subject + "/*/")
+        for acquisition in acquisitions:
+            data = glob.glob(acquisition + "*.list")
+            for filename in data:
+                name = filename.split('.')[0].split('/')[-1].split('_')[1]
+                if name != '501':  # exclude the sense ref scan
+                    name = 'AXFLAIR' if name == '301' else 'AXT1_MPRAGE'
+
+                    logger.info(
+                        f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]}"
+                        f" | acquisition: {name}")
+
+                    kspace = np.squeeze(get_kspace_from_listdata(filename.split('.')[0]))
+                    mask = np.expand_dims(np.where(np.sum(np.sum(np.abs(kspace), 0), -1) > 0, 1, 0), 0)
+
+                    #imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
+                    #if imspace.shape[-1] == 2:
+                        #imspace = imspace[..., 0] + 1j * imspace[..., 1]
+
+                    sense = resize_sensitivity_map(np.fft.ifftshift(bart(1, f"caldir 20",
+                            get_kspace_from_listdata('/'.join(filename.split('.')[0].split('/')[:-1]) + '/raw_501')),
+                                                                                        axes=(0, 1, 2)), kspace.shape)
+
+                    #imspace = imspace / np.abs(np.max(np.sum(imspace * sense.conj(), -1)))
+                    #imspace = imspace / np.abs(np.max(imspace))
+                    #sense = sense / np.abs(np.max(sense))
+
+                    # Save data
+                    output_dir = output + '/test/'
+                    create_dir(output_dir)
+                    Process(target=save_pickle_outputs, args=(np.stack((imspace, sense), 1), output_dir + \
+                                      subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name)).start()
+
+                    # Save mask
+                    acceleration = np.round(mask.size / mask.sum())
+
+                    if acceleration < 4:
+                        acceleration = 4.0
+                    elif 4 < acceleration < 6:
+                        acceleration = 6.0
+                    elif 6 < acceleration < 8:
+                        acceleration = 8.0
+                    elif 8 < acceleration < 10:
+                        acceleration = 10.0
+
+                    output_dir_mask = output + '/masks_' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                        -2] + '/' + name + '/acc' + str(acceleration)
+                    create_dir(output_dir_mask)
+                    with open(output_dir_mask + '/mask0', 'wb') as f:
+                        pickle.dump(mask, f)
 
 
 def main(args):
     start_time = time.perf_counter()
     logger.info("Converting data. This might take some time, please wait...")
-    kspace = get_kspace_from_listdata(args.root)
-    sense = get_kspace_from_listdata('/'.join(args.root.split('/')[:-1]) + '/raw_501')
-
-    imspace = np.fft.ifftn(np.squeeze(kspace), axes=(0, 1, 2))
-    if imspace.shape[-1] == 2:
-        imspace = imspace[..., 0] + 1j * imspace[..., 1]
-
-    if sense.shape[-1] == 2:
-        sense = sense[..., 0] + 1j * sense[..., 1]
-    sense = np.fft.ifftshift(bart(1, f"caldir 50", sense), axes=(0, 1, 2))
-    imspace = imspace / np.abs(np.max(imspace))
-    sense = sense / np.abs(np.max(sense))
-
-    print('imspace', np.abs(np.min(imspace)), np.abs(np.max(imspace)))
-    print('sense', np.abs(np.min(sense)), np.abs(np.max(sense)))
-
-    # sense = np.transpose(np.fft.ifftn(pad(input=torch.from_numpy(np.fft.fftn(np.transpose(sense, (3, 0, 1, 2)),
-    # axes=(-2, -1))), pad=((imspace.shape[-2]-sense.shape[-2])//2, (imspace.shape[-2]-sense.shape[-2])//2,
-    # (imspace.shape[-3]-sense.shape[-3])//2, (imspace.shape[-3]-sense.shape[-3])//2), mode='constant',
-    # value=0).numpy(), axes=(-2, -1)), (1, 2, 3, 0))
-
-    # if imspace.shape[1] > sense.shape[1] and imspace.shape[2] > sense.shape[2]:
-    # cropped_imspace = center_crop(imspace, (sense.shape[1], sense.shape[2]))
-
-    target = np.sum(center_crop(imspace, (sense.shape[1], sense.shape[2]))[0] * sense[0].conj(), -1)
-    rss_target = np.sqrt(np.sum(imspace ** 2, -1))
-    sense = np.sqrt(np.sum(sense ** 2, -1))
-
-    import matplotlib.pyplot as plt
-    # for i in range(rss_target.shape[0]):
-    plt.subplot(1, 3, 1)
-    plt.imshow(np.abs(target), cmap='gray')
-    plt.subplot(1, 3, 2)
-    plt.imshow(np.abs(rss_target)[0], cmap='gray')
-    plt.subplot(1, 3, 3)
-    plt.imshow(np.abs(sense)[0], cmap='gray')
-    plt.show()
-
+    preprocessing(args.root, args.output)
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
 
@@ -221,6 +269,7 @@ def main(args):
 def create_arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('root', type=str, help='Root dir containing folders with raw files.')
+    parser.add_argument('output', type=str, help='Output dir to save data as pickle.')
     return parser
 
 

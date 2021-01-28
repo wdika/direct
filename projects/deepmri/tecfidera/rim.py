@@ -129,6 +129,9 @@ class Rim(Module):
         for args in sbatches:
             eta, y, mask, target, sense = args
 
+            if mask.dim() > 4:
+                mask = mask[..., 0]
+
             sense = sense.to(param)
             eta = eta.to(param)
             y = y.to(param)
