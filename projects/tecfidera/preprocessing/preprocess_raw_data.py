@@ -171,28 +171,62 @@ def get_kspace_from_listdata(fdir):
 
 
 def resize_sensitivity_map(sensmap, newSize):
-    [xNew, yNew, zNew, _] = newSize
+    [xNew, yNew, zNew, cNew] = newSize
 
-    sensmap = np.expand_dims(sensmap[0], 0)
+    #sensEstResize = bart(1, 'fft 7', sensmap)
+    #sensEstResize = bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew), sensEstResize)
+    #sensEstResize = bart(1, 'fft -i 7', sensEstResize)
 
-    sensEstResize = bart(1, 'fft 7', sensmap)
-    sensEstResize = bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew), sensEstResize)
-    sensEstResize = bart(1, 'fft -i 7', sensEstResize)
+    # TODO: Find out how resize function works - probably it applies zero padding, which seems not to be same when:
+    #   1. Using numpy fft transforms and numpy zero padding.
+    #       sensEstResize_np2 = np.fft.fftn(sensmap, axes=(0, 1, 2))
+    #       sensEstResize_np2 = np.pad(sensEstResize_np2, (((xNew-sensmap.shape[0])//2, (xNew-sensmap.shape[0])//2),
+    #                                                       ((yNew-sensmap.shape[1])//2, (yNew-sensmap.shape[1])//2),
+    #                                                       ((zNew-sensmap.shape[2])//2, (zNew-sensmap.shape[2])//2),
+    #                                                       ((cNew-sensmap.shape[3])//2, (cNew-sensmap.shape[3])//2)))
+    #       sensEstResize_np2 = np.fft.ifftn(sensEstResize_np2, axes=(0, 1, 2))
+    #   2. Using numpy fft transforms and bart resize function.
+    #       sensEstResize_np = np.fft.fftn(sensmap, axes=(0, 1, 2))
+    #       sensEstResize_np = bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew),
+    #                                                                                               sensEstResize_np)
+    #       sensEstResize_np = np.fft.ifftn(sensEstResize_np, axes=(0, 1, 2))
+    #  But it works when applying numpy zero padding and bart fft transforms.
 
-    sensEstResize_np = np.fft.fftn(sensmap, axes=(0, 1, 2))
-    sensEstResize_np = bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew), sensEstResize_np)
+    sensEstResize_np_kspace = np.fft.fftshift(np.fft.fftn(sensmap, axes=(0, 1, 2)), axes=(0, 1, 2))
+    sensEstResize_np = np.pad(sensEstResize_np_kspace, (((xNew - sensmap.shape[0]) // 2, (xNew - sensmap.shape[0]) // 2),
+                                                ((yNew - sensmap.shape[1]) // 2, (yNew - sensmap.shape[1]) // 2),
+                                                ((zNew - sensmap.shape[2]) // 2, (zNew - sensmap.shape[2]) // 2),
+                                                ((cNew - sensmap.shape[3]) // 2, (cNew - sensmap.shape[3]) // 2)))
     sensEstResize_np = np.fft.ifftn(sensEstResize_np, axes=(0, 1, 2))
 
-    import matplotlib.pyplot as plt
-    plt.subplot(1, 3, 1)
-    plt.imshow(np.abs(np.sqrt(np.sum(sensmap ** 2, -1)))[0], cmap='gray')
-    plt.subplot(1, 3, 2)
-    plt.imshow(np.abs(np.sqrt(np.sum(sensEstResize ** 2, -1)))[0], cmap='gray')
-    plt.subplot(1, 3, 3)
-    plt.imshow(np.abs(np.sqrt(np.sum(sensEstResize_np ** 2, -1)))[0], cmap='gray')
-    plt.show()
+    sensEstResize = bart(1, 'resize -c 0 ' + str(xNew) + ' 1 ' + str(yNew) + ' 2 ' + str(zNew), sensEstResize_np_kspace)
+    sensEstResize = np.fft.ifftn(sensEstResize, axes=(0, 1, 2))
 
-    return sensEstResize
+    s1 = np.abs(np.sqrt(np.sum(sensEstResize_np**2, -1)))
+    s2 = np.abs(np.sqrt(np.sum(sensEstResize**2, -1)))
+
+    import matplotlib.pyplot as plt
+    for i in range(sensEstResize.shape[0]):
+        plt.subplot(1, 2, 1)
+        plt.imshow(s1[i], cmap='gray')
+        plt.title(str(i))
+        plt.subplot(1, 2, 2)
+        plt.imshow(s2[i], cmap='gray')
+        plt.show()
+
+    return sensEstResize_np
+
+
+def center_crop(data, shape):
+    if not (0 < shape[0] <= data.shape[1]) or not (0 < shape[1] <= data.shape[2]):
+        raise ValueError(f"Crop shape should be smaller than data. Requested {shape}, got {data.shape}.")
+
+    width_lower = (data.shape[1] - shape[0]) // 2
+    width_upper = width_lower + shape[0]
+    height_lower = (data.shape[2] - shape[1]) // 2
+    height_upper = height_lower + shape[1]
+
+    return data[:, width_lower:width_upper, height_lower:height_upper, :]
 
 
 def preprocessing(root, output):
@@ -221,26 +255,26 @@ def preprocessing(root, output):
                     kspace = np.squeeze(get_kspace_from_listdata(filename.split('.')[0]))
                     mask = np.expand_dims(np.where(np.sum(np.sum(np.abs(kspace), 0), -1) > 0, 1, 0), 0)
 
-                    # imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
-                    # if imspace.shape[-1] == 2:
-                    # imspace = imspace[..., 0] + 1j * imspace[..., 1]
+                    imspace = np.fft.ifftn(kspace, axes=(0, 1, 2))
+                    if imspace.shape[-1] == 2:
+                        imspace = imspace[..., 0] + 1j * imspace[..., 1]
 
-                    sense = resize_sensitivity_map(np.fft.ifftshift(bart(1, f"caldir 20",
-                                                                         get_kspace_from_listdata('/'.join(
-                                                                             filename.split('.')[0].split('/')[
-                                                                             :-1]) + '/raw_501')),
-                                                                    axes=(0, 1, 2)), kspace.shape)
+                    sense = np.fft.ifftshift(bart(1, f"caldir 20", get_kspace_from_listdata('/'.join(
+                                             filename.split('.')[0].split('/')[:-1]) + '/raw_501')), axes=(0, 1, 2))
+                    if sense.shape[-1] == 2:
+                        sense = sense[..., 0] + 1j * sense[..., 1]
 
-                    # imspace = imspace / np.abs(np.max(np.sum(imspace * sense.conj(), -1)))
-                    # imspace = imspace / np.abs(np.max(imspace))
-                    # sense = sense / np.abs(np.max(sense))
+                    sense = resize_sensitivity_map(sense, imspace.shape)
+                    sense = sense / np.abs(np.max(sense))
+
+                    #imspace = imspace / np.abs(np.max(np.sum(imspace * sense.conj(), -1)))
+                    imspace = imspace / np.abs(np.max(imspace))
 
                     # Save data
                     output_dir = output + '/test/'
                     create_dir(output_dir)
                     Process(target=save_pickle_outputs, args=(np.stack((imspace, sense), 1), output_dir + \
-                                                              subject.split('/')[-2] + '_' + acquisition.split('/')[
-                                                                  -2] + '_' + name)).start()
+                                      subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name)).start()
 
                     # Save mask
                     acceleration = np.round(mask.size / mask.sum())

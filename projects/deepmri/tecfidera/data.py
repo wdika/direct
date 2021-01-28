@@ -23,17 +23,6 @@ sys.path.append('/home/dkarkalousos/bart-0.6.00/python/')
 import bart
 
 
-def center_crop(data, shape):
-    assert 0 < shape[0] <= data.shape[-2]
-    assert 0 < shape[1] <= data.shape[-1]
-
-    w_from = (data.shape[-2] - shape[0]) // 2
-    h_from = (data.shape[-1] - shape[1]) // 2
-    w_to = w_from + shape[0]
-    h_to = h_from + shape[1]
-    return data[..., w_from:w_to, h_from:h_to]
-
-
 def default_collate(batch):
     r"""Puts each data field into a tensor with outer dimension batch size"""
 
@@ -391,10 +380,8 @@ class Brains(Dataset):
                 mask = mask[..., 0]
 
             pics = np.fft.fftshift(bart.bart(1, 'pics -d0 -S -R W:7:0:0.005 -i 60', np.expand_dims(np.transpose(
-                np.fft.ifftshift(np.fft.fft2(imspace) * mask, axes=(-2, -1)), (1, 2, 0)), 0),
-                                             np.expand_dims(
-                                                 np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0],
-                                   axes=(-2, -1))
+                    np.fft.ifftshift(np.fft.fft2(imspace) * mask, axes=(-2, -1)), (1, 2, 0)), 0), np.expand_dims(
+                    np.transpose(np.fft.fftshift(sense, axes=(-2, -1)), (1, 2, 0)), 0))[0], axes=(-2, -1))
 
             target = np.sum(imspace * sense.conj(), 0)
             y = np.fft.fft2(imspace) * mask

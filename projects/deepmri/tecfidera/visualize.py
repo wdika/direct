@@ -165,7 +165,7 @@ def plot_reconstructions(loader, models, data_kwargs, mode='absolute', t_max=Non
             target = mode[tloc](target_np)
 
         target = np.abs(target).astype(np.float32)
-        target = np.clip(target / np.max(target), 0, 1)
+        target = target / np.max(target)
 
         if tloc >= 0:
             for pdict in plotdicts:
@@ -199,10 +199,14 @@ def plot_reconstructions(loader, models, data_kwargs, mode='absolute', t_max=Non
                                                            (fsc_ax, '', next(colorpalette)), cmaps[etaloc],
                                                            min_clims[etaloc], max_clims[etaloc])})
 
-        pics_mode = np.abs(batch['pics'].squeeze().numpy())
-        pics_mode = np.clip(pics_mode / np.max(pics_mode), 0, 1)
+        pics_mode = batch['pics'].squeeze().numpy()
+        pics_mode = pics_mode / np.max(pics_mode)
+        pics_mode = np.abs(pics_mode)
 
-        plotdicts[0].update({gs[(etaloc + 1) // grid[1], (etaloc + 1) % grid[1]]: (pics_mode, 'CS', (
+        pics_mode_ssim = ' - SSIM:' + str(np.round(compare_ssim(target, pics_mode, data_range=target.max() - target.min(
+                                                )), 3)) + ' PSNR:' + str(np.round(compare_psnr(target, pics_mode), 1))
+
+        plotdicts[0].update({gs[(etaloc + 1) // grid[1], (etaloc + 1) % grid[1]]: (pics_mode, 'CS' + pics_mode_ssim, (
             fsc_ax, '', next(colorpalette)), cmaps[etaloc], min_clims[etaloc], max_clims[etaloc])})
 
         for model in models:
@@ -235,11 +239,15 @@ def plot_reconstructions(loader, models, data_kwargs, mode='absolute', t_max=Non
             for img, pdict in zip(imgs, plotdicts[i:]):
                 img_np = img.squeeze().cpu().numpy()
                 img_np = img_np[..., 0] + 1j * img_np[..., 1]
+                img_np = img_np / np.max(img_np)
 
                 im_mode = np.abs(mode[gl](img_np)).astype(np.float32)
-                im_mode = np.clip(im_mode / np.max(im_mode), 0, 1)
 
-                pdict.update({gs[gl // grid[1], gl % grid[1]]: (im_mode, '' if notitles else '{}'.format(model.name),
+                im_mode_ssim = ' - SSIM:' + str(np.round(compare_ssim(target, im_mode,
+                                                                  data_range=target.max() - target.min(
+                    )), 3)) + ' PSNR:' + str(np.round(compare_psnr(target, im_mode), 1))
+
+                pdict.update({gs[gl // grid[1], gl % grid[1]]: (im_mode, '' if notitles else '{}'.format(model.name) + im_mode_ssim,
                                                                 (fsc_ax, '', next(colorpalette)), cmaps[gl],
                                                                 min_clims[gl], max_clims[gl])})
 
