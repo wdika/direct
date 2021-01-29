@@ -5,8 +5,6 @@ import argparse
 import glob
 import logging
 import time
-import sys
-
 from multiprocessing import Process
 
 from tqdm import tqdm
@@ -54,8 +52,8 @@ def preprocessing(root, output, export_type, device):
 
                         # Save target (SENSE reconstructed) png images
                         Process(target=save_png_outputs, args=(
-                        complex_tensor_to_real_np(sense_reconstruction(imspace, sensitivity_map, dim=-1)),
-                        output_dir + '/targets/')).start()
+                            complex_tensor_to_real_np(sense_reconstruction(imspace, sensitivity_map, dim=-1)),
+                            output_dir + '/targets/')).start()
 
                         # Save mask
                         plt.imshow(mask, cmap='gray')
@@ -64,8 +62,8 @@ def preprocessing(root, output, export_type, device):
 
                         # Save sense coil combined png images
                         Process(target=save_png_outputs, args=(
-                        complex_tensor_to_real_np(rss_reconstruction(sensitivity_map, dim=-1)),
-                        output_dir + '/csms/')).start()
+                            complex_tensor_to_real_np(rss_reconstruction(sensitivity_map, dim=-1)),
+                            output_dir + '/csms/')).start()
 
                     elif export_type == 'h5':
                         name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
@@ -85,8 +83,8 @@ def preprocessing(root, output, export_type, device):
                         output_dir_csm = output + '/csms/'
                         create_dir(output_dir_csm)
                         Process(target=save_h5_outputs, args=(
-                        complex_tensor_to_complex_np(sensitivity_map), "sensitivity_map",
-                        output_dir_csm + name)).start()
+                            complex_tensor_to_complex_np(sensitivity_map), "sensitivity_map",
+                            output_dir_csm + name)).start()
                         del sensitivity_map
 
                     elif export_type == 'pickle':
@@ -94,8 +92,9 @@ def preprocessing(root, output, export_type, device):
                         output_dir = output + '/test/'
                         create_dir(output_dir)
                         Process(target=save_pickle_outputs, args=(
-                        complex_tensor_to_complex_np(torch.stack((imspace, sensitivity_map), 1)),
-                        output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name)).start()
+                            complex_tensor_to_complex_np(torch.stack((imspace, sensitivity_map), 1)),
+                            output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[
+                                -2] + '_' + name)).start()
 
                         # Save mask
                         acceleration = np.round(mask.size / mask.sum())
