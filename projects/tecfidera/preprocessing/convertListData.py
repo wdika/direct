@@ -46,7 +46,7 @@ def preprocessing(root, output, export_type, device):
                         device=device)
 
                     if export_type == 'png':
-                        output_dir = output + '/png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                        output_dir = output + 'png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
                             -2] + '/' + name
                         create_dir(output_dir)
 

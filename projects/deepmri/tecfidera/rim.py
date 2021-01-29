@@ -119,7 +119,6 @@ class Rim(Module):
                 hiddens[h] = convrnn(d_eta, hiddens[h])
                 d_eta = hiddens[h]
             eta = eta + self.restack(self.final_layer(d_eta))
-
         return eta, None
 
     def get_num_params(self):

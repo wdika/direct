@@ -4,13 +4,10 @@ __author__ = 'Dimitrios Karkalousos'
 import argparse
 import logging
 import multiprocessing
-import os
 import random
-import sys
 import time
 from collections import defaultdict
 
-from direct.data.transforms import ifftshift
 from projects.tecfidera.dataset import TECFIDERADataset
 from projects.tecfidera.preprocessing.utils import *
 
@@ -22,19 +19,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class DataTransform:
-    def __init__(self):
-        pass
-
-    def __call__(self, sample):
-        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
-        sensitivity_map = complex_tensor_to_complex_np(
-            ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
-
-        return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"]
-
-
 def save_outputs(outputs, output_path):
+    """
+
+    Parameters
+    ----------
+    outputs :
+    output_path :
+
+    Returns
+    -------
+
+    """
+    create_dir(output_path)
+
     pics_recons = defaultdict(list)
 
     for filename, slice_data, pred in outputs:
@@ -53,67 +51,38 @@ def save_outputs(outputs, output_path):
             f["pics"] = pics_recon
 
 
+class DataTransform:
+    def __init__(self, device):
+        self.device = device
+
+    def __call__(self, sample):
+        masked_kspace = complex_tensor_to_complex_np(torch.from_numpy(sample["kspace"]).permute(1, 2, 0).unsqueeze(0))
+        sensitivity_map = complex_tensor_to_complex_np(
+            fft.ifftshift(torch.from_numpy(sample["sensitivity_map"]).permute(1, 2, 0).unsqueeze(0), dim=(1, 2)))
+
+        return masked_kspace, sensitivity_map, sample["filename"], sample["slice_no"], self.device
+
+
 def pics_recon(idx):
-    kspace, sensitivity_map, filename, slice_no = data[idx]
+    """
 
-    # TODO (dk) : pics per slice appears to not working properly
-    pred = np.fft.fftshift(bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace, sensitivity_map)[0], axes=(0, 1))
-    pred = pred / np.max(np.abs(pred))
+    Parameters
+    ----------
+    idx :
 
-    import matplotlib.pyplot as plt
-    imspace = np.fft.ifft2(kspace, axes=(1, 2))
-    rss_target = np.sqrt(np.sum(imspace ** 2, -1))[0]
+    Returns
+    -------
 
-    sensitivity_map = np.fft.ifftshift(sensitivity_map, axes=(1, 2))
-    target = np.sum(sensitivity_map.conj() * imspace, -1)[0]
-    target = target / np.max(np.abs(target))
-    sense = np.sqrt(np.sum(sensitivity_map ** 2, -1))[0]
+    """
+    kspace, sensitivity_map, filename, slice_no, device = data[idx]
 
-    print('imspace', np.min(np.abs(imspace)), np.max(np.abs(imspace)))
-    print('sensitivity_map', np.min(np.abs(sensitivity_map)), np.max(np.abs(sensitivity_map)))
-    print('target', np.min(np.abs(target)), np.max(np.abs(target)))
-    print('rss_target', np.min(np.abs(rss_target)), np.max(np.abs(rss_target)))
-    print('sense', np.min(np.abs(sense)), np.max(np.abs(sense)))
-    print('pred', np.min(np.abs(pred)), np.max(np.abs(pred)))
-    print('\n')
+    pred = fft.fftshift(torch.from_numpy(bart(1, f'pics -g -d0 -S -R W:7:0:0.005 -i 60', kspace,
+                        sensitivity_map) if device == 'cuda' else bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace,
+                        sensitivity_map)).to(device), dim=(-2, -1))[0]
+    pred = pred / torch.max(torch.abs(pred))
 
-    from skimage.metrics import structural_similarity
-
-    plt.subplot(2, 4, 1)
-    plt.imshow(np.abs(rss_target), cmap='gray')
-    plt.title('rss_target')
-    plt.colorbar()
-    plt.subplot(2, 4, 2)
-    plt.imshow(np.angle(rss_target), cmap='gray')
-    plt.title('rss_target phase')
-    plt.colorbar()
-    plt.subplot(2, 4, 3)
-    plt.imshow(np.abs(sense), cmap='gray')
-    plt.title('sense')
-    plt.colorbar()
-    plt.subplot(2, 4, 4)
-    plt.imshow(np.angle(sense), cmap='gray')
-    plt.title('sense phase')
-    plt.colorbar()
-    plt.subplot(2, 4, 5)
-    plt.imshow(np.abs(target), cmap='gray')
-    plt.title('target')
-    plt.colorbar()
-    plt.subplot(2, 4, 6)
-    plt.imshow(np.angle(target), cmap='gray')
-    plt.title('target phase')
-    plt.colorbar()
-    plt.subplot(2, 4, 7)
-    plt.imshow(np.abs(pred), cmap='gray')
-    plt.title('pics ' + str(np.round(
-        structural_similarity(np.abs(target), np.abs(pred), data_range=np.max(np.abs(target)) - np.min(np.abs(target))),
-        4)))
-    plt.colorbar()
-    plt.subplot(2, 4, 8)
-    plt.imshow(np.angle(pred), cmap='gray')
-    plt.title('pics phase')
-    plt.colorbar()
-    plt.show()
+    if device == 'cuda':
+        pred = pred.detach().cpu().numpy()
 
     return filename, slice_no, pred
 
@@ -141,5 +110,6 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
-    data = TECFIDERADataset(root=args.data_root, transform=DataTransform(), sensitivity_maps=args.sensitivity_maps_root)
+    data = TECFIDERADataset(root=args.data_root, transform=DataTransform(device=args.device),
+                            sensitivity_maps=args.sensitivity_maps_root)
     main(args.num_workers)

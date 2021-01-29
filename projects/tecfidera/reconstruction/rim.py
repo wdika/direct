@@ -8,7 +8,7 @@ import sys
 
 import numpy as np
 import torch
-
+from pathlib import Path
 import direct.launch
 from direct.data.mri_transforms import Compose
 from direct.environment import Args
@@ -130,6 +130,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     set_all_seeds(args.seed)
+
+    Path(args.output_directory).mkdir(parents=True, exist_ok=True)
 
     # Process all masks
     all_maps = args.masks.glob("*.npy")

@@ -72,6 +72,7 @@ def save_png_outputs(data, output_dir):
     -------
 
     """
+    create_dir(output_dir)
     for i in range(data.shape[0]):
         plt.imshow(data[i], cmap='gray')
         plt.savefig(output_dir + str(i) + '.png')
