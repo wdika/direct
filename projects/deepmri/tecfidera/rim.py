@@ -7,19 +7,25 @@ from projects.deepmri.tecfidera.utils import act_fns, loss_fns, recurrencies, co
 
 
 def multi_gll(eta, y, mask, sense, sigma=1.):
-    mask = mask.unsqueeze(-1)
+    mask = mask.unsqueeze(1).unsqueeze(-1)
     re_sense, im_sense = sense.chunk(2, -1)
     re_eta, im_eta = map(lambda x: torch.unsqueeze(x, 1), eta.chunk(2, -1))
     re_se = re_eta * re_sense - im_eta * im_sense
     im_se = re_eta * im_sense + im_eta * re_sense
-    sensed_e = torch.fft(torch.cat((re_se, im_se), -1), 2) - y
-    sensed_e = mask * sensed_e
-    sensed_e = torch.ifft(sensed_e, 2)
+    sensed_e = torch.cat((re_se, im_se), -1)
+
+    sensed_e = sensed_e[..., 0] + 1j*sensed_e[..., 1]
+    sensed_e = torch.fft.fft2(sensed_e, dim=(-2, -1)).unsqueeze(-1)
+    sensed_e = torch.cat((sensed_e.real, sensed_e.imag), -1)
+    sensed_e = mask * (sensed_e - y)
+    sensed_e = sensed_e[..., 0] + 1j*sensed_e[..., 1]
+    sensed_e = torch.fft.ifft2(sensed_e, dim=(-2, -1)).unsqueeze(-1)
+    sensed_e = torch.cat((sensed_e.real, sensed_e.imag), -1)
+
     re_sensed, im_sensed = sensed_e.chunk(2, -1)
     re_out = torch.sum(re_sensed * re_sense + im_sensed * im_sense, 1).permute(0, 3, 1, 2) / sigma ** 2.
     im_out = torch.sum(im_sensed * re_sense - re_sensed * im_sense, 1).permute(0, 3, 1, 2) / sigma ** 2.
-    eta = eta.permute(0, 3, 1, 2)
-    return torch.cat((eta, re_out, im_out), 1)
+    return torch.cat((eta.permute(0, 3, 1, 2), re_out, im_out), 1)
 
 
 class ConvRNNStack(Module):

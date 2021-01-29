@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle5 as pickle
 import torch
-from torch.fft import ifftn
+import torch.fft as fft
+from torch.nn.functional import pad
 
 from direct.data import transforms as T
 
@@ -198,18 +199,27 @@ def slice_selection(data, start, end):
     return data[start:end]
 
 
-def preprocess_volume(kspace, sense, device='cuda'):
+def preprocess_volume(kspace, sense, slice_range, device='cuda'):
     input_kspace = torch.from_numpy(kspace).squeeze().to(device)
+    if input_kspace.shape[-1] == 2:
+        input_kspace = input_kspace[..., 0] + 1j * input_kspace[..., 1]
     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
-    imspace = normalize(ifftn(input_kspace, dim=(0, 1, 2), norm="ortho"))
-    sensitivity_map = normalize(estimate_csm(sense, calibration_region_size=20, resize_csm_shape=imspace.shape))
+    imspace = normalize(fft.ifftn(input_kspace, dim=(0, 1, 2), norm="ortho").detach().cpu()).to(device)
+    sensitivity_map = normalize(resize_sensitivity_map(estimate_csm(sense, calibration_region_size=20), imspace.shape).detach().cpu()).to(device)
+    imspace = fft.ifftshift(imspace, dim=0)
+    sensitivity_map = fft.ifftshift(sensitivity_map, dim=0)
+    if slice_range is not None:
+        imspace = slice_selection(imspace, slice_range[0], slice_range[1])
+        sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
+    input_kspace = fft.fft2(imspace, dim=(1, 2), norm="ortho")
     return input_kspace, mask, imspace, sensitivity_map
 
 
 def normalize(data):
     if data.shape[-1] == 2:
         data = data[..., 0] + 1j * data[..., 1]
-    return np.where(data == 0, np.array([0.0], dtype=data.dtype), (data / np.max(data)))
+    maximum = torch.max(torch.max(data.real), torch.max(data.imag)) if data.dtype == torch.complex64 or data.dtype == torch.complex128 else torch.max(data)
+    return torch.where(data == 0, torch.tensor([0.0], dtype=data.dtype), (data / maximum))
 
 
 def extract_mask(kspace):
@@ -228,21 +238,18 @@ def extract_mask(kspace):
 
 def resize_sensitivity_map(sensitivity_map, shape):
     [slices, readout, phase_enc, coils] = shape
-    return np.fft.ifftn(np.pad(np.fft.fftshift(np.fft.fftn(sensitivity_map, axes=(0, 1, 2)), axes=(0, 1, 2)), (
-        ((slices - sensitivity_map.shape[0]) // 2, (slices - sensitivity_map.shape[0]) // 2),
-        ((readout - sensitivity_map.shape[1]) // 2, (readout - sensitivity_map.shape[1]) // 2),
-        ((phase_enc - sensitivity_map.shape[2]) // 2, (phase_enc - sensitivity_map.shape[2]) // 2),
-        ((coils - sensitivity_map.shape[3]) // 2, (coils - sensitivity_map.shape[3]) // 2))), axes=(0, 1, 2))
+    return fft.ifftn(pad(fft.fftshift(fft.fftn(sensitivity_map, dim=(0, 1, 2)), dim=(0, 1, 2)), (
+        (coils - sensitivity_map.shape[3]) // 2, (coils - sensitivity_map.shape[3]) // 2,
+        (phase_enc - sensitivity_map.shape[2]) // 2, (phase_enc - sensitivity_map.shape[2]) // 2,
+        (readout - sensitivity_map.shape[1]) // 2, (readout - sensitivity_map.shape[1]) // 2,
+        (slices - sensitivity_map.shape[0]) // 2, (slices - sensitivity_map.shape[0]) // 2)), dim=(0, 1, 2))
 
 
-def estimate_csm(kspace, calibration_region_size, resize_csm_shape=None):
-    sensitivity_map = T.ifftshift(bart(1, f"caldir {calibration_region_size}", kspace), dim=(0, 1, 2))
+def estimate_csm(kspace, calibration_region_size):
+    sensitivity_map = fft.ifftshift(torch.from_numpy(bart(1, f"caldir {calibration_region_size}", kspace)), dim=(0, 1, 2))
     if sensitivity_map.shape[-1] == 2:
         sensitivity_map = sensitivity_map[..., 0] + 1j * sensitivity_map[..., 1]
-    if resize_csm_shape is not None:
-        return resize_sensitivity_map(sensitivity_map, resize_csm_shape)
-    else:
-        return sensitivity_map
+    return sensitivity_map
 
 
 def rss_reconstruction(imspace, dim=-1):

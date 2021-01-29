@@ -5,6 +5,8 @@ import argparse
 import glob
 import logging
 import time
+import sys
+
 from multiprocessing import Process
 
 from tqdm import tqdm
@@ -25,11 +27,11 @@ def preprocessing(root, output, export_type, device):
     output : output directory to save data
     """
     subjects = glob.glob(root + "/*/")
-    for subject in tqdm(subjects):
+    for subject in subjects:
         acquisitions = glob.glob(subject + "/*/")
         for acquisition in acquisitions:
             data = glob.glob(acquisition + "*.list")
-            for filename in data:
+            for filename in tqdm(data):
                 name = filename.split('.')[0].split('/')[-1].split('_')[1]
 
                 if name != '501':  # exclude the sense ref scan
@@ -42,6 +44,7 @@ def preprocessing(root, output, export_type, device):
                     kspace, mask, imspace, sensitivity_map = preprocess_volume(
                         kspace=get_kspace_from_listdata(filename.split('.')[0]),
                         sense=get_kspace_from_listdata('/'.join(filename.split('.')[0].split('/')[:-1]) + '/raw_501'),
+                        slice_range=(123 if name == 'AXFLAIR' else 143, 293 if name == 'AXFLAIR' else 343),
                         device=device)
 
                     if export_type == 'png':
@@ -61,7 +64,7 @@ def preprocessing(root, output, export_type, device):
 
                         # Save sense coil combined png images
                         Process(target=save_png_outputs, args=(
-                        complex_tensor_to_real_np(rss_reconstruction(torch.from_numpy(sensitivity_map), dim=-1)),
+                        complex_tensor_to_real_np(rss_reconstruction(sensitivity_map, dim=-1)),
                         output_dir + '/csms/')).start()
 
                     elif export_type == 'h5':
@@ -115,7 +118,7 @@ def preprocessing(root, output, export_type, device):
 def main(args):
     start_time = time.perf_counter()
     logger.info("Converting data. This might take some time, please wait...")
-    preprocessing(args.root, args.output)
+    preprocessing(args.root, args.output, args.export_type, args.device)
     time_taken = time.perf_counter() - start_time
     logger.info(f"Done! Run Time = {time_taken:}s")
 
