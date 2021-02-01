@@ -150,21 +150,23 @@ def slice_selection(data, start, end):
     return data[start:end]
 
 
-def normalize(data):
+def normalize(data, device='cuda'):
     """
 
     Parameters
     ----------
+    device :
     data :
 
     Returns
     -------
 
     """
+    data = data.detach().cpu()
     if data.shape[-1] == 2:
         data = data[..., 0] + 1j * data[..., 1]
-    zero = torch.tensor([0.0], dtype=data.dtype).to(data.device)
-    return torch.where(data == zero, zero, (data / torch.max(torch.max(torch.abs(data)))))
+    zero = torch.tensor([0.0], dtype=data.dtype)
+    return torch.where(data == zero, zero, (data / torch.max(torch.max(torch.abs(data))))).to(device)
 
 
 def rss_reconstruction(imspace, dim=-1):
@@ -418,7 +420,7 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
     del kspace
 
     mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
-    imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace, dim=(0, 1, 2), norm="ortho")), dim=0)
+    imspace = normalize(fft.ifftshift(fft.ifftn(raw_kspace, dim=(0, 1, 2), norm="ortho"), dim=0), device=device)
     del raw_kspace
     torch.cuda.empty_cache()
 
@@ -436,11 +438,11 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
         del sensitivity_map, validate_sense
         torch.cuda.empty_cache()
 
-        sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20, device=device))
+        sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20, device=device), device=device)
     else:
         del validate_sense
 
-        sensitivity_map = normalize(resize_sensitivity_map(sensitivity_map, imspace.shape, device=device))
+        sensitivity_map = normalize(resize_sensitivity_map(sensitivity_map, imspace.shape, device=device), device=device)
 
         if sensitivity_map.shape[-1] < imspace.shape[-1]:
             expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
