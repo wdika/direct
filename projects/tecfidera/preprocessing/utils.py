@@ -163,10 +163,8 @@ def normalize(data):
     """
     if data.shape[-1] == 2:
         data = data[..., 0] + 1j * data[..., 1]
-
-    maximum = torch.max(torch.max(data.real), torch.max(
-        data.imag)) if data.dtype == torch.complex64 or data.dtype == torch.complex128 else torch.max(data)
-    return torch.where(data == 0, torch.tensor([0.0], dtype=data.dtype), (data / maximum))
+    zero = torch.tensor([0.0], dtype=data.dtype).to(data.device)
+    return torch.where(data == zero, zero, (data / torch.max(torch.max(torch.abs(data)))))
 
 
 def rss_reconstruction(imspace, dim=-1):
@@ -184,11 +182,12 @@ def rss_reconstruction(imspace, dim=-1):
     return torch.sqrt(torch.sum(imspace ** 2, dim=dim))
 
 
-def sense_reconstruction(imspace, csm, dim=-1):
+def sense_reconstruction(imspace, csm, dim=-1, device='cuda'):
     """
 
     Parameters
     ----------
+    device :
     imspace : torch.Tensor
     csm : torch.Tensor
     dim : coil dimension
@@ -197,7 +196,7 @@ def sense_reconstruction(imspace, csm, dim=-1):
     -------
     reconstructed complex-valued image using SENSE
     """
-    return torch.sum(imspace * torch.conj(csm), dim=dim)
+    return torch.sum(imspace.to(device) * torch.conj(csm.to(device)), dim=dim)
 
 
 def extract_mask(kspace):
@@ -214,11 +213,12 @@ def extract_mask(kspace):
     return torch.where(torch.sum(torch.sum(torch.abs(kspace), 0), -1) > 0, 1, 0)
 
 
-def resize_sensitivity_map(sensitivity_map, shape):
+def resize_sensitivity_map(sensitivity_map, shape, device='cuda'):
     """
 
     Parameters
     ----------
+    device :
     sensitivity_map :
     shape :
 
@@ -227,18 +227,21 @@ def resize_sensitivity_map(sensitivity_map, shape):
 
     """
     [slices, readout, phase_enc, coils] = shape
-    return fft.ifftn(pad(fft.fftshift(fft.fftn(sensitivity_map, dim=(0, 1, 2)), dim=(0, 1, 2)), (
-        (coils - sensitivity_map.shape[3]) // 2, (coils - sensitivity_map.shape[3]) // 2,
-        (phase_enc - sensitivity_map.shape[2]) // 2, (phase_enc - sensitivity_map.shape[2]) // 2,
-        (readout - sensitivity_map.shape[1]) // 2, (readout - sensitivity_map.shape[1]) // 2,
-        (slices - sensitivity_map.shape[0]) // 2, (slices - sensitivity_map.shape[0]) // 2)), dim=(0, 1, 2))
+    return fft.ifftn(
+        pad(fft.fftshift(fft.fftn(sensitivity_map.to(device), dim=(0, 1, 2)), dim=(0, 1, 2)).detach().cpu(),
+            ((coils - sensitivity_map.shape[3]) // 2, (coils - sensitivity_map.shape[3]) // 2,
+             (phase_enc - sensitivity_map.shape[2]) // 2, (phase_enc - sensitivity_map.shape[2]) // 2,
+             (readout - sensitivity_map.shape[1]) // 2, (readout - sensitivity_map.shape[1]) // 2,
+             (slices - sensitivity_map.shape[0]) // 2, (slices - sensitivity_map.shape[0]) // 2)).to(device),
+        dim=(0, 1, 2))
 
 
-def estimate_csm(kspace, calibration_region_size):
+def estimate_csm(kspace, calibration_region_size, device='cuda'):
     """
 
     Parameters
     ----------
+    device :
     kspace :
     calibration_region_size :
 
@@ -246,7 +249,7 @@ def estimate_csm(kspace, calibration_region_size):
     -------
 
     """
-    sensitivity_map = fft.ifftshift(torch.from_numpy(bart(1, f"caldir {calibration_region_size}", kspace)),
+    sensitivity_map = fft.ifftshift(torch.from_numpy(bart(1, f"caldir {calibration_region_size}", kspace)).to(device),
                                     dim=(0, 1, 2))
     if sensitivity_map.shape[-1] == 2:
         sensitivity_map = sensitivity_map[..., 0] + 1j * sensitivity_map[..., 1]
@@ -413,8 +416,7 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
     del kspace
 
     mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
-    imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace, dim=(0, 1, 2), norm="ortho").detach().cpu()).to(device),
-                            dim=0)
+    imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace, dim=(0, 1, 2), norm="ortho")), dim=0)
     del raw_kspace
 
     sensitivity_map = estimate_csm(sense, calibration_region_size=20).squeeze()
@@ -426,14 +428,14 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
         imspace = slice_selection(imspace, slice_range[0], slice_range[1])
         sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
 
-    kspace = fft.fft2(imspace.to(device), dim=(1, 2), norm="ortho").detach().cpu()
+    kspace = fft.fft2(imspace, dim=(1, 2), norm="ortho").detach().cpu()
 
     validate_sense = torch.sum(sensitivity_map)
     if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
-        sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20)).squeeze()
+        sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20, device=device)).squeeze()
     else:
-        sensitivity_map = resize_sensitivity_map(sensitivity_map.to(device), imspace.shape)
-        sensitivity_map = fft.ifftshift(normalize(sensitivity_map.detach().cpu()).to(device), dim=0)
+        sensitivity_map = resize_sensitivity_map(sensitivity_map, imspace.shape, device=device)
+        sensitivity_map = fft.ifftshift(normalize(sensitivity_map), dim=0)
 
         if sensitivity_map.shape[-1] < imspace.shape[-1]:
             expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
@@ -441,4 +443,4 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
                 sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
             del expand_sensitivity_map
 
-    return kspace, mask, imspace.detach().cpu(), sensitivity_map.detach().cpu()
+    return kspace, mask, imspace, sensitivity_map

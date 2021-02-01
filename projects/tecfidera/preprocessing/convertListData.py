@@ -57,7 +57,7 @@ def preprocessing(root, output, export_type, device):
 
                             # Save target (SENSE reconstructed) png images
                             Process(target=save_png_outputs, args=(
-                                complex_tensor_to_real_np(sense_reconstruction(imspace, sensitivity_map, dim=-1)),
+                                complex_tensor_to_real_np(sense_reconstruction(imspace, sensitivity_map, dim=-1, device=device)),
                                 output_dir + '/targets/')).start()
 
                             # Save mask
