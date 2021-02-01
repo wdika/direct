@@ -45,10 +45,10 @@ def preprocessing(root, output, export_type, device):
                         sense = get_kspace_from_listdata(sense_path) if os.path.isfile(sense_path
                                                                            ) else get_kspace_from_listdata(kspace_path)
 
-                        kspace, mask, imspace, sensitivity_map = preprocess_volume(kspace=raw_kspace, sense=sense,
-                            slice_range=None, device=device)
+                        with torch.no_grad():
+                            kspace, mask, imspace, sensitivity_map = preprocess_volume(kspace=raw_kspace, sense=sense,
+                                slice_range=None, device=device)
                         del raw_kspace, kspace_path, sense_path, sense, filename
-                        torch.cuda.empty_cache()
 
                         if export_type == 'png':
                             output_dir = output + 'png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
@@ -121,7 +121,6 @@ def preprocessing(root, output, export_type, device):
 
                     else:
                         del raw_kspace, kspace_path, name
-                        torch.cuda.empty_cache()
 
 
 def main(args):

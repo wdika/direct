@@ -253,7 +253,6 @@ def estimate_csm(kspace, calibration_region_size, device='cuda'):
     """
     sensitivity_map = torch.from_numpy(bart(1, f"caldir {calibration_region_size}", kspace)).to(device).squeeze()
     del kspace
-    torch.cuda.empty_cache()
 
     if sensitivity_map.shape[-1] == 2:
         sensitivity_map = sensitivity_map[..., 0] + 1j * sensitivity_map[..., 1]
@@ -422,7 +421,6 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
     mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
     imspace = normalize(fft.ifftshift(fft.ifftn(raw_kspace, dim=(0, 1, 2), norm="ortho"), dim=0), device=device)
     del raw_kspace
-    torch.cuda.empty_cache()
 
     sensitivity_map = estimate_csm(sense, calibration_region_size=20)
     del sense
@@ -436,7 +434,6 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
     validate_sense = torch.sum(sensitivity_map)
     if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
         del sensitivity_map, validate_sense
-        torch.cuda.empty_cache()
 
         sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20, device=device), device=device)
     else:
