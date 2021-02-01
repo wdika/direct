@@ -7,8 +7,9 @@ import logging
 import time
 from multiprocessing import Process
 
-from projects.tecfidera.preprocessing.utils import *
 from tqdm import tqdm
+
+from projects.tecfidera.preprocessing.utils import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,6 +24,8 @@ def preprocessing(root, output, export_type, device):
     root :   root directory of containing cfl data
     output : output directory to save data
     """
+    raw_data = []
+
     subjects = glob.glob(root + "/*/")
     for subject in tqdm(subjects):
         acquisitions = glob.glob(subject + "/*/")
@@ -42,85 +45,93 @@ def preprocessing(root, output, export_type, device):
                     raw_kspace = get_kspace_from_listdata(kspace_path)
                     if raw_kspace is not None:
                         sense_path = kspace_path.split('_')[0] + '_501'
-                        sense = get_kspace_from_listdata(sense_path) if os.path.isfile(sense_path
-                                                                           ) else get_kspace_from_listdata(kspace_path)
+                        raw_sense = get_kspace_from_listdata(sense_path) if os.path.isfile(sense_path
+                                                                                           ) else get_kspace_from_listdata(
+                            kspace_path)
 
-                        with torch.no_grad():
-                            kspace, mask, imspace, sensitivity_map = preprocess_volume(kspace=raw_kspace, sense=sense,
-                                slice_range=None, device=device)
-                        del raw_kspace, kspace_path, sense_path, sense, filename
+                        name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
-                        if export_type == 'png':
-                            output_dir = output + 'png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                                -2] + '/' + name
-                            create_dir(output_dir)
+                        raw_data.append([name, raw_kspace, raw_sense])
+                        del raw_sense
+                    del raw_kspace
 
-                            # Save target (SENSE reconstructed) png images
-                            Process(target=save_png_outputs, args=(
-                                complex_tensor_to_real_np(sense_reconstruction(imspace, sensitivity_map, dim=-1, device=device)),
-                                output_dir + '/targets/')).start()
+    torch.cuda.empty_cache()
 
-                            # Save mask
-                            plt.imshow(mask, cmap='gray')
-                            plt.savefig(output_dir + '/mask.png')
-                            plt.close()
+    with torch.no_grad():
+        for name, raw_kspace, raw_sense in zip(raw_data):
+            kspace, mask, imspace, sensitivity_map = preprocess_volume(kspace=raw_kspace, sense=raw_sense,
+                                                                       slice_range=None, device=device)
+            del raw_kspace, raw_sense
 
-                            # Save sense coil combined png images
-                            Process(target=save_png_outputs, args=(
-                                complex_tensor_to_real_np(rss_reconstruction(sensitivity_map, dim=-1)),
-                                output_dir + '/csms/')).start()
+            if export_type == 'png':
+                output_dir = name + '/png'
+                create_dir(output_dir)
 
-                        elif export_type == 'h5':
-                            name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
+                # Save target (SENSE reconstructed) png images
+                Process(target=save_png_outputs, args=(
+                    complex_tensor_to_real_np(sense_reconstruction(imspace, sensitivity_map, dim=-1, device=device)),
+                    output_dir + '/targets/')).start()
 
-                            output_dir = output + '/kspaces/'
-                            create_dir(output_dir)
-                            Process(target=save_h5_outputs,
-                                    args=(complex_tensor_to_complex_np(kspace), "kspace", output_dir + name)).start()
+                # Save mask
+                plt.imshow(mask, cmap='gray')
+                plt.savefig(output_dir + '/mask.png')
+                plt.close()
 
-                            # Save mask
-                            output_dir_mask = output + '/masks/'
-                            create_dir(output_dir_mask)
-                            np.save(output_dir_mask + name + ".npy", mask)
+                # Save sense coil combined png images
+                Process(target=save_png_outputs, args=(
+                    complex_tensor_to_real_np(rss_reconstruction(sensitivity_map, dim=-1)),
+                    output_dir + '/csms/')).start()
 
-                            # Save csm
-                            output_dir_csm = output + '/csms/'
-                            create_dir(output_dir_csm)
-                            Process(target=save_h5_outputs, args=(
-                                complex_tensor_to_complex_np(sensitivity_map), "sensitivity_map",
-                                output_dir_csm + name)).start()
+            elif export_type == 'h5':
+                output_dir = name + '/kspaces/'
 
-                        elif export_type == 'pickle':
-                            # Save data
-                            output_dir = output + '/test/'
-                            create_dir(output_dir)
-                            Process(target=save_pickle_outputs, args=(
-                                complex_tensor_to_complex_np(torch.stack((imspace, sensitivity_map), 1)),
-                                output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[
-                                    -2] + '_' + name)).start()
+                create_dir(output_dir)
+                Process(target=save_h5_outputs,
+                        args=(complex_tensor_to_complex_np(kspace), "kspace", output_dir + name)).start()
 
-                            # Save mask
-                            acceleration = np.round(mask.size / mask.sum())
+                # Save mask
+                output_dir_mask = name + '/masks/'
+                create_dir(output_dir_mask)
+                np.save(output_dir_mask + name + ".npy", mask)
 
-                            if acceleration < 4:
-                                acceleration = 4.0
-                            elif 4 < acceleration < 6:
-                                acceleration = 6.0
-                            elif 6 < acceleration < 8:
-                                acceleration = 8.0
-                            elif 8 < acceleration < 10:
-                                acceleration = 10.0
+                # Save csm
+                output_dir_csm = name + '/csms/'
+                create_dir(output_dir_csm)
+                Process(target=save_h5_outputs, args=(
+                    complex_tensor_to_complex_np(sensitivity_map), "sensitivity_map",
+                    output_dir_csm + name)).start()
 
-                            output_dir_mask = output + '/masks_pickle/' + subject.split('/')[-2] + '/' + \
-                                              acquisition.split('/')[
-                                                  -2] + '/' + name + '/acc' + str(acceleration)
-                            create_dir(output_dir_mask)
-                            save_pickle_mask(mask, output_dir_mask + '/mask0')
+            elif export_type == 'pickle':
+                # Save data
+                output_dir = output + '/pickle/'
+                create_dir(output_dir)
 
-                        del kspace, mask, imspace, sensitivity_map, name
+                output_dir_data = output_dir + '/data/'
+                create_dir(output_dir_data)
 
-                    else:
-                        del raw_kspace, kspace_path, name
+                Process(target=save_pickle_outputs, args=(
+                    complex_tensor_to_complex_np(torch.stack((imspace, sensitivity_map), 1)),
+                    output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[
+                        -2] + '_' + name)).start()
+
+                # Save mask
+                acceleration = np.round(mask.size / mask.sum())
+
+                if acceleration < 4:
+                    acceleration = 4.0
+                elif 4 < acceleration < 6:
+                    acceleration = 6.0
+                elif 6 < acceleration < 8:
+                    acceleration = 8.0
+                elif 8 < acceleration < 10:
+                    acceleration = 10.0
+
+                output_dir_masks = output_dir + '/masks/acc' + str(acceleration)
+                create_dir(output_dir_masks)
+
+                save_pickle_mask(mask, output_dir_masks + '/mask0')
+
+            del kspace, mask, imspace, sensitivity_map, name
 
 
 def main(args):
