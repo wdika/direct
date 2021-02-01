@@ -413,32 +413,55 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
     if raw_kspace.shape[-1] == 2:
         raw_kspace = raw_kspace[..., 0] + 1j * raw_kspace[..., 1]
 
-    mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
-    imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace.detach().cpu(), dim=(0, 1, 2), norm="ortho")).to(device), dim=0).detach().cpu()
+    raw_sense = torch.from_numpy(sense).squeeze()
 
-    sensitivity_map = estimate_csm(sense, calibration_region_size=20).squeeze()
-    del sense
+    if raw_sense.shape[-1] == 2:
+        raw_sense = raw_sense[..., 0] + 1j * raw_sense[..., 1]
 
-    if slice_range is not None:
-        imspace = slice_selection(imspace, slice_range[0], slice_range[1])
-        sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
+    transversal = [raw_kspace, raw_sense]
+    sagittal = [raw_kspace.permute(1, 0, 2, 3), raw_sense.permute(1, 0, 2, 3)]
+    coronal = [raw_kspace.permute(2, 0, 1, 3), raw_sense.permute(2, 0, 1, 3)]
+    del raw_kspace, raw_sense
 
-    validate_sense = torch.sum(sensitivity_map)
-    if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
-        sensitivity_map = estimate_csm(raw_kspace.detach().cpu().numpy(), calibration_region_size=20).squeeze()
-    else:
-        sensitivity_map = resize_sensitivity_map(sensitivity_map.to(device), imspace.shape)
+    imspaces = []
+    kspaces = []
+    sensitivities_maps = []
+    masks = []
+    for i, view in enumerate([transversal, sagittal, coronal]):
+        raw_kspace, sense = view[0], view[1]
 
-        if sensitivity_map.shape[-1] < imspace.shape[-1]:
-            expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
-            for i in range(imspace.shape[-1] - sensitivity_map.shape[-1]):
-                sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
-            del expand_sensitivity_map
+        mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
+        imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace.detach().cpu(), dim=(0, 1, 2), norm="ortho")).to(device),
+                                dim=0 if i == 0 else 1).detach().cpu()
+        del raw_kspace
+        torch.cuda.empty_cache()
 
-    sensitivity_map = fft.ifftshift(normalize(sensitivity_map.detach().cpu())).to(device)
+        sensitivity_map = estimate_csm(sense.numpy(), calibration_region_size=20)
+        del sense
 
-    del raw_kspace
+        if slice_range is not None:
+            imspace = slice_selection(imspace, slice_range[0], slice_range[1])
+            sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
 
-    kspace = fft.fft2(imspace.to(device), dim=(1, 2), norm="ortho").detach().cpu()
+        kspace = fft.fft2(imspace.to(device), dim=(1, 2), norm="ortho").detach().cpu()
 
-    return kspace.detach().cpu(), mask, imspace.detach().cpu(), sensitivity_map.detach().cpu()
+        validate_sense = torch.sum(sensitivity_map)
+        if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
+            sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20)).squeeze()
+        else:
+            sensitivity_map = resize_sensitivity_map(sensitivity_map.to(device), imspace.shape)
+            sensitivity_map = fft.ifftshift(normalize(sensitivity_map.detach().cpu())).to(device)
+
+            if sensitivity_map.shape[-1] < imspace.shape[-1]:
+                expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
+                for i in range(imspace.shape[-1] - sensitivity_map.shape[-1]):
+                    sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
+                del expand_sensitivity_map
+        torch.cuda.empty_cache()
+
+        imspaces.append(imspace.detach().cpu())
+        kspaces.append(kspace.detach().cpu())
+        sensitivities_maps.append(sensitivity_map.detach().cpu())
+        masks.append(mask)
+
+    return kspaces, masks, imspaces, sensitivities_maps
