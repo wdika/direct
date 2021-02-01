@@ -58,7 +58,10 @@ def preprocessing(root, output, export_type, device):
     torch.cuda.empty_cache()
 
     with torch.no_grad():
-        for name, raw_kspace, raw_sense in zip(raw_data):
+        for name, raw_kspace, raw_sense in tqdm(zip(raw_data)):
+            logger.info(
+                f"Saving {name}. This might take some time, please wait...")
+
             kspace, mask, imspace, sensitivity_map = preprocess_volume(kspace=raw_kspace, sense=raw_sense,
                                                                        slice_range=None, device=device)
             del raw_kspace, raw_sense
