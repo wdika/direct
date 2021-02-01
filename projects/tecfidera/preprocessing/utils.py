@@ -434,9 +434,11 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
         sensitivity_map = estimate_csm(kspace.detach().cpu().numpy(), calibration_region_size=20).to(device).squeeze()
         if slice_range is not None:
             sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
+
         print('1', sensitivity_map.shape, imspace.shape)
     else:
         sensitivity_map = resize_sensitivity_map(sensitivity_map, imspace.shape)
+
         print('2', sensitivity_map.shape, imspace.shape)
 
     sensitivity_map = fft.ifftshift(normalize(sensitivity_map))
