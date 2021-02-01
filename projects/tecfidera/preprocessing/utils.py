@@ -163,10 +163,10 @@ def normalize(data):
     """
     if data.shape[-1] == 2:
         data = data[..., 0] + 1j * data[..., 1]
+
     maximum = torch.max(torch.max(data.real), torch.max(
         data.imag)) if data.dtype == torch.complex64 or data.dtype == torch.complex128 else torch.max(data)
-    zero = torch.tensor([0.0], dtype=data.dtype)
-    return torch.where(data == zero, zero, (data / maximum))
+    return torch.where(data == 0, torch.tensor([0.0], dtype=data.dtype), (data / maximum))
 
 
 def rss_reconstruction(imspace, dim=-1):
@@ -390,9 +390,6 @@ def get_kspace_from_listdata(fdir):
     for n, (y, z, m, t, a) in enumerate(zip(yy, zz, mm, tt, aa)):
         kspace_filled[:, y, z, :, m, t, a] = tmp[:, :, n]
 
-        if np.fmod(n, np.around(len(yy) / 100)) == 0:
-            print('Progress: {}%'.format(np.around((n / len(yy)) * 100)), end='\r')
-
     return kspace_filled
 
 
@@ -417,26 +414,20 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
         raw_kspace = raw_kspace[..., 0] + 1j * raw_kspace[..., 1]
 
     mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
-    imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace, dim=(0, 1, 2), norm="ortho")), dim=0)
-    del raw_kspace
+    imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace.detach().cpu(), dim=(0, 1, 2), norm="ortho")).to(device), dim=0).detach().cpu()
 
-    sensitivity_map = estimate_csm(sense, calibration_region_size=20).to(device).squeeze()
+    sensitivity_map = estimate_csm(sense, calibration_region_size=20).squeeze()
     del sense
 
     if slice_range is not None:
         imspace = slice_selection(imspace, slice_range[0], slice_range[1])
         sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
 
-    kspace = fft.fft2(imspace, dim=(1, 2), norm="ortho")
-
-    if torch.sum(torch.abs(sensitivity_map)) == torch.tensor(0) or torch.isnan(torch.sum(sensitivity_map)):
-        sensitivity_map = normalize(estimate_csm(kspace.detach().cpu().numpy(), calibration_region_size=20).to(device
-                                                                                                           ).squeeze())
-        #if slice_range is not None:
-            #sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
+    validate_sense = torch.sum(sensitivity_map)
+    if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
+        sensitivity_map = estimate_csm(raw_kspace.detach().cpu().numpy(), calibration_region_size=20).squeeze()
     else:
-        sensitivity_map = resize_sensitivity_map(sensitivity_map, imspace.shape)
-        sensitivity_map = fft.ifftshift(normalize(sensitivity_map))
+        sensitivity_map = resize_sensitivity_map(sensitivity_map.to(device), imspace.shape)
 
         if sensitivity_map.shape[-1] < imspace.shape[-1]:
             expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
@@ -444,4 +435,10 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
                 sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
             del expand_sensitivity_map
 
-    return kspace, mask, imspace, sensitivity_map
+    sensitivity_map = fft.ifftshift(normalize(sensitivity_map.detach().cpu())).to(device)
+
+    del raw_kspace
+
+    kspace = fft.fft2(imspace.to(device), dim=(1, 2), norm="ortho").detach().cpu()
+
+    return kspace.detach().cpu(), mask, imspace.detach().cpu(), sensitivity_map.detach().cpu()
