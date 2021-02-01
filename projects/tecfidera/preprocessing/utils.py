@@ -249,11 +249,13 @@ def estimate_csm(kspace, calibration_region_size, device='cuda'):
     -------
 
     """
-    sensitivity_map = fft.ifftshift(torch.from_numpy(bart(1, f"caldir {calibration_region_size}", kspace)).to(device),
-                                    dim=(0, 1, 2))
+    sensitivity_map = torch.from_numpy(bart(1, f"caldir {calibration_region_size}", kspace)).to(device).squeeze()
+    del kspace
+    torch.cuda.empty_cache()
+
     if sensitivity_map.shape[-1] == 2:
         sensitivity_map = sensitivity_map[..., 0] + 1j * sensitivity_map[..., 1]
-    return sensitivity_map
+    return fft.ifftshift(sensitivity_map, dim=(1, 2))
 
 
 def load_kprops(list_file):
@@ -418,10 +420,9 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
     mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
     imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace, dim=(0, 1, 2), norm="ortho")), dim=0)
     del raw_kspace
+    torch.cuda.empty_cache()
 
-    sensitivity_map = estimate_csm(sense, calibration_region_size=20).squeeze()
-    if sensitivity_map.shape[-1] == 2:
-        sensitivity_map = sensitivity_map[..., 0] + 1j * sensitivity_map[..., 1]
+    sensitivity_map = estimate_csm(sense, calibration_region_size=20)
     del sense
 
     if slice_range is not None:
@@ -432,10 +433,14 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
 
     validate_sense = torch.sum(sensitivity_map)
     if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
-        sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20, device=device)).squeeze()
+        del sensitivity_map, validate_sense
+        torch.cuda.empty_cache()
+
+        sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20, device=device))
     else:
-        sensitivity_map = resize_sensitivity_map(sensitivity_map, imspace.shape, device=device)
-        sensitivity_map = fft.ifftshift(normalize(sensitivity_map), dim=0)
+        del validate_sense
+
+        sensitivity_map = normalize(resize_sensitivity_map(sensitivity_map, imspace.shape, device=device))
 
         if sensitivity_map.shape[-1] < imspace.shape[-1]:
             expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
