@@ -5,10 +5,11 @@ import logging
 import os
 import pathlib
 import sys
+from pathlib import Path
 
 import numpy as np
 import torch
-from pathlib import Path
+
 import direct.launch
 from direct.data.mri_transforms import Compose
 from direct.environment import Args

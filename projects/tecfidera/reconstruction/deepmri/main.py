@@ -1,16 +1,17 @@
 import argparse
+import glob
 import re
+import sys
 from os import listdir
 from os.path import join, exists, split, isdir
-import sys
 from pathlib import Path
 
 import dill
+import h5py
 import numpy as np
 import pickle5 as pickle
 import torch
-import h5py
-import glob
+
 from projects.tecfidera.reconstruction.deepmri.plot import ModelLog
 from projects.tecfidera.reconstruction.deepmri.rim import Rim
 
@@ -53,9 +54,9 @@ def get_network(model, loaded=False, device='cuda'):
         ARGS.rnn_dilations[::2], ARGS.rnn_kernels[1::2])]}
 
     network = Rim(t_max=ARGS.t_max, act_fn=ARGS.act_fn,
-                                 n_feature=ARGS.n_feature if type(ARGS.n_feature) != int else [ARGS.n_feature],
-                                 recurrent=ARGS.recurrent,
-                                 conv_params=conv_params, rnn_params=rnn_params).to(dtype=getattr(torch, ARGS.dtype))
+                  n_feature=ARGS.n_feature if type(ARGS.n_feature) != int else [ARGS.n_feature],
+                  recurrent=ARGS.recurrent,
+                  conv_params=conv_params, rnn_params=rnn_params).to(dtype=getattr(torch, ARGS.dtype))
 
     if loaded:
         savedmodel = join(model.runfolder, 'models', model.to_reconstruct)
@@ -134,7 +135,7 @@ def main(args):
         recon = np.abs(recon / np.max(recon))
         recons.append(recon)
 
-        if (name != prev_name and prev_name != '') or i == len(data)-1:
+        if (name != prev_name and prev_name != '') or i == len(data) - 1:
             with h5py.File(args.wdir + '/' + name + ".h5", "w") as f:
                 f['reconstruction'] = recons
             recons = []

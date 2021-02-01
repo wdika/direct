@@ -77,8 +77,11 @@ def pics_recon(idx):
     kspace, sensitivity_map, filename, slice_no, device = data[idx]
 
     pred = fft.fftshift(torch.from_numpy(bart(1, f'pics -g -d0 -S -R W:7:0:0.005 -i 60', kspace,
-                        sensitivity_map) if device == 'cuda' else bart(1, f'pics -d0 -S -R W:7:0:0.005 -i 60', kspace,
-                        sensitivity_map)).to(device), dim=(-2, -1))[0]
+                                              sensitivity_map) if device == 'cuda' else bart(1,
+                                                                                             f'pics -d0 -S -R W:7:0:0.005 -i 60',
+                                                                                             kspace,
+                                                                                             sensitivity_map)).to(
+        device), dim=(-2, -1))[0]
     pred = pred / torch.max(torch.abs(pred))
 
     if device == 'cuda':

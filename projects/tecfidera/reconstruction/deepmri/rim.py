@@ -60,14 +60,16 @@ class Rim(Module):
 
             if rf != 0:
                 rk, rd = next(rnn_kernels), next(rnn_dilations)
-                self.convRNNs.append(ConvRNNStack(convstack, recurrencies[recurrent](channels, rf, rk, dilation=rd, bias=bias), self.act_fn))
+                self.convRNNs.append(
+                    ConvRNNStack(convstack, recurrencies[recurrent](channels, rf, rk, dilation=rd, bias=bias),
+                                 self.act_fn))
                 channels = rf
                 convstack = ModuleList()
 
         del convstack[-1]._parameters['bias']
         convstack[-1].register_parameter('bias', None)
         self.final_layer = Sequential(*list(chain(*[[c, act_fns[act_fn]] for c in convstack]))[:-1])
-        self.restack = lambda x: x[:, 0, ...] + 1j*x[:, 1, ...]
+        self.restack = lambda x: x[:, 0, ...] + 1j * x[:, 1, ...]
 
         print('Constructed RIM of {:,d} parameters.'.format(self.get_num_params()))
 
@@ -78,7 +80,8 @@ class Rim(Module):
         gll = lambda e: multi_gll(e, y, mask, sense)
 
         if hiddens is None:
-            hiddens = [torch.zeros(eta.size(0), f, *eta.size()[1:]).to(eta.device) for f in self.rnn_params['f'] if f != 0]
+            hiddens = [torch.zeros(eta.size(0), f, *eta.size()[1:]).to(eta.device) for f in self.rnn_params['f'] if
+                       f != 0]
 
         for _ in range(t_max):
             d_eta = gll(eta).contiguous()
