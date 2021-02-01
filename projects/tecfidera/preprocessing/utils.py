@@ -428,26 +428,19 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
 
     kspace = fft.fft2(imspace, dim=(1, 2), norm="ortho")
 
-    print('0', sensitivity_map.shape, imspace.shape)
-
     if torch.sum(torch.abs(sensitivity_map)) == torch.tensor(0) or torch.isnan(torch.sum(sensitivity_map)):
-        sensitivity_map = estimate_csm(kspace.detach().cpu().numpy(), calibration_region_size=20).to(device).squeeze()
-        if slice_range is not None:
-            sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
-
-        print('1', sensitivity_map.shape, imspace.shape)
+        sensitivity_map = normalize(estimate_csm(kspace.detach().cpu().numpy(), calibration_region_size=20).to(device
+                                                                                                           ).squeeze())
+        #if slice_range is not None:
+            #sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
     else:
         sensitivity_map = resize_sensitivity_map(sensitivity_map, imspace.shape)
+        sensitivity_map = fft.ifftshift(normalize(sensitivity_map))
 
-        print('2', sensitivity_map.shape, imspace.shape)
-
-    sensitivity_map = fft.ifftshift(normalize(sensitivity_map))
-
-    if sensitivity_map.shape[-1] < imspace.shape[-1]:
-        expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
-
-        for i in range(imspace.shape[-1] - sensitivity_map.shape[-1]):
-            sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
-        del expand_sensitivity_map
+        if sensitivity_map.shape[-1] < imspace.shape[-1]:
+            expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
+            for i in range(imspace.shape[-1] - sensitivity_map.shape[-1]):
+                sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
+            del expand_sensitivity_map
 
     return kspace, mask, imspace, sensitivity_map
