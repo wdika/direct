@@ -441,6 +441,4 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
                 sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
             del expand_sensitivity_map
 
-        sensitivity_map = sensitivity_map.detach().cpu()
-
-    return kspace, mask, imspace, sensitivity_map
+    return kspace, mask, imspace.detach().cpu(), sensitivity_map.detach().cpu()
