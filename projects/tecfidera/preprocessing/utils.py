@@ -165,7 +165,8 @@ def normalize(data):
         data = data[..., 0] + 1j * data[..., 1]
     maximum = torch.max(torch.max(data.real), torch.max(
         data.imag)) if data.dtype == torch.complex64 or data.dtype == torch.complex128 else torch.max(data)
-    return torch.where(data == 0, torch.tensor([0.0], dtype=data.dtype), (data / maximum))
+    zero = torch.tensor([0.0], dtype=data.dtype)
+    return torch.where(data == zero, zero, (data / maximum))
 
 
 def rss_reconstruction(imspace, dim=-1):
