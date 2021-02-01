@@ -7,9 +7,8 @@ import logging
 import time
 from multiprocessing import Process
 
-from tqdm import tqdm
-
 from projects.tecfidera.preprocessing.utils import *
+from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,11 +24,11 @@ def preprocessing(root, output, export_type, device):
     output : output directory to save data
     """
     subjects = glob.glob(root + "/*/")
-    for subject in subjects:
+    for subject in tqdm(subjects):
         acquisitions = glob.glob(subject + "/*/")
         for acquisition in acquisitions:
             data = glob.glob(acquisition + "*.list")
-            for filename in tqdm(data):
+            for filename in data:
                 name = filename.split('.')[0].split('/')[-1].split('_')[1]
 
                 if name != '501':  # exclude the sense ref scan
@@ -39,79 +38,87 @@ def preprocessing(root, output, export_type, device):
                         f"Processing subject: {subject.split('/')[-2]} | time-point: {acquisition.split('/')[-2]} "
                         f"| acquisition: {name}")
 
-                    kspace, mask, imspace, sensitivity_map = preprocess_volume(
-                        kspace=get_kspace_from_listdata(filename.split('.')[0]),
-                        sense=get_kspace_from_listdata('/'.join(filename.split('.')[0].split('/')[:-1]) + '/raw_501'),
-                        slice_range=(123 if name == 'AXFLAIR' else 143, 293 if name == 'AXFLAIR' else 343),
-                        device=device)
+                    kspace_path = filename.split('.')[0]
 
-                    if export_type == 'png':
-                        output_dir = output + 'png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                            -2] + '/' + name
-                        create_dir(output_dir)
+                    raw_kspace = get_kspace_from_listdata(kspace_path)
+                    if raw_kspace is not None:
+                        sense_path = kspace_path.split('_')[0] + '_501'
+                        sense = get_kspace_from_listdata(sense_path) if os.path.isfile(sense_path
+                                                                           ) else get_kspace_from_listdata(kspace_path)
 
-                        # Save target (SENSE reconstructed) png images
-                        Process(target=save_png_outputs, args=(
-                            complex_tensor_to_real_np(sense_reconstruction(imspace, sensitivity_map, dim=-1)),
-                            output_dir + '/targets/')).start()
+                        kspace, mask, imspace, sensitivity_map = preprocess_volume(kspace=raw_kspace, sense=sense,
+                            slice_range=(123 if name == 'AXFLAIR' else 143, 293 if name == 'AXFLAIR' else 343),
+                            device=device)
+                        del raw_kspace
 
-                        # Save mask
-                        plt.imshow(mask, cmap='gray')
-                        plt.savefig(output_dir + '/mask.png')
-                        plt.close()
+                        if export_type == 'png':
+                            output_dir = output + 'png/' + subject.split('/')[-2] + '/' + acquisition.split('/')[
+                                -2] + '/' + name
+                            create_dir(output_dir)
 
-                        # Save sense coil combined png images
-                        Process(target=save_png_outputs, args=(
-                            complex_tensor_to_real_np(rss_reconstruction(sensitivity_map, dim=-1)),
-                            output_dir + '/csms/')).start()
+                            # Save target (SENSE reconstructed) png images
+                            Process(target=save_png_outputs, args=(
+                                complex_tensor_to_real_np(sense_reconstruction(imspace, sensitivity_map, dim=-1)),
+                                output_dir + '/targets/')).start()
 
-                    elif export_type == 'h5':
-                        name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
+                            # Save mask
+                            plt.imshow(mask, cmap='gray')
+                            plt.savefig(output_dir + '/mask.png')
+                            plt.close()
 
-                        output_dir = output + '/kspaces/'
-                        create_dir(output_dir)
-                        Process(target=save_h5_outputs,
-                                args=(complex_tensor_to_complex_np(kspace), "kspace", output_dir + name)).start()
+                            # Save sense coil combined png images
+                            Process(target=save_png_outputs, args=(
+                                complex_tensor_to_real_np(rss_reconstruction(sensitivity_map, dim=-1)),
+                                output_dir + '/csms/')).start()
 
-                        # Save mask
-                        output_dir_mask = output + '/masks/'
-                        create_dir(output_dir_mask)
-                        np.save(output_dir_mask + name + ".npy", mask)
-                        del mask
+                        elif export_type == 'h5':
+                            name = subject.split('/')[-2] + '_' + acquisition.split('/')[-2] + '_' + name
 
-                        # Save csm
-                        output_dir_csm = output + '/csms/'
-                        create_dir(output_dir_csm)
-                        Process(target=save_h5_outputs, args=(
-                            complex_tensor_to_complex_np(sensitivity_map), "sensitivity_map",
-                            output_dir_csm + name)).start()
-                        del sensitivity_map
+                            output_dir = output + '/kspaces/'
+                            create_dir(output_dir)
+                            Process(target=save_h5_outputs,
+                                    args=(complex_tensor_to_complex_np(kspace), "kspace", output_dir + name)).start()
 
-                    elif export_type == 'pickle':
-                        # Save data
-                        output_dir = output + '/test/'
-                        create_dir(output_dir)
-                        Process(target=save_pickle_outputs, args=(
-                            complex_tensor_to_complex_np(torch.stack((imspace, sensitivity_map), 1)),
-                            output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[
-                                -2] + '_' + name)).start()
+                            # Save mask
+                            output_dir_mask = output + '/masks/'
+                            create_dir(output_dir_mask)
+                            np.save(output_dir_mask + name + ".npy", mask)
 
-                        # Save mask
-                        acceleration = np.round(mask.size / mask.sum())
+                            # Save csm
+                            output_dir_csm = output + '/csms/'
+                            create_dir(output_dir_csm)
+                            Process(target=save_h5_outputs, args=(
+                                complex_tensor_to_complex_np(sensitivity_map), "sensitivity_map",
+                                output_dir_csm + name)).start()
 
-                        if acceleration < 4:
-                            acceleration = 4.0
-                        elif 4 < acceleration < 6:
-                            acceleration = 6.0
-                        elif 6 < acceleration < 8:
-                            acceleration = 8.0
-                        elif 8 < acceleration < 10:
-                            acceleration = 10.0
+                        elif export_type == 'pickle':
+                            # Save data
+                            output_dir = output + '/test/'
+                            create_dir(output_dir)
+                            Process(target=save_pickle_outputs, args=(
+                                complex_tensor_to_complex_np(torch.stack((imspace, sensitivity_map), 1)),
+                                output_dir + subject.split('/')[-2] + '_' + acquisition.split('/')[
+                                    -2] + '_' + name)).start()
 
-                        output_dir_mask = output + '/masks_' + subject.split('/')[-2] + '/' + acquisition.split('/')[
-                            -2] + '/' + name + '/acc' + str(acceleration)
-                        create_dir(output_dir_mask)
-                        save_pickle_mask(mask, output_dir_mask + '/mask0')
+                            # Save mask
+                            acceleration = np.round(mask.size / mask.sum())
+
+                            if acceleration < 4:
+                                acceleration = 4.0
+                            elif 4 < acceleration < 6:
+                                acceleration = 6.0
+                            elif 6 < acceleration < 8:
+                                acceleration = 8.0
+                            elif 8 < acceleration < 10:
+                                acceleration = 10.0
+
+                            output_dir_mask = output + '/masks_pickle/' + subject.split('/')[-2] + '/' + \
+                                              acquisition.split('/')[
+                                                  -2] + '/' + name + '/acc' + str(acceleration)
+                            create_dir(output_dir_mask)
+                            save_pickle_mask(mask, output_dir_mask + '/mask0')
+
+                        del kspace, mask, imspace, sensitivity_map, name, filename, kspace_path, sense_path
 
 
 def main(args):
@@ -119,7 +126,7 @@ def main(args):
     logger.info("Converting data. This might take some time, please wait...")
     preprocessing(args.root, args.output, args.export_type, args.device)
     time_taken = time.perf_counter() - start_time
-    logger.info(f"Done! Run Time = {time_taken:}s")
+    logger.info(f"Done! Run Time = {np.round(time_taken/60):} min")
 
 
 def create_arg_parser():

@@ -6,7 +6,12 @@ import sys
 from pathlib import Path
 
 import h5py
-import matplotlib.pyplot as plt
+import matplotlib
+
+matplotlib.use('Agg')
+
+from matplotlib import pyplot as plt
+
 import numpy as np
 import pickle5 as pickle
 import torch
@@ -362,8 +367,13 @@ def get_kspace_from_listdata(fdir):
     kzflag = 'kz' if kspace['kspace_properties']['number_of_encoding_dimensions'][0] == 3 else 'loca'
     kzmin, kzmax = np.amin(kspace[kzflag]), np.amax(kspace[kzflag])
     sx = len(kspace['complexdata'][-1])
-    tmp = np.array([elem for elem, ktyp in zip(kspace['complexdata'], kspace['typ']) if ktyp == b'STD']).T
-    tmp = tmp.reshape((sx, channels, -1), order='A')
+    tmp = np.array([elem for elem, ktyp in zip(kspace['complexdata'], kspace['typ']) if ktyp == b'STD'], dtype=object).T
+
+    try:
+        tmp = tmp.reshape((sx, channels, -1), order='A')
+    except ValueError:
+        print(f'ValueError: cannot reshape array of size {tmp.shape} into shape ({sx},{channels},newaxis). Skipping...')
+        return None
 
     startidx = kspace['typ'].index(b'STD')
 
@@ -407,16 +417,37 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
 
     mask = complex_tensor_to_real_np(extract_mask(input_kspace))
     imspace = fft.ifftshift(normalize(fft.ifftn(input_kspace, dim=(0, 1, 2), norm="ortho").detach().cpu()).to(device),
-                            dim=0)
-    sensitivity_map = fft.ifftshift(normalize(
-        resize_sensitivity_map(estimate_csm(sense, calibration_region_size=20), imspace.shape).detach().cpu()).to(
-        device), dim=0)
-    del input_kspace, sense
+                            dim=0)#.squeeze()
+    del input_kspace
+
+    sensitivity_map = estimate_csm(sense, calibration_region_size=20).to(device)
+    del sense
 
     if slice_range is not None:
         imspace = slice_selection(imspace, slice_range[0], slice_range[1])
         sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
 
     kspace = fft.fft2(imspace, dim=(1, 2), norm="ortho")
+
+    print('0', sensitivity_map.shape, imspace.shape)
+
+    if torch.sum(torch.abs(sensitivity_map)) == torch.tensor(0) or torch.isnan(torch.sum(sensitivity_map)):
+        sensitivity_map = estimate_csm(kspace.detach().cpu().numpy(), calibration_region_size=20).to(device)
+        if slice_range is not None:
+            sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
+        print('1', sensitivity_map.shape, imspace.shape)
+    else:
+        sensitivity_map = resize_sensitivity_map(sensitivity_map, imspace.shape)
+        print('2', sensitivity_map.shape, imspace.shape)
+
+    sensitivity_map = fft.ifftshift(normalize(sensitivity_map.detach().cpu()).to(device),
+                                    dim=0).squeeze().detach().cpu()
+
+    if sensitivity_map.shape[-1] < imspace.shape[-1]:
+        expand_sensitivity_map = torch.sum(sensitivity_map.to(device), -1).unsqueeze(-1)
+
+        for i in range(imspace.shape[-1] - sensitivity_map.shape[-1]):
+            sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
+        del expand_sensitivity_map
 
     return kspace, mask, imspace, sensitivity_map
