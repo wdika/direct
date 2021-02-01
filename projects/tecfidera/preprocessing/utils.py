@@ -229,13 +229,19 @@ def resize_sensitivity_map(sensitivity_map, shape, device='cuda'):
 
     """
     [slices, readout, phase_enc, coils] = shape
-    return fft.ifftn(
-        pad(fft.fftshift(fft.fftn(sensitivity_map.to(device), dim=(0, 1, 2)), dim=(0, 1, 2)).detach().cpu(),
-            ((coils - sensitivity_map.shape[3]) // 2, (coils - sensitivity_map.shape[3]) // 2,
+    with torch.no_grad():
+        kspace_sense = fft.fftn(sensitivity_map.to(device), dim=(0, 1, 2))
+        nopad_sense = fft.fftshift(kspace_sense, dim=(0, 1, 2))
+        del kspace_sense
+        padded_sense = pad(nopad_sense.detach().cpu(),
+                ((coils - sensitivity_map.shape[3]) // 2, (coils - sensitivity_map.shape[3]) // 2,
              (phase_enc - sensitivity_map.shape[2]) // 2, (phase_enc - sensitivity_map.shape[2]) // 2,
              (readout - sensitivity_map.shape[1]) // 2, (readout - sensitivity_map.shape[1]) // 2,
-             (slices - sensitivity_map.shape[0]) // 2, (slices - sensitivity_map.shape[0]) // 2)).to(device),
-        dim=(0, 1, 2))
+             (slices - sensitivity_map.shape[0]) // 2, (slices - sensitivity_map.shape[0]) // 2)).to(device)
+        del nopad_sense
+        sense = fft.ifftn(padded_sense, dim=(0, 1, 2))
+        del padded_sense
+    return sense
 
 
 def estimate_csm(kspace, calibration_region_size, device='cuda'):
@@ -436,16 +442,13 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
             tmp.append(tmp_kspace)
             del tmp_kspace
     kspace = torch.stack(tmp, 0)
-    print(kspace.shape, imspace.shape)
 
     validate_sense = torch.sum(sensitivity_map)
     if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
         del sensitivity_map, validate_sense
-
         sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20, device=device), device=device)
     else:
         del validate_sense
-
         sensitivity_map = normalize(resize_sensitivity_map(sensitivity_map, imspace.shape, device=device), device=device)
 
         if sensitivity_map.shape[-1] < imspace.shape[-1]:
