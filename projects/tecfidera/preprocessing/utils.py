@@ -408,60 +408,39 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
 
     """
     raw_kspace = torch.from_numpy(kspace).squeeze().to(device)
-    del kspace
-
     if raw_kspace.shape[-1] == 2:
         raw_kspace = raw_kspace[..., 0] + 1j * raw_kspace[..., 1]
+    del kspace
 
-    raw_sense = torch.from_numpy(sense).squeeze()
+    mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
+    imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace, dim=(0, 1, 2), norm="ortho").detach().cpu()).to(device),
+                            dim=0)
+    del raw_kspace
 
-    if raw_sense.shape[-1] == 2:
-        raw_sense = raw_sense[..., 0] + 1j * raw_sense[..., 1]
+    sensitivity_map = estimate_csm(sense, calibration_region_size=20).squeeze()
+    if sensitivity_map.shape[-1] == 2:
+        sensitivity_map = sensitivity_map[..., 0] + 1j * sensitivity_map[..., 1]
+    del sense
 
-    transversal = [raw_kspace, raw_sense]
-    sagittal = [raw_kspace.permute(1, 0, 2, 3), raw_sense.permute(1, 0, 2, 3)]
-    coronal = [raw_kspace.permute(2, 0, 1, 3), raw_sense.permute(2, 0, 1, 3)]
-    del raw_kspace, raw_sense
+    if slice_range is not None:
+        imspace = slice_selection(imspace, slice_range[0], slice_range[1])
+        sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
 
-    imspaces = []
-    kspaces = []
-    sensitivities_maps = []
-    masks = []
-    for i, view in enumerate([transversal, sagittal, coronal]):
-        raw_kspace, sense = view[0], view[1]
+    kspace = fft.fft2(imspace.to(device), dim=(1, 2), norm="ortho").detach().cpu()
 
-        mask = complex_tensor_to_real_np(extract_mask(raw_kspace))
-        imspace = fft.ifftshift(normalize(fft.ifftn(raw_kspace.detach().cpu(), dim=(0, 1, 2), norm="ortho")).to(device),
-                                dim=0 if i == 0 else 1).detach().cpu()
-        del raw_kspace
-        torch.cuda.empty_cache()
+    validate_sense = torch.sum(sensitivity_map)
+    if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
+        sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20)).squeeze()
+    else:
+        sensitivity_map = resize_sensitivity_map(sensitivity_map.to(device), imspace.shape)
+        sensitivity_map = fft.ifftshift(normalize(sensitivity_map.detach().cpu()).to(device), dim=0)
 
-        sensitivity_map = estimate_csm(sense.numpy(), calibration_region_size=20)
-        del sense
+        if sensitivity_map.shape[-1] < imspace.shape[-1]:
+            expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
+            for i in range(imspace.shape[-1] - sensitivity_map.shape[-1]):
+                sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
+            del expand_sensitivity_map
 
-        if slice_range is not None:
-            imspace = slice_selection(imspace, slice_range[0], slice_range[1])
-            sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
+        sensitivity_map = sensitivity_map.detach().cpu()
 
-        kspace = fft.fft2(imspace.to(device), dim=(1, 2), norm="ortho").detach().cpu()
-
-        validate_sense = torch.sum(sensitivity_map)
-        if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
-            sensitivity_map = normalize(estimate_csm(kspace.numpy(), calibration_region_size=20)).squeeze()
-        else:
-            sensitivity_map = resize_sensitivity_map(sensitivity_map.to(device), imspace.shape)
-            sensitivity_map = fft.ifftshift(normalize(sensitivity_map.detach().cpu())).to(device)
-
-            if sensitivity_map.shape[-1] < imspace.shape[-1]:
-                expand_sensitivity_map = torch.sum(sensitivity_map, -1).unsqueeze(-1)
-                for i in range(imspace.shape[-1] - sensitivity_map.shape[-1]):
-                    sensitivity_map = torch.cat((sensitivity_map, expand_sensitivity_map), -1)
-                del expand_sensitivity_map
-        torch.cuda.empty_cache()
-
-        imspaces.append(imspace.detach().cpu())
-        kspaces.append(kspace.detach().cpu())
-        sensitivities_maps.append(sensitivity_map.detach().cpu())
-        masks.append(mask)
-
-    return kspaces, masks, imspaces, sensitivities_maps
+    return kspace, mask, imspace, sensitivity_map
