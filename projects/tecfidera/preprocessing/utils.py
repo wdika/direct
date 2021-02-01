@@ -429,7 +429,14 @@ def preprocess_volume(kspace, sense, slice_range, device='cuda'):
         imspace = slice_selection(imspace, slice_range[0], slice_range[1])
         sensitivity_map = slice_selection(sensitivity_map, slice_range[0], slice_range[1])
 
-    kspace = fft.fft2(imspace, dim=(1, 2), norm="ortho").detach().cpu()
+    tmp = []
+    with torch.no_grad():
+        for i in range(imspace.shape[0]):
+            tmp_kspace = fft.fft2(imspace[i], dim=(0, 1), norm="ortho").detach().cpu()
+            tmp.append(tmp_kspace)
+            del tmp_kspace
+    kspace = torch.stack(tmp, 0)
+    print(kspace.shape, imspace.shape)
 
     validate_sense = torch.sum(sensitivity_map)
     if torch.abs(validate_sense) == torch.tensor(0) or torch.isnan(validate_sense):
